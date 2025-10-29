@@ -5,9 +5,9 @@ import pandas as pd
 from pathlib import Path
 from typing import Optional
 
-from src.excel_generator_project.utils.utils import Utils
-from src.excel_generator_project.config import TEMP_DIR
-from src.excel_generator_project.infrastructure.excel_handler import ExcelHandler
+from excel_generator_project.utils.utils import Utils
+from excel_generator_project.config import TEMP_DIR
+from excel_generator_project.infrastructure.excel_handler import ExcelHandler
 from openpyxl.utils import get_column_letter
 
 class ExceptionProcessor:

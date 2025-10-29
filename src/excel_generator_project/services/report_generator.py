@@ -7,8 +7,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
 
 # 假设 ExcelHandler 和 Utils 的路径如下
-from src.excel_generator_project.infrastructure.excel_handler import ExcelHandler
-from src.excel_generator_project.utils.utils import Utils
+from excel_generator_project.infrastructure.excel_handler import ExcelHandler
+from excel_generator_project.utils.utils import Utils
 
 class ReportGenerator:
     """

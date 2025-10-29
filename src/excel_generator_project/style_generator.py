@@ -5,12 +5,15 @@ import sys
 import os
 from pathlib import Path
 
-# --- 路径设置 ---
-project_root = Path(__file__).parent.resolve()
-sys.path.insert(0, str(project_root))
+# # --- 路径设置，确保可以导入src下的模块 ---
+project_root = Path(__file__).parent.parent.parent.resolve()
+src_root = project_root / 'src'
+if str(src_root) not in sys.path:
+    sys.path.insert(0, str(src_root))
 
-from src.excel_generator_project.config import CONFIG
-from src.excel_generator_project.utils.utils import Utils
+from excel_generator_project.config import CONFIG, TEMP_PATH, OUTPUT_PATH
+from excel_generator_project.config import CONFIG
+from excel_generator_project.utils.utils import Utils
 from excel_generator_project.core.font_processor import FontProcessor
 
 def style_postprocess_flow():
@@ -21,8 +24,8 @@ def style_postprocess_flow():
     logging.info("===== [阶段二] 开始进行后期样式处理 =====")
     
     # 1. 从环境变量中读取UI传递过来的动态路径
-    temp_path_str = os.getenv("TEMPLATE_PATH") # 此时的模板是上一阶段的输出
-    output_path_str = os.getenv("OUTPUT_PATH")
+    temp_path_str = os.getenv("TEMPLATE_PATH", str(TEMP_PATH)) # 此时的模板是上一阶段的输出
+    output_path_str = os.getenv("OUTPUT_PATH", str(OUTPUT_PATH))
 
     if not temp_path_str or not output_path_str:
         logging.error("错误：环境变量 TEMPLATE_PATH 或 OUTPUT_PATH 未设置。")

@@ -9,8 +9,8 @@ from datetime import datetime as dt
 import openpyxl
 from openpyxl.utils import column_index_from_string, get_column_letter
 
-from src.excel_generator_project.config import BASE_DIR, DATA_DIR
-from src.excel_generator_project.utils.utils import Utils
+from excel_generator_project.config import BASE_DIR, DATA_DIR
+from excel_generator_project.utils.utils import Utils
 
 class DataProcessor:
     """

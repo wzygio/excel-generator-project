@@ -7,7 +7,7 @@ import os, re
 from openpyxl import load_workbook
 from xml.etree import ElementTree as ET
 
-from src.excel_generator_project.utils.utils import Utils # 假设您的文本处理函数在这里
+from excel_generator_project.utils.utils import Utils # 假设您的文本处理函数在这里
 
 # 预定义XML命名空间
 NAMESPACES = {

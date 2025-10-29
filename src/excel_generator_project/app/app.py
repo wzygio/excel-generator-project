@@ -1,84 +1,28 @@
 # ui/streamlit_app.py
-import sys
+import sys, os
 from pathlib import Path
-import datetime
 import streamlit as st
-import subprocess
-import os
 import time, logging, shutil
-import tempfile # 导入tempfile模块
+import tempfile
 
-# --- 路径设置 ---
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
-sys.path.insert(0, str(PROJECT_ROOT))
+from excel_generator_project.config import (
+    TEMPLATE_PATH,
+    TEMP_PATH,
+    PROJECT_ROOT,
+    DOWNLOADER_SCRIPT_PATH,
+    DOWNLOADER_PYTHON_EXECUTABLE,
+    CONTENT_GENERATOR_SCRIPT_PATH,
+    STYLE_GENERATOR_SCRIPT_PATH
+)
 
-from src.excel_generator_project.config import TEMPLATE_PATH, TEMP_PATH
-from src.excel_generator_project.utils.utils import Utils
+from excel_generator_project.utils.utils import Utils
+from excel_generator_project.app.setup import AppSetup
 
 PYTHON_EXECUTABLE = sys.executable
 
-# --- 辅助函数 (已重构) ---
-def save_uploaded_file(uploaded_file, save_path: Path):
-    """(已更新为先删除后保存的模式) 保存上传的文件到指定路径"""
-    try:
-        # --- 核心修改：在写入新文件前，先检查并删除已存在的旧文件 ---
-        if save_path.exists():
-            logging.info(f"检测到已存在的目标文件 '{save_path}'，正在删除...")
-            save_path.unlink() # 使用 unlink 删除文件
-            logging.info(f"旧文件已成功删除。")
-        # --- 修改结束 ---
-
-        # 将文件指针重置到开头
-        uploaded_file.seek(0)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # 使用 shutil.copyfileobj 进行流式复制
-        with open(save_path, "wb") as f:
-            shutil.copyfileobj(uploaded_file, f)
-            
-        logging.info(f"文件 '{uploaded_file.name}' 已成功保存到 '{save_path}'")
-        return save_path
-    except Exception as e:
-        logging.error(f"保存上传文件时出错: {e}", exc_info=True)
-        raise
-
-def generate_dynamic_filename() -> str:
-    """根据当前时间段，生成动态的默认输出文件名。"""
-    now = datetime.datetime.now()
-    date_str = now.strftime('%Y%m%d')
-    current_hour = now.hour
-
-    if 0 <= current_hour < 12:
-        # 规则1: 0点到12点之前，不添加时刻
-        return f"V3屏体良率日报-{date_str}.xlsx"
-    elif 12 <= current_hour < 16:
-        # 规则2: 12点到16点之前，固定为14:00 (注意使用全角冒号)
-        return f"V3屏体良率日报-{date_str}-14：00.xlsx"
-    else: # 16:00 - 23:59
-        # 规则3: 16点及以后，固定为16:00 (注意使用全角冒号)
-        return f"V3屏体良率日报-{date_str}-16：00.xlsx"
-
-def run_subprocess(script_path: str, template_path: str, output_path: str):
-    """(已重构) 一个通用的、用于执行后台脚本的函数，强制使用UTF-8编码。"""
-    st.info(f"正在执行脚本: {Path(script_path).name}...")
-    
-    # --- 核心修改：在环境变量中增加 PYTHONUTF8=1 ---
-    process_env = os.environ.copy()
-    process_env["TEMPLATE_PATH"] = str(template_path)
-    process_env["OUTPUT_PATH"] = str(output_path)
-    process_env["PYTHONPATH"] = os.environ.get("PYTHONPATH", "") + os.pathsep + str(PROJECT_ROOT)
-    process_env["PYTHONUTF8"] = "1" # 强制子进程使用UTF-8
-    # --- 修改结束 ---
-
-    return subprocess.run(
-        [PYTHON_EXECUTABLE, script_path],
-        env=process_env, # 使用我们构建的、包含了新环境变量的字典
-        capture_output=True, # 使用 capture_output 更简洁
-        text=True,
-        encoding='utf-8' # 现在解码方式和子进程的输出编码保证一致
-    )
-
+# ==========================================================
 # --- Streamlit UI 界面 ---
+# ==========================================================
 st.set_page_config(page_title="Excel日报生成器", layout="wide")
 st.title("📊 Excel日报自动化生成工具")
 
@@ -94,18 +38,50 @@ if 'final_file_content' not in st.session_state:
 # --- 侧边栏 ---
 with st.sidebar:
     st.header("⚙️ 全局配置")
-
     # --- 调用新的辅助函数来设置默认文件名 ---
     if 'output_filename' not in st.session_state:
         # 仅在会话状态中不存在时，调用函数生成一次默认值
-        st.session_state.output_filename = generate_dynamic_filename() 
+        st.session_state.output_filename = AppSetup.generate_dynamic_filename() 
     # text_input 会使用会话状态中的值作为默认值，并允许用户修改
     st.session_state.output_filename = st.text_input(
         "最终输出文件名", 
         value=st.session_state.output_filename
     )
+    
+    st.divider()
+
+        # --- 新增：下载数据按钮 ---
+    st.header("🔄 数据准备")
+    if st.button("📥 下载最新数据文件", use_container_width=True, key="download_data_btn"):
+        with st.spinner("正在运行下载脚本..."):
+            
+            # 检查配置是否有效
+            if not DOWNLOADER_SCRIPT_PATH.exists() or not DOWNLOADER_PYTHON_EXECUTABLE.exists():
+                st.error("下载脚本或其Python解释器路径配置错误，请检查 config.py。")
+            else:
+                # 调用 run_subprocess，传入下载脚本的解释器和路径
+                result = AppSetup.run_subprocess(
+                    script_path=str(DOWNLOADER_SCRIPT_PATH),
+                    python_executable=str(DOWNLOADER_PYTHON_EXECUTABLE)
+                    # 下载脚本可能不需要 TEMPLATE_PATH 和 OUTPUT_PATH
+                )
+                st.session_state.download_result = result
+        st.rerun() # 刷新以显示结果
+
+    # 显示下载结果 (如果执行过)
+    download_res = st.session_state.get('download_result')
+    if download_res:
+        if download_res.returncode == 0:
+            st.success("✅ 数据文件下载成功！")
+        else:
+            st.error("❌ 数据文件下载失败。")
+        # 提供一个折叠的日志查看器
+        with st.expander("查看下载日志", expanded=False):
+             st.code(download_res.stdout or download_res.stderr, language="text")
+    # --- 下载数据按钮结束 ---
 
     st.divider()
+
     if st.button("🔄 Rerun", use_container_width=True):
         # 遍历并删除会话状态中的所有键，实现彻底重置
         for key in st.session_state.keys():
@@ -140,16 +116,16 @@ with tab1:
         template_to_use = TEMPLATE_PATH
         if uploaded_template_file:
             try:
-                save_uploaded_file(uploaded_template_file, TEMPLATE_PATH)
+                AppSetup.save_uploaded_file(uploaded_template_file, TEMPLATE_PATH)
                 template_to_use = TEMPLATE_PATH
             except Exception as e:
                 st.error(f"更新默认模板时发生错误: {e}")
                 st.stop()
 
         with st.spinner("正在运行数据处理模块..."):
-            # --- 核心修改：移除 tempfile，直接写入到持久化的 TEMP_PATH ---
-            result = run_subprocess(
-                script_path='content_generator.py',
+            result = AppSetup.run_subprocess(
+                script_path=str(CONTENT_GENERATOR_SCRIPT_PATH),
+                python_executable=PYTHON_EXECUTABLE,
                 template_path=str(template_to_use),
                 output_path=str(TEMP_PATH)
             )
@@ -207,7 +183,7 @@ with tab2:
             # 同样使用临时目录
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_dir_path = Path(temp_dir)
-                saved_intermediate_path = save_uploaded_file(
+                saved_intermediate_path = AppSetup.save_uploaded_file(
                     uploaded_intermediate_file,
                     temp_dir_path / uploaded_intermediate_file.name
                 )
@@ -215,8 +191,9 @@ with tab2:
                 final_output_path = temp_dir_path / st.session_state.output_filename
 
                 with st.spinner("正在运行样式处理模块..."):
-                    result = run_subprocess(
-                        script_path='run_style_postprocess.py',
+                    result = AppSetup.run_subprocess(
+                        script_path=str(STYLE_GENERATOR_SCRIPT_PATH),
+                        python_executable=str(sys.executable),
                         template_path=str(saved_intermediate_path),
                         output_path=str(final_output_path)
                     )

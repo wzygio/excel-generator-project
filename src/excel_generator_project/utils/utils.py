@@ -11,9 +11,84 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from typing import Optional
 
-from src.excel_generator_project.config import BASE_DIR, DATA_DIR, PATHS
+from excel_generator_project.config import BASE_DIR, DATA_DIR, LOG_DIR
 
 class Utils:
+    @staticmethod
+    def setup_logging(log_filename: str = "app.log"):
+        """初始化日志系统，输出到文件(覆盖模式)和控制台。"""
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log_filepath = LOG_DIR / log_filename
+
+        log_format = '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s'
+        log_date_format = '%Y-%m-%d %H:%M:%S'
+
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.INFO) # 或 DEBUG
+
+        # 清除旧处理器 (保持不变)
+        if root_logger.hasHandlers():
+            # 移除处理器并关闭它们，确保文件句柄被释放
+            for handler in root_logger.handlers[:]:
+                handler.close()
+                root_logger.removeHandler(handler)
+
+        # --- [核心修改] 文件处理器，使用 mode='w' ---
+        try:
+            file_handler = logging.FileHandler(log_filepath, mode='w', encoding='utf-8') # <-- 添加 mode='w'
+            file_handler.setFormatter(logging.Formatter(log_format, datefmt=log_date_format))
+            root_logger.addHandler(file_handler)
+        except Exception as e:
+             # 如果文件无法以写入模式打开（例如权限问题），至少还能输出到控制台
+             logging.error(f"无法以写入模式打开日志文件 '{log_filepath}': {e}")
+
+
+        # --- 控制台处理器 (保持不变) ---
+        # 避免重复添加控制台处理器（如果之前被清除了）
+        if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
+             console_handler = logging.StreamHandler(sys.stdout)
+             console_handler.setFormatter(logging.Formatter(log_format, datefmt=log_date_format))
+             root_logger.addHandler(console_handler)
+
+        logging.info(f"日志系统已初始化，将同时输出到文件 '{log_filepath}' (覆盖模式) 和控制台。")
+
+
+    @staticmethod
+    def setup_test_environment(log_filename: str, log_level=logging.INFO):
+        """
+        (已重构) 配置日志系统，实现文件和控制台的双路输出。
+        """
+        # 1. 获取根日志记录器
+        root_logger = logging.getLogger()
+        root_logger.setLevel(log_level)
+
+        # 2. 清除任何已存在的处理器，防止日志重复输出
+        if root_logger.hasHandlers():
+            root_logger.handlers.clear()
+
+        # 3. 创建一个统一的日志格式
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+
+        # 4. 创建处理器 1: 写入到文件
+        log_dir = Path("./logs") # 建议将所有日志文件统一存放在logs目录
+        log_dir.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.FileHandler(log_dir / log_filename, encoding='utf-8')
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
+
+        # 5. 创建处理器 2: 输出到标准错误流 (stderr)
+        #    这是让 subprocess 能够捕获到日志的关键
+        stream_handler = logging.StreamHandler(sys.stderr)
+        stream_handler.setLevel(log_level)
+        stream_handler.setFormatter(formatter)
+        root_logger.addHandler(stream_handler)
+
+        logging.info(f"日志系统已初始化，将同时输出到文件 '{log_filename}' 和控制台。")
+
     @staticmethod
     def extract_product_models(model_config: dict, custom_path: Optional[Path] = None) -> list:
         """
@@ -184,9 +259,6 @@ class Utils:
         
         return fragments
 
-    # =========================================================================
-    # 策略二：分层解析器 (完整保留你为 U 列任务编写的强大引擎)
-    # =========================================================================
     @staticmethod
     def parse_fragments_hierarchical(text_content: str, definitions: list[dict], default_style_name: str) -> list[tuple[str, str]]:
         """
@@ -295,42 +367,6 @@ class Utils:
         final_content = section_text[last_end:]
         if final_content: fragments.append((final_content, default_style))
         return fragments
-
-    @staticmethod
-    def setup_test_environment(log_filename: str, log_level=logging.INFO):
-        """
-        (已重构) 配置日志系统，实现文件和控制台的双路输出。
-        """
-        # 1. 获取根日志记录器
-        root_logger = logging.getLogger()
-        root_logger.setLevel(log_level)
-
-        # 2. 清除任何已存在的处理器，防止日志重复输出
-        if root_logger.hasHandlers():
-            root_logger.handlers.clear()
-
-        # 3. 创建一个统一的日志格式
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-
-        # 4. 创建处理器 1: 写入到文件
-        log_dir = Path("./logs") # 建议将所有日志文件统一存放在logs目录
-        log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_dir / log_filename, encoding='utf-8')
-        file_handler.setLevel(log_level)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
-
-        # 5. 创建处理器 2: 输出到标准错误流 (stderr)
-        #    这是让 subprocess 能够捕获到日志的关键
-        stream_handler = logging.StreamHandler(sys.stderr)
-        stream_handler.setLevel(log_level)
-        stream_handler.setFormatter(formatter)
-        root_logger.addHandler(stream_handler)
-
-        logging.info(f"日志系统已初始化，将同时输出到文件 '{log_filename}' 和控制台。")
 
 
     @staticmethod

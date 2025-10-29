@@ -9,7 +9,11 @@ paths:
   template_file: 'resources/V3屏体良率日报.xlsx'  # 模板文件路径
   temp_file: 'output/V3屏体良率日报-temp.xlsx'  # 临时文件路径
   output_file: 'output/V3屏体良率日报-output.xlsx'  # 输出文件路径
-  
+  downloader_script_path: 'D:/wzy/Python/pyautogui-project/daily_report_files_downloader.py'  # 下载脚本路径
+  downloader_python_executable: 'D:/wzy/Python/pyautogui-project/pyautogui-project/Scripts/python.exe'  # 下载脚本使用的Python解释器路径
+  content_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/content_generator.py'  # 内容生成脚本路径
+  style_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/style_generator.py'  # 样式生成脚本路径
+
 # --- 2. 样式定义 (Style Definitions) ---
 style_definitions:
   # 第一部分任务所需的样式 (保持不变)

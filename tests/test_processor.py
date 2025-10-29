@@ -9,9 +9,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(project_root))
 
-# --- 1. 从 src.config 导入所有需要的配置 ---
-from src.excel_generator_project.config import CONFIG, TEMP_PATH, OUTPUT_PATH
-from src.excel_generator_project.utils.utils import Utils
+# --- 1. 从 config 导入所有需要的配置 ---
+from excel_generator_project.config import CONFIG, TEMP_PATH, OUTPUT_PATH
+from excel_generator_project.utils.utils import Utils
 from excel_generator_project.core.data_processor import DataProcessor
 from excel_generator_project.core.exception_processor import ExceptionProcessor
 from excel_generator_project.core.font_processor import FontProcessor
