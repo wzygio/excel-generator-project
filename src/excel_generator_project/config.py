@@ -51,7 +51,7 @@ CONFIG = load_config()
 
 # --- 2. 导出配置常量 ---
 PATHS = CONFIG.get("paths", {})
-BASE_DIR = Path(PATHS.get("base_dir", ""))
+BASE_DIR = PROJECT_ROOT
 DATA_DIR = Path(PATHS.get("data_dir", ""))
 TEMP_DIR = Path(PATHS.get("temp_dir", ""))
 LOG_DIR = Path(PATHS.get("log_dir", ""))

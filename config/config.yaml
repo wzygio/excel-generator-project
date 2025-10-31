@@ -6,7 +6,7 @@ paths:
   data_dir: 'resources'  # 数据文件夹路径
   temp_dir: 'data/temp'  # 临时文件夹路径
   log_dir: 'logs'  # 日志文件夹路径
-  template_file: 'resources/V3屏体良率日报.xlsx'  # 模板文件路径
+  template_file: 'resources/V3屏体良率日报-A版.xlsx'  # 模板文件路径
   temp_file: 'output/V3屏体良率日报-temp.xlsx'  # 临时文件路径
   output_file: 'output/V3屏体良率日报-output.xlsx'  # 输出文件路径
   downloader_script_path: 'D:/wzy/Python/pyautogui-project/daily_report_files_downloader.py'  # 下载脚本路径
@@ -47,10 +47,10 @@ style_definitions:
     bold: True
 
 model_definitions:  # 任务类型标识符
-  source_file: 'resources/V3屏体良率日报.xlsx'
-  sheet_name: '良率Trend'
+  source_file: 'resources/V3屏体良率日报-A版.xlsx'
+  sheet_name: 'sheet1'
   pattern: '^([^\n]*)'
-  start_cell: 'A2'
+  start_cell: 'B2'
   step: 4
   end_row: 60
 
@@ -58,7 +58,7 @@ model_definitions:  # 任务类型标识符
 exception_processing_jobs:
   # 任务0：从上一版日报提取原异常记录的任务
   - job_type: "extract_previous_exceptions"
-    sheet_name: '良率Trend'
+    sheet_name: 'sheet1'
     data_column: '日波动调查'
 
      # 新增的动态路径配置块
@@ -148,10 +148,10 @@ exception_processing_jobs:
 # --- 3. 数据处理任务批量处理定义 (Batch Processing Jobs) ---
 data_processing_jobs:
   - job_type: 'extract_product_models'  # 任务类型标识符
-    source_file: 'resources/V3屏体良率日报.xlsx'
-    sheet_name: '良率Trend'
+    source_file: 'resources/V3屏体良率日报-A版.xlsx'
+    sheet_name: 'sheet1'
     pattern: '^([^\n]*)'
-    start_cell: 'A2'
+    start_cell: 'B2'
     step: 4
     end_row: 60
 
@@ -159,18 +159,18 @@ data_processing_jobs:
   - job_type: 'daily_yield_change'  # 任务类型标识符
     description: '更新当日修正良率变化'
     source_path: 'D:/wzy/Python/excel-generator-project/resources'
-    source_file: 'V3屏体良率日报.xlsx'
-    sheet_name: '良率Trend'
-    pattern: '1\.当日CT良率说明：\s*(.*?)\s*2\.当月入库良率说明：'
+    source_file: 'V3屏体良率日报-A版.xlsx'
+    sheet_name: 'sheet1'
+    pattern: '1\.当日CT良率说明：\s*(.*?)\s*新增异常：'
     cell_sequence:
-      start_cell: 'B4'
+      start_cell: 'D4'
       step: 4
       end_row: 60
   
   - job_type: 'extract_bp_target' # 任务类型名建议清晰表达动作
     description: '更新BP良率目标'
     source_path: 'D:/wzy/Python/excel-generator-project/resources'
-    source_file: 'V3屏体良率日报.xlsx'
+    source_file: 'V3屏体良率日报-A版.xlsx'
     sheet_name: 'Gap分析'
 
     # 新增：用于定义如何动态查找起始行的配置块
@@ -269,7 +269,7 @@ data_processing_jobs:
     # 第二部分：检索每个风险品的释放计划
     release_plan_finder:
       source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项'
-      source_file: '返工需求和风险品处置.xlsx'
+      source_file: '风险品汇总.xlsx'
       sheet_name: '风险品释放管控表'
       header_row: 1
       product_model_column: '产品'
@@ -286,7 +286,7 @@ report_generator_jobs:
   - job_type: "write_processed_exceptions"
     description: "将最终处理好的异常模块文本，按顺序写回到目标Excel文件的单元格中"
     data_source_key: "exceptions_data" # 我们将在主流程中用这个键名注入数据
-    sheet_name: '良率Trend'
+    sheet_name: 'sheet1'
     data_column: '日波动调查'
     
     # 代码会根据这个规则计算出每个模块应该写入的行号
@@ -306,7 +306,7 @@ report_generator_jobs:
     data_source_key: "yield_data" # 用于从DataProcessor的结果中查找数据
     template_name: "yield_summary"  # 使用的模板名称
     target_cells:
-      start_cell: "B4"            # 报告写入的起始单元格
+      start_cell: "D4"            # 报告写入的起始单元格
       step: 4                     # 写入的步长
  
 # --- 4. 字体样式任务批量处理定义 (Batch Processing Jobs) ---
@@ -314,9 +314,9 @@ font_processing_jobs:
 
   # 任务一：处理 B 列的良率数据
   - job_name: 'Process Part 1 Yield Data'
-    sheet_name: '良率Trend'
+    sheet_name: 'sheet1'
     cell_sequence:
-      start_cell: 'B4'
+      start_cell: 'D4'
       step: 4
       end_row: 60
     # 此任务使用的标题识别规则
@@ -329,9 +329,9 @@ font_processing_jobs:
 
   # 任务二：处理 U 列的异常分析数据 (应用新的嵌套结构)
   - job_name: 'Process Part 2 Anomaly Data'
-    sheet_name: '良率Trend'
+    sheet_name: 'sheet1'
     cell_sequence:
-      start_cell: 'S2'
+      start_cell: 'G2'
       step: 2
       end_row: 60
     title_definitions:

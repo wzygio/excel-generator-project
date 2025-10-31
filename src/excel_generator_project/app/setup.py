@@ -15,6 +15,12 @@ class AppSetup:
         """
         初始化应用的日志系统。
         """
+        # --- 路径设置，确保可以导入src下的模块 ---
+        project_root = Path(__file__).parent.parent.parent.parent.resolve()
+        src_root = project_root / 'src'
+        if str(src_root) not in sys.path:
+            sys.path.insert(0, str(src_root))
+
         Utils.setup_logging("app.log")
         logging.info("Application setup complete (logging initialized).")
 

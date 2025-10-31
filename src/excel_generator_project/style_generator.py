@@ -1,5 +1,5 @@
+#%%
 # run_style_postprocess.py
-
 import logging
 import sys
 import os
@@ -61,3 +61,4 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"流程[阶段二]发生未知异常: {e}", exc_info=True)
         sys.exit(1)
+# %%

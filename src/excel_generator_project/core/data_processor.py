@@ -43,8 +43,8 @@ class DataProcessor:
     
             if job_type == "daily_yield_change":
                 self._execute_daily_yield_change_job(job_config) # 当日修正良率变化：self.calculated_data['daily_yield_change']
-            elif job_type == "extract_bp_target": 
-                self._execute_extract_bp_target_job(job_config) # BP良率目标：self.calculated_data['bp_target']
+            # elif job_type == "extract_bp_target": 
+            #     self._execute_extract_bp_target_job(job_config) # BP良率目标：self.calculated_data['bp_target']
             elif job_type == "extract_tila_target": 
                 self._execute_extract_tila_target_job(job_config) # 提拉良率目标：self.calculated_data['tila_target']
             elif job_type == "extract_monthly_yield_estimate": 
@@ -527,11 +527,13 @@ class DataProcessor:
                             continue
                 
                 if candidate_dirs:
-                    # 按数字降序排序，并选择第一个
+                    # 按数字降序排序，并选择最近的两个目录
                     candidate_dirs.sort(key=lambda x: x[0], reverse=True)
-                    latest_dir_path = candidate_dirs[0][1]
-                    logging.info(f"      -> 找到最新子目录: {latest_dir_path.name}")
-                    search_path = latest_dir_path # 更新搜索路径为这个最新的子目录
+                    # 获取最近的两个目录路径
+                    recent_dirs = [dir_info[1] for dir_info in candidate_dirs[:2]]
+                    # 将最近的两个目录合并为一个搜索路径列表
+                    search_paths = recent_dirs
+                    logging.info(f"      -> 找到最近的两个子目录: {[d.name for d in recent_dirs]}")
                 else:
                     logging.warning(f"    未能在 '{base_path}' 下找到任何以 '{prefix}' 开头的子目录。")
                     return None # 如果找不到符合规则的周别目录，则任务失败
@@ -545,22 +547,25 @@ class DataProcessor:
 
         latest_file = None
         latest_time = 0
-        logging.info(f"    正在目录 '{search_path.name}' 中查找包含 '{name_contains}' 和 '{month_string_to_find}' 的最新文件...")
-        for filename in os.listdir(search_path):
-            if (name_contains in filename and 
-                not filename.startswith('~$') and 
-                month_string_to_find in filename):
-                file_path = search_path / filename
-                if file_path.is_file(): # 确保是文件
-                    mod_time = file_path.stat().st_mtime
-                    if mod_time > latest_time:
-                        latest_time = mod_time
-                        latest_file = file_path
+
+        # 遍历所有搜索路径
+        for search_path in search_paths:
+            logging.info(f"    正在目录 '{search_path.name}' 中查找包含 '{name_contains}' 和 '{month_string_to_find}' 的最新文件...")
+            for filename in os.listdir(search_path):
+                if (name_contains in filename and 
+                    not filename.startswith('~$') and 
+                    month_string_to_find in filename):
+                    file_path = search_path / filename
+                    if file_path.is_file(): # 确保是文件
+                        mod_time = file_path.stat().st_mtime
+                        if mod_time > latest_time:
+                            latest_time = mod_time
+                            latest_file = file_path
         
         if latest_file:
             logging.info(f"      -> 动态查找到最新文件: {latest_file.name}")
         else:
-            logging.warning(f"    未能在 '{search_path.name}' 中找到任何包含 '{name_contains}' 的文件。")
+            logging.warning(f"    未能在任何目录中找到包含 '{name_contains}' 的文件。")
             
         return latest_file
     

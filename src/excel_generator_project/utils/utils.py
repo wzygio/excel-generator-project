@@ -75,7 +75,7 @@ class Utils:
         # 4. 创建处理器 1: 写入到文件
         log_dir = Path("./logs") # 建议将所有日志文件统一存放在logs目录
         log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_dir / log_filename, encoding='utf-8')
+        file_handler = logging.FileHandler(log_dir / log_filename, mode='w', encoding='utf-8')
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
