@@ -150,10 +150,10 @@ class Utils:
 
     @staticmethod
     def get_safe_source_path(job_config: dict, 
-                             path_key: str = "source_path",
-                             file_key: str = "source_file") -> Optional[Path]:
+                            path_key: str = "source_path",
+                            file_key: str = "source_file") -> Optional[Path]:
         """
-        (已重构) 增加了对Excel锁定文件的自动处理。
+        (已重构) 增加了对Excel锁定文件的自动处理和文件名模糊匹配。
         """
         source_directory = job_config.get(path_key)
         file_name = job_config.get(file_key)
@@ -161,7 +161,24 @@ class Utils:
             logging.error(f"   任务配置中缺少必要的目录路径键 '{path_key}'。")
             return None
 
+        # 1. 首先尝试精确匹配
         initial_target_path = Path(source_directory) / file_name
+        
+        # 2. 如果精确匹配的文件不存在，尝试模糊匹配
+        if not initial_target_path.is_file():
+            logging.info(f"   精确匹配的文件不存在，尝试模糊匹配...")
+            source_dir = Path(source_directory)
+            found_files = [f for f in source_dir.iterdir() 
+                        if f.is_file() and file_name in f.name]
+            
+            if found_files:
+                # 选择最新的文件
+                latest_file = max(found_files, key=lambda f: f.stat().st_mtime)
+                logging.info(f"   找到包含 '{file_name}' 的最新文件: {latest_file.name}")
+                initial_target_path = latest_file
+            else:
+                logging.warning(f"   未能找到包含 '{file_name}' 的任何文件。")
+                return None
 
         # 在复制前，自动解析并净化路径
         final_path_to_copy = Utils.resolve_lock_file(initial_target_path)
@@ -175,6 +192,27 @@ class Utils:
         
         return Utils.get_local_copy(final_path_to_copy, local_cache_dir)
 
+    @staticmethod
+    def resolve_lock_file(source_path: Path) -> Path:
+        """
+        (新增的私有辅助方法) 
+        检查给定的路径是否为Excel锁定文件(~$开头)，如果是，则尝试返回真实文件路径。
+        """
+        if source_path and source_path.name.startswith('~$'):
+            # 移除 "~$" 前缀来构建真实文件名
+            real_filename = source_path.name[2:]
+            real_path = source_path.with_name(real_filename)
+            
+            # 检查真实文件是否存在
+            if real_path.is_file():
+                logging.info(f"  [Utils] 检测到Excel锁定文件，自动切换到真实文件: '{real_path.name}'")
+                return real_path
+            else:
+                 logging.warning(f"  [Utils] 检测到锁定文件，但对应的真实文件不存在: '{real_path.name}'")
+        
+        # 如果不是锁定文件，或者真实文件不存在，则返回原始路径
+        return source_path
+    
     @staticmethod
     def get_local_copy(source_path, local_cache_dir) -> Path | None:
         """
@@ -549,26 +587,7 @@ class Utils:
             logging.error(f"  [Utils] 查找最新文件时发生错误: {e}", exc_info=True)
             return None
 
-    @staticmethod
-    def resolve_lock_file(source_path: Path) -> Path:
-        """
-        (新增的私有辅助方法) 
-        检查给定的路径是否为Excel锁定文件(~$开头)，如果是，则尝试返回真实文件路径。
-        """
-        if source_path and source_path.name.startswith('~$'):
-            # 移除 "~$" 前缀来构建真实文件名
-            real_filename = source_path.name[2:]
-            real_path = source_path.with_name(real_filename)
-            
-            # 检查真实文件是否存在
-            if real_path.is_file():
-                logging.info(f"  [Utils] 检测到Excel锁定文件，自动切换到真实文件: '{real_path.name}'")
-                return real_path
-            else:
-                 logging.warning(f"  [Utils] 检测到锁定文件，但对应的真实文件不存在: '{real_path.name}'")
-        
-        # 如果不是锁定文件，或者真实文件不存在，则返回原始路径
-        return source_path
+
     
     @staticmethod
     def generate_cell_list(seq_config: dict) -> list[str]:

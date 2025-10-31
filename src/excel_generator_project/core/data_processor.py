@@ -508,37 +508,41 @@ class DataProcessor:
 
         search_path = base_path # 默认的搜索路径是基础路径
         
-        # --- 第一阶段：查找最新子目录 (查找最新的周别) --
+        # --- 第一阶段：查找最新子目录 (从本周开始向前查找) ---
         if dir_rule:
             prefix = dir_rule.get("prefix")
             if prefix:
-                candidate_dirs = []
-                logging.info(f"    正在基础路径下查找前缀为 '{prefix}' 的最新子目录...")
-                for item_name in os.listdir(base_path):
-                    item_path = base_path / item_name
-                    # 确保是目录，且名字以指定前缀开头
-                    if item_path.is_dir() and item_name.startswith(prefix):
-                        try:
-                            # 提取前缀后的数字部分进行排序
-                            dir_number = int(item_name[len(prefix):])
-                            candidate_dirs.append((dir_number, item_path))
-                        except ValueError:
-                            # 忽略那些前缀匹配但后面不是数字的目录
-                            continue
+                # 获取当前周数
+                current_week = datetime.datetime.now().isocalendar()[1]
+                search_paths = []
                 
-                if candidate_dirs:
-                    # 按数字降序排序，并选择最近的两个目录
-                    candidate_dirs.sort(key=lambda x: x[0], reverse=True)
-                    # 获取最近的两个目录路径
-                    recent_dirs = [dir_info[1] for dir_info in candidate_dirs[:2]]
-                    # 将最近的两个目录合并为一个搜索路径列表
-                    search_paths = recent_dirs
-                    logging.info(f"      -> 找到最近的两个子目录: {[d.name for d in recent_dirs]}")
-                else:
+                # 从本周开始，向前最多查找5周
+                for week_offset in range(6):  # range(6)包含0-5，共6周
+                    target_week = current_week - week_offset
+                    if target_week < 0:  # 如果周数变为负数，跳过
+                        continue
+                        
+                    dir_name = f"{prefix}{target_week}"
+                    dir_path = base_path / dir_name
+                    
+                    if dir_path.is_dir():
+                        search_paths.append(dir_path)
+                        logging.info(f"    找到目录: {dir_name}")
+                        # 找到目录后立即尝试查找文件
+                        found_file = self.__search_file_in_directory(dir_path, name_contains)
+                        if found_file:
+                            return found_file
+                
+                if not search_paths:
                     logging.warning(f"    未能在 '{base_path}' 下找到任何以 '{prefix}' 开头的子目录。")
-                    return None # 如果找不到符合规则的周别目录，则任务失败
+                    return None
 
-        # --- 第二阶段：在最终确定的搜索路径下查找文件 (已更新过滤逻辑) ---
+        # --- 第二阶段：在基础路径直接查找（如果没有二级目录规则） ---
+        return self.__search_file_in_directory(base_path, name_contains)
+
+
+    def __search_file_in_directory(self, directory: Path, name_contains: str) -> Path | None:
+        """在指定目录中查找最新的匹配文件"""
         if not name_contains:
             return None
         
@@ -548,26 +552,25 @@ class DataProcessor:
         latest_file = None
         latest_time = 0
 
-        # 遍历所有搜索路径
-        for search_path in search_paths:
-            logging.info(f"    正在目录 '{search_path.name}' 中查找包含 '{name_contains}' 和 '{month_string_to_find}' 的最新文件...")
-            for filename in os.listdir(search_path):
-                if (name_contains in filename and 
-                    not filename.startswith('~$') and 
-                    month_string_to_find in filename):
-                    file_path = search_path / filename
-                    if file_path.is_file(): # 确保是文件
-                        mod_time = file_path.stat().st_mtime
-                        if mod_time > latest_time:
-                            latest_time = mod_time
-                            latest_file = file_path
+        logging.info(f"    正在目录 '{directory.name}' 中查找包含 '{name_contains}' 和 '{month_string_to_find}' 的最新文件...")
+        for filename in os.listdir(directory):
+            if (name_contains in filename and 
+                not filename.startswith('~$') and 
+                month_string_to_find in filename):
+                file_path = directory / filename
+                if file_path.is_file():  # 确保是文件
+                    mod_time = file_path.stat().st_mtime
+                    if mod_time > latest_time:
+                        latest_time = mod_time
+                        latest_file = file_path
         
         if latest_file:
-            logging.info(f"      -> 动态查找到最新文件: {latest_file.name}")
+            logging.info(f"      -> 找到最新文件: {latest_file.name}")
         else:
-            logging.warning(f"    未能在任何目录中找到包含 '{name_contains}' 的文件。")
-            
+            logging.warning(f"    未能找到包含 '{name_contains}' 的文件。")
+        
         return latest_file
+
     
     def __find_column_by_header(self, worksheet, header_config: dict, header_row: int) -> str | None:
         """(新辅助方法) 根据表头名称和出现次数查找列。"""
