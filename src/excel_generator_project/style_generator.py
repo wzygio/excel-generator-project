@@ -54,7 +54,6 @@ def style_postprocess_flow():
 
     logging.info(f"===== [阶段二] 后期样式处理完成: {output_path.name} =====")
 
-
 if __name__ == '__main__':
     try:
         style_postprocess_flow()

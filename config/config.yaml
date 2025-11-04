@@ -61,7 +61,7 @@ exception_processing_jobs:
     sheet_name: 'sheet1'
     data_column: '日波动调查'
 
-     # 新增的动态路径配置块
+    # 新增的动态路径配置块
     dynamic_path_config:
       base_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
       # 子目录的格式化模式，{year}和{month}是占位符
@@ -147,43 +147,29 @@ exception_processing_jobs:
 
 # --- 3. 数据处理任务批量处理定义 (Batch Processing Jobs) ---
 data_processing_jobs:
-  - job_type: 'extract_product_models'  # 任务类型标识符
-    source_file: 'resources/V3屏体良率日报-A版.xlsx'
-    sheet_name: 'sheet1'
-    pattern: '^([^\n]*)'
-    start_cell: 'B2'
-    step: 4
-    end_row: 60
-
-  # 当日修正良率变化
-  - job_type: 'daily_yield_change'  # 任务类型标识符
-    description: '更新当日修正良率变化'
+  - job_type: "parse_text_from_cells"   # <-- 1. 使用新的通用 job_type
+    output_key: "daily_yield_change"   # <-- 2. 指定输出的键名
+    description: "更新当日修正良率变化"
+    source_path: "D:/wzy/Python/excel-generator-project/resources"
+    source_file: 'V3屏体良率日报-A版.xlsx'
+    sheet_name: "sheet1"
+    pattern: '1\.当日CT良率说明：\s*(.*?)\s*新增异常：'
+    cell_sequence:
+      start_cell: "D4"
+      step: 4
+      end_row: 60
+  
+  - job_type: "parse_text_from_cells"   # <-- 1. 使用新的通用 job_type
+    output_key: "bp_target"            # <-- 2. 指定输出的键名
+    description: '更新BP良率目标'
     source_path: 'D:/wzy/Python/excel-generator-project/resources'
     source_file: 'V3屏体良率日报-A版.xlsx'
     sheet_name: 'sheet1'
-    pattern: '1\.当日CT良率说明：\s*(.*?)\s*新增异常：'
+    pattern: 'BP良率目标\s*([^,]+)'
     cell_sequence:
       start_cell: 'D4'
       step: 4
       end_row: 60
-  
-  - job_type: 'extract_bp_target' # 任务类型名建议清晰表达动作
-    description: '更新BP良率目标'
-    source_path: 'D:/wzy/Python/excel-generator-project/resources'
-    source_file: 'V3屏体良率日报-A版.xlsx'
-    sheet_name: 'Gap分析'
-
-    # 新增：用于定义如何动态查找起始行的配置块
-    start_row_finder:
-      search_column: 'C'      # 在哪一列进行搜索
-      search_value: 'CT'       # 要搜索的关键字
-      max_search_row: 40      # 安全设置：最多搜索到100行，防止无限循环
-
-    # 提取数据的规则配置块
-    data_extraction:
-      data_column: 'D'         # 从哪一列提取数据
-      step: 10                 # 提取的步长
-      end_row: 200             # 提取过程在哪一行之后停止
   
   - job_type: 'extract_tila_target'
     description: '分步提取提拉良率目标（tila_target）'
@@ -192,14 +178,14 @@ data_processing_jobs:
     row_locator:
       # 在哪个文件和工作表中查找产品型号
       source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
-      source_file: '25年营收预测0514版提拉目标-47.85KK-更新.xlsx'
+      source_file: '25年营收预测0514版提拉目标'
       sheet_name: '屏体良率预测' # 假设是同一个工作表
       search_column: 'A' # 在哪一列中搜索产品型号
     
     column_locator:
       # 在哪个文件和工作表中查找月份（通常与第二步一致）
-      source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会\25年营收预测0514版提拉目标-47.85KK-更新.xlsx'
-      source_file: '25年营收预测0514版提拉目标-47.85KK-更新.xlsx'
+      source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
+      source_file: '25年营收预测0514版提拉目标'
       search_row: 3 # 在哪一行中搜索月份
       month_format: '{month}月' # 月份的格式。代码运行时会自动将 {month} 替换为当前的月份数字
 
@@ -232,49 +218,88 @@ data_processing_jobs:
         monthly_yield_col:
           header_format: 'M{month:02}'
 
-  - job_type: 'extract_batch_info'
-    description: '从最新报表中，计算最新和最优批次的CT良率和产出率'
+  - job_type: "parse_text_from_cells"   # <-- 1. 使用新的通用 job_type
+    output_key: "best_batch"            # <-- 2. 指定输出的键名
+    description: '提取最优批次'
     source_path: 'D:/wzy/Python/excel-generator-project/resources'
-    source_file: 'V3良率及不良率By批次汇总报表.xlsx'
-    sheet_name: 'CT'
-    product_model_row: 4
-    batch_row: 5
-    ct_yield_row: 9
-    output_rate_row: 13
-
-    # 找到最优批次
-    best_batch_locator:
-      output_rate_boundary: 0.995
+    source_file: 'V3屏体良率日报-A版.xlsx'
+    sheet_name: 'sheet1'
+    pattern: '最优批次：\s*([^\n]+)'
+    cell_sequence:
+      start_cell: 'D4'
+      step: 4
+      end_row: 60
   
+  - job_type: "parse_text_from_cells"   # <-- 1. 使用新的通用 job_type
+    output_key: "latest_batch"            # <-- 2. 指定输出的键名
+    description: '提取最新批次'
+    source_path: 'D:/wzy/Python/excel-generator-project/resources'
+    source_file: 'V3屏体良率日报-A版.xlsx'
+    sheet_name: 'sheet1'
+    pattern: '最新批次：\s*([^\n]+)'
+    cell_sequence:
+      start_cell: 'D4'
+      step: 4
+      end_row: 60
+  
+  # --- 使用以下配置替换现有的 "extract_risk_items" 任务 ---
   - job_type: 'extract_risk_items'
-    description: '提取风险品的良率数据和释放计划'
+    description: '从日报模板的文本块中提取风险品，并查找其释放计划'
 
-    # 第一部分：检索风险品及其近两个月良率
-    risk_yield_finder:
+    # --- 第一部分：用于从日报模板中定位“风险品”文本块 ---
+    template_reader_config:
+      # (这部分配置与 parse_text_from_cells 任务共享相同的源文件)
       source_path: 'D:/wzy/Python/excel-generator-project/resources'
-      source_file: 'V3入库良率还原By月周天报表.xlsx'
-      sheet_name: '风险品'  
+      source_file: 'V3屏体良率日报-A版.xlsx'
+      sheet_name: 'sheet1'
+      cell_sequence:
+        start_cell: 'D4'
+        step: 4
+        end_row: 60
+      block_pattern: '(?s)3\.2风险品：\s*(.*?)\s*4\.良率提升机会点'
 
-      # 定义如何定位产品型号
-      product_model_locator:
-        search_column: 'B'
+    # --- 第二部分：用于从文本块中解析出具体的“风险品名称” ---
+    parser_config:
+      # 新正则的逻辑: (捕获组1: 风险品名称) + (捕获组2: 该行剩余的所有良率文本)
+      # ([\s\S]+?) : 非贪婪匹配所有字符，直到...
+      # (?=\s*M\d): ...遇到一个（可选的）空格，后面跟着"M"和一个数字
+      item_pattern: '①\s*([\s\S]+?)\s*(M\d[^\n]*)'
+      item_pattern_2: '②\s*([\s\S]+?)\s*(M\d[^\n]*)'
+      item_pattern_3: '③\s*([\s\S]+?)\s*(M\d[^\n]*)'
+      item_pattern_4: '④\s*([\s\S]+?)\s*(M\d[^\n]*)'
+    # --- 修改结束 ---
 
-      # 定义风险品数据表的结构
-      risk_item_definition:
-        item_column: 'D'                # 风险品名称所在的列
-        ignore_values: ['-']            # 在item_column中，需要忽略的值列表
-        data_columns: ['E', 'F']        # 包含风险品良率数据的列
-        data_header_row: 3              # 数据列的表头（月份）所在的行
-
-    # 第二部分：检索每个风险品的释放计划
-    release_plan_finder:
-      source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项'
-      source_file: '风险品汇总'
-      sheet_name: '风险品释放管控表'
-      header_row: 1
-      product_model_column: '产品'
-      risk_item_column: '风险'
-      release_plan_column: '释放计划'
+    plan_finder_config:
+      # 步骤1：从旧日报中获取“基线”计划
+      old_release_plan_finder:
+        # 1.1) 查找文件
+        dynamic_path_config:
+          base_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
+          subdirectory_pattern: "{year}M{month:02d}"
+          file_pattern: "*.xlsx"
+        
+        # 1.2) 查找逻辑
+        sheet_name: 'sheet1'
+        product_model_column: 'B'  # 产品型号在哪一列
+        model_start_row: 2         # 型号从第几行开始
+        model_step: 4              # 型号的步长
+        risk_content_column: 'D'   # 风险品内容在哪一列
+        risk_content_offset: 2     # 风险品内容行 = 型号行 + 2
+        
+        # 1.3) 解析逻辑
+        block_pattern: '(?s)3\.2风险品：\s*(.*?)\s*4\.良率提升机会点'
+        parser_pattern: '(?:①|②|③|④|⑤)\s*([\s\S]+?)\s*M\d+[\s\S]*?%?：([\s\S]*?)(?=\n[①②③④⑤]|\nOLED:|\nTP:|$)'
+      
+      # (新增) 步骤2：从风险品汇总表获取“更新”计划
+      # (这部分就是你之前的 'release_plan_finder')
+      new_release_plan_finder:
+        source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项'
+        source_file: '风险品汇总'
+        sheet_name: '风险品释放管控表'
+        header_row: 1
+        product_model_column: '产品'
+        risk_item_column: '风险'
+        release_plan_column: '释放计划'
   
   - job_type: 'prepare_summary_data'
     description: '整合所有已提取的数据，为每个产品型号生成并写入最终的摘要文本'
@@ -343,7 +368,7 @@ font_processing_jobs:
         sub_definitions: # 二级标题
         - name: 'u_column_L2_title'
           # 精准匹配后面跟着 \n【 的二级标题
-          pattern: '\n(\d\.\d[^\n]+)(?=\n【)'
+          pattern: '\n(\d\.\d[^\n]+)(?=\n【)|【异常】([^\n]+?)\s*([\d.]+%)\s*（([^）]+)）'
           default_style: 'subtitle_black_bold'
           conditional_styles:
             - if_parent_contains: '当日异常'
@@ -368,18 +393,19 @@ report_text_templates:
     新增异常：{new_exceptions}
     已知异常：{known_exceptions}
     2. 月度良率预估
-    目标及预估：BP良率目标{bp_target}，提拉良率目标 {tila_target}，排产良率目标{prod_target}%，预估{estimated_yield}%
+    目标及预估：BP良率目标{bp_target}，提拉良率目标 {tila_target}，排产良率目标{prod_target}，预估{estimated_yield}（与提拉目标Gap：{estimated_tila_gap}）
     最优批次：{best_batch}
-    最新批次：{latest_batch_info}
+    最新批次：{latest_batch}
     3. 持续良损问题
     3.1 特有异常：{unique_exceptions}
-    3.2 风险品：{risk_items}
+    3.2 风险品：
+    {risk_items}
     4.良率提升机会点
     4.1 Array：{array_opportunities}
     4.2 OLED：{oled_opportunities}
     4.3 TP：{tp_opportunities}
   exception_report_title: |
-    {index} {exception_name} {daily_loss_rate}%({month_str} {monthly_loss_rate}%)
+    {index} {exception_name} {daily_loss_rate}({month_str} {monthly_loss_rate})
   exception_report_details: |
     【异常原因】{exception_reason}
     【Inline监控】{inline_monitoring}

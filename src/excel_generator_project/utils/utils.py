@@ -7,6 +7,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import logging, re
 import pprint, shutil
 import openpyxl
+import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from typing import Optional
@@ -652,4 +653,49 @@ class Utils:
         except Exception as e:
             logging.error(f"[Utils] 应用样式时发生错误: {e}", exc_info=True)
 
-    
+    @staticmethod
+    def safe_convert_percent_to_float(percent_str: str) -> float | None:
+        """将百分比字符串转换为浮点数，如果转换失败则返回None"""
+        if not isinstance(percent_str, str):
+            return None
+        try:
+            # 移除百分号并转换为浮点数
+            return float(percent_str.rstrip('%')) / 100
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def find_previous_report_file(dynamic_config: dict) -> Optional[Path]:
+        """
+        (新增) 专用于本任务的、根据年月动态查找最新报告文件的私有方法。
+        """
+        base_path_str = dynamic_config.get("base_path")
+        subdir_pattern = dynamic_config.get("subdirectory_pattern")
+        file_pattern = dynamic_config.get("file_pattern")
+
+        if not all([base_path_str, subdir_pattern, file_pattern]):
+            logging.error("    dynamic_path_config 配置不完整，缺少 base_path, subdirectory_pattern 或 file_pattern。")
+            return None
+        if not isinstance(subdir_pattern, str) or not isinstance(base_path_str, str) or not isinstance(file_pattern, str):
+                logging.error(" 路径组件必须都是字符串类型。")
+                return None
+
+        try:
+            # 1. 根据当前日期构建子目录路径
+            today = datetime.date.today()
+            
+            subdir_name = subdir_pattern.format(year=today.year, month=today.month)
+            search_path = Path(base_path_str) / subdir_name
+
+            if not search_path.is_dir():
+                logging.warning(f"    动态构建的搜索目录不存在: '{search_path}'")
+                return None
+
+            # 2. 复用通用的 find_latest_valid_file 工具函数来查找最终文件
+            # (假设此函数已存在于 Utils 中)
+            latest_file = Utils.find_latest_valid_file(str(search_path), file_pattern)
+            return latest_file
+            
+        except Exception as e:
+            logging.error(f"    在动态查找文件时发生错误: {e}", exc_info=True)
+            return None

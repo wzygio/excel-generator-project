@@ -75,7 +75,7 @@ class ExceptionProcessor:
         # --- 核心修改：采用“业务类查找 -> 工具类复制”的新模式 ---
         # 1. 调用专属的私有方法来定位远程源文件
         dynamic_path_cfg = job_config.get("dynamic_path_config", {})
-        source_path = self.__find_previous_report_file(dynamic_path_cfg)
+        source_path = Utils.find_previous_report_file(dynamic_path_cfg)
         if not source_path:
             logging.error("    未能根据 dynamic_path_config 找到源文件，任务中止。")
             return
@@ -324,46 +324,6 @@ class ExceptionProcessor:
                 # 将生成的段落添加回该产品型号的子字典中
                 self.processed_results[model]['report_paragraph'] = report_paragraph
 
-
-
-    # --- 新增的私有辅助方法 ---
-    def __find_previous_report_file(self, dynamic_config: dict) -> Optional[Path]:
-        """
-        (新增) 专用于本任务的、根据年月动态查找最新报告文件的私有方法。
-        """
-        base_path_str = dynamic_config.get("base_path")
-        subdir_pattern = dynamic_config.get("subdirectory_pattern")
-        file_pattern = dynamic_config.get("file_pattern")
-
-        if not all([base_path_str, subdir_pattern, file_pattern]):
-            logging.error("    dynamic_path_config 配置不完整，缺少 base_path, subdirectory_pattern 或 file_pattern。")
-            return None
-        if not isinstance(subdir_pattern, str) or not isinstance(base_path_str, str) or not isinstance(file_pattern, str):
-                logging.error(" 路径组件必须都是字符串类型。")
-                return None
-
-        try:
-            # 1. 根据当前日期构建子目录路径
-            today = datetime.date.today()
-            
-            subdir_name = subdir_pattern.format(year=today.year, month=today.month)
-            search_path = Path(base_path_str) / subdir_name
-
-            if not search_path.is_dir():
-                logging.warning(f"    动态构建的搜索目录不存在: '{search_path}'")
-                return None
-
-            # 2. 复用通用的 find_latest_valid_file 工具函数来查找最终文件
-            # (假设此函数已存在于 Utils 中)
-            latest_file = Utils.find_latest_valid_file(str(search_path), file_pattern)
-            return latest_file
-            
-        except Exception as e:
-            logging.error(f"    在动态查找文件时发生错误: {e}", exc_info=True)
-            return None
-        
-    
-        
     def _apply_text_transformations(self, text: str, transformations: list) -> str:
         """
         (已更新) 根据配置规则，对输入的文本进行一系列转换操作。

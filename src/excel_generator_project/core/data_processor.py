@@ -9,7 +9,7 @@ from datetime import datetime as dt
 import openpyxl
 from openpyxl.utils import column_index_from_string, get_column_letter
 
-from excel_generator_project.config import BASE_DIR, DATA_DIR
+from excel_generator_project.config import BASE_DIR, DATA_DIR, TEMP_DIR
 from excel_generator_project.utils.utils import Utils
 
 class DataProcessor:
@@ -24,6 +24,7 @@ class DataProcessor:
         self.config = config
         self.excel_handler = None # 统一命名
         self.calculated_data = {}
+        self.cache_dir = TEMP_DIR
         self.product_models = Utils.extract_product_models(config.get("model_definitions", "")) # 提取日报中产品型号
         
     def run(self):
@@ -41,20 +42,17 @@ class DataProcessor:
             job_type = job_config.get("job_type")
             logging.info(f"--> 开始执行任务 {i}/{len(jobs)}: 类型 = {job_type}")
     
-            if job_type == "daily_yield_change":
-                self._execute_daily_yield_change_job(job_config) # 当日修正良率变化：self.calculated_data['daily_yield_change']
-            # elif job_type == "extract_bp_target": 
-            #     self._execute_extract_bp_target_job(job_config) # BP良率目标：self.calculated_data['bp_target']
+            if job_type == "parse_text_from_cells": # 统一调用新方法
+                self._execute_parse_text_from_cells_job(job_config)
             elif job_type == "extract_tila_target": 
-                self._execute_extract_tila_target_job(job_config) # 提拉良率目标：self.calculated_data['tila_target']
+                # 提拉良率目标：self.calculated_data['tila_target']
+                self._execute_extract_tila_target_job(job_config) 
             elif job_type == "extract_monthly_yield_estimate": 
                 # 月度良率预估：self.calculated_data['prod_target'] 和 self.calculated_data['estimated_yield']
                 self._execute_extract_monthly_yield_estimate_job(job_config) 
-            elif job_type == "extract_batch_info": 
-                # 最新最优批次：self.calculated_data['newest_batch_info'] 和 self.calculated_data['best_batch_info']
-                self._execute_extract_batch_info_job(job_config) 
             elif job_type == "extract_risk_items": 
-                self._execute_extract_risk_items_job(job_config) # 风险品：self.calculated_data['risk_items']
+                # 风险品：self.calculated_data['risk_items']
+                self._execute_extract_risk_items_job(job_config) 
             elif job_type == "prepare_summary_data":
                 self._execute_prepare_summary_data(job_config)
             else:
@@ -83,64 +81,81 @@ class DataProcessor:
         self.calculated_data['summary_report_data'] = all_reports_data
         logging.info(f"    已成功为 {len(all_reports_data)} 个产品型号准备好摘要数据。")
 
+    # --- 核心修改 2：使用以下代码替换现有的 __prepare_data_for_templating 方法 ---
     def __prepare_data_for_templating(self) -> list[dict]:
         """
-        (新辅助方法) 将 self.calculated_data 中所有零散的数据，
-        整合成一个可以直接用于填充模板的“数据包”列表。
+        (已更新) 增加了“与提拉目标Gap”的衍生计算逻辑。
         """
         all_reports_data = []
         num_models = len(self.product_models)
 
-        # 从 self.calculated_data 中安全地获取数据
+        # (从 self.calculated_data 中获取数据的部分保持不变)
         dc = self.calculated_data
         daily_yield_list = dc.get('daily_yield_change', [])
         bp_target_list = dc.get('bp_target', [])
         tila_target_list = dc.get('tila_target', [])
         prod_yield_list = dc.get('production_yield_values', [])
-        month_yield_list = dc.get('monthly_yield_values', [])
-        newest_batch_map = dc.get('newest_batch_info', {})
-        best_batch_map = dc.get('best_batch_info', {})
-        risk_items_map = dc.get('risk_items', {})
+        month_yield_list = dc.get('monthly_yield_values', []) # <--- estimated_yield 在这里
+        best_batch_list = dc.get('best_batch', [])
+        latest_batch_list = dc.get('latest_batch', [])
+        risk_items_map = dc.get('risk_items', {}) # <- 'risk_items' 现在是 {model: "完整字符串"}
 
-        # 遍历每个产品型号，为其打包一份专属的数据字典
         for i, model in enumerate(self.product_models):
-            # 处理 risk_items 的格式，将其从字典转换为多行字符串
-            risk_items_for_model = risk_items_map.get(model, {})
-            risk_items_str = "\n".join(risk_items_for_model.values()) if risk_items_for_model else "/"
+            # --- 新增的Gap计算逻辑 ---
+            # 1. 安全地获取原始数据
+            estimated_yield_str = month_yield_list[i] if i < len(month_yield_list) else "N/A"
+            tila_target_str = tila_target_list[i] if i < len(tila_target_list) else "N/A"
 
-            # 构建数据字典，key必须与模板中的占位符完全对应
-            # 使用 try-except 或 get 方法来安全地获取数据，防止因某个数据缺失导致整个流程失败
+            # 2. 调用辅助函数进行安全转换
+            float_yield = Utils.safe_convert_percent_to_float(estimated_yield_str)
+            float_tila = Utils.safe_convert_percent_to_float(tila_target_str)
+
+            # 3. 执行计算
+            estimated_tila_gap_str = "N/A" # 默认值
+            if float_yield is not None and float_tila is not None:
+                gap_value = float_yield - float_tila
+                # 将结果格式化回带一位小数的百分比字符串
+                estimated_tila_gap_str = f"{gap_value:.1%}"
+
+            # 构建数据字典
             report_data = {
-                'model_name': model, # 额外添加一个型号名称，便于日志记录
+                'model_name': model,
                 'daily_yield_change': daily_yield_list[i] if i < len(daily_yield_list) else "N/A",
-                'new_exceptions': "/", # 占位符，未来可扩展
-                'known_exceptions': "/", # 占位符，未来可扩展
+                'new_exceptions': "/", 
+                'known_exceptions': "/",
                 'bp_target': bp_target_list[i] if i < len(bp_target_list) else "N/A",
-                'tila_target': tila_target_list[i] if i < len(tila_target_list) else "N/A",
+                'tila_target': tila_target_str, # 使用我们获取的原始字符串
                 'prod_target': prod_yield_list[i] if i < len(prod_yield_list) else "N/A",
-                'estimated_yield': month_yield_list[i] if i < len(month_yield_list) else "N/A",
-                'best_batch': best_batch_map.get(model, "/"),
-                'latest_batch_info': newest_batch_map.get(model, "/"),
-                'risk_items': risk_items_str,
-                'unique_exceptions': "/", # 占位符，未来可扩展
-                'array_opportunities': "/", # 占位符，未来可扩展
-                'oled_opportunities': "/", # 占位符，未来可扩展
-                'tp_opportunities': "/" # 占位符，未来可扩展
+                'estimated_yield': estimated_yield_str, # 使用我们获取的原始字符串
+                'estimated_tila_gap': estimated_tila_gap_str, # <-- 4. 插入新计算出的Gap值
+                'best_batch': best_batch_list[i] if i < len(bp_target_list) else "N/A",
+                'latest_batch': latest_batch_list[i] if i < len(bp_target_list) else "N/A",
+                'risk_items': risk_items_map.get(model, "/"),
+                'unique_exceptions': "/",
+                'array_opportunities': "/",
+                'oled_opportunities': "/",
+                'tp_opportunities': "/"
             }
             all_reports_data.append(report_data)
 
         return all_reports_data
 
-    def _execute_daily_yield_change_job(self, job_config: dict):
+
+    def _execute_parse_text_from_cells_job(self, job_config: dict):
         """
-        执行“提取当日良率变化值”的任务。
-        此方法根据精确的步长迭代逻辑，从源文件的文本段落中提取一个数字，
-        并将其存入 self.calculated_data。
+        (新增的通用方法)
+        按步长遍历一系列单元格，读取其文本内容，应用正则表达式提取数据，
+        并将结果存入由 'output_key' 指定的 self.calculated_data 键中。
         """
         # --- 1. 解析并验证配置 ---
+        output_key = job_config.get("output_key") # <-- 关键：获取输出键名
+        if not output_key:
+            logging.error(f"任务 '{job_config.get('description')}' 配置错误：缺少 'output_key'。")
+            return
+
         source_path = Utils.get_safe_source_path(job_config)
         if not source_path or not source_path.is_file():
-            logging.error(f"    未能获取有效的源文件路径，任务中止。")
+            logging.error(f"  未能获取有效的源文件路径，任务 '{output_key}' 中止。")
             return
 
         sheet_name = job_config.get("sheet_name")
@@ -150,160 +165,59 @@ class DataProcessor:
         step = sequence.get("step")
         end_row = sequence.get("end_row")
 
-        # 确保所有必需的配置项都存在且有效
         if not all([source_path.is_file(), sheet_name, pattern, start_cell, isinstance(step, int), isinstance(end_row, int)]):
-            logging.error("任务 'daily_yield_change' 配置不完整、类型错误或源文件不存在。")
+            logging.error(f"任务 '{output_key}' 配置不完整、类型错误或源文件不存在。")
             return
 
         try:
             # --- 2. 加载源数据文件 ---
             source_wb = openpyxl.load_workbook(source_path, read_only=True, data_only=True)
-            if sheet_name not in source_wb.sheetnames:
-                logging.error(f"工作表 '{sheet_name}' 在文件 '{source_path.name}' 中未找到。")
-                return
-            source_ws = source_wb[sheet_name]
+            source_ws = source_wb[str(sheet_name)]  # 强制转换为字符串
 
-            # --- 3. 实现您指定的步长迭代逻辑 ---
-            # 从 'B4' 中解析出列 'B' 和起始行 4
+            # --- 3. 步长迭代逻辑 ---
             col_letter = ''.join(filter(str.isalpha, start_cell))
             current_row = int(''.join(filter(str.isdigit, start_cell)))
 
             extracted_list = []
-            consecutive_none_count = 0 # 新增：初始化空值计数器
-            logging.info(f"    开始在 {source_path.name}[{sheet_name}] 中按步长 {step} 搜索...")
+            consecutive_none_count = 0
+            logging.info(f"  任务 '{output_key}': 开始在 {source_path.name}[{sheet_name}] 中搜索...")
             
-            # 循环直到当前行超过结束行
             while current_row <= end_row:
                 cell_address = f"{col_letter}{current_row}"
                 cell_value = source_ws[cell_address].value
                 
-                # --- 新增：边界条件判断逻辑 ---
                 if cell_value is None:
                     consecutive_none_count += 1
                 else:
                     consecutive_none_count = 0
                 
                 if consecutive_none_count >= 2:
-                    logging.info(f"    检测到连续两次空值，提取在第 {current_row} 行提前终止。")
+                    logging.info(f"  检测到连续两次空值，提取在第 {current_row} 行提前终止。")
                     break
 
                 if isinstance(cell_value, str):
                     match = re.search(str(pattern), cell_value)
                     if match:
-                        # 提取第一个捕获组的内容
                         extracted_value = match.group(1).strip()
-                        logging.info(f"    在单元格 {cell_address} 中找到匹配项。提取值: {extracted_value}")
+                        logging.info(f"  在单元格 {cell_address} 找到匹配项: {extracted_value}")
                         extracted_list.append(extracted_value)
 
-                # 移动到下一个目标单元格
                 current_row += step
 
             # --- 4. 存储提取结果 ---
             if extracted_list:
-                self.calculated_data['daily_yield_change'] = extracted_list
-                logging.info(f"    数据提取成功: daily_yield_change 已存为包含 {len(extracted_list)} 个值的列表。")
+                # <-- 关键：使用动态键名存入结果 ---
+                self.calculated_data[output_key] = extracted_list
+                logging.info(f"  数据提取成功: '{output_key}' 已存为包含 {len(extracted_list)} 个值的列表。")
             else:
-                logging.warning(f"    未能在指定的单元格序列中找到与模式 '{pattern}' 匹配的数据。")
+                logging.warning(f"  未能在指定的单元格序列中找到与模式 '{pattern}' 匹配的数据。")
 
         except Exception as e:
-            logging.error(f"    处理任务 'daily_yield_change' 时发生意外错误: {e}", exc_info=True)
-
-
-    def _execute_extract_bp_target_job(self, job_config: dict):
-        """
-        执行“提取BP良率目标”的任务。
-        此方法会先动态查找起始行，然后按步长提取一系列数据。
-        """
-        # --- 1. 解析并验证配置 ---
-        source_path = Utils.get_safe_source_path(job_config)
-        if not source_path or not source_path.is_file():
-            logging.error(f"    未能获取有效的源文件路径，任务中止。")
-            return
-        sheet_name = job_config.get("sheet_name")
-        finder_config = job_config.get("start_row_finder", {})
-        extraction_config = job_config.get("data_extraction", {})
-
-        if not all([source_path.is_file(), sheet_name, finder_config, extraction_config]):
-            logging.error("任务 'extract_bp_target' 配置不完整或源文件不存在。")
-            return
-
-        try:
-            # --- 2. 加载源数据文件 ---
-            source_wb = openpyxl.load_workbook(source_path, read_only=True, data_only=True)
-            if sheet_name not in source_wb.sheetnames:
-                logging.error(f"工作表 '{sheet_name}' 在文件 '{source_path.name}' 中未找到。")
-                return
-            source_ws = source_wb[sheet_name]
-
-            # --- 3. 动态查找起始行 ---
-            search_col = finder_config.get('search_column')
-            search_val = finder_config.get('search_value')
-            max_row = finder_config.get('max_search_row', 200) # 提供一个默认值
-            
-            start_row = None
-            logging.info(f"    在 {search_col} 列中搜索关键字 '{search_val}'...")
-            for row in range(1, max_row + 1):
-                cell_value = source_ws[f"{search_col}{row}"].value
-                # 检查单元格内容是否为字符串，以及是否包含关键字
-                if isinstance(cell_value, str) and search_val in cell_value:
-                    start_row = row
-                    logging.info(f"    找到起始行: {start_row}")
-                    break
-            
-            if start_row is None:
-                logging.warning(f"    未能在 {max_row} 行内找到包含 '{search_val}' 的单元格，任务中止。")
-                return
-
-            # --- 4. 按步长提取数据序列 (已更新终止逻辑) ---
-            data_col = extraction_config.get('data_column')
-            step = extraction_config.get('step')
-            end_row = extraction_config.get('end_row')
-
-            current_row = start_row
-            extracted_list = []
-            consecutive_none_count = 0 # 初始化None值计数器
-            logging.info(f"    从 {data_col} 列的第 {current_row} 行开始，按步长 {step} 提取数据...")
-
-            while current_row <= end_row:
-                cell_address = f"{data_col}{current_row}"
-                data_value = source_ws[cell_address].value
-                if isinstance(data_value, (int, float)):
-                    data_value = f"{data_value:.1%}"  # 保留两位小数的百分比格式
-                
-                # 无论值是什么，都先添加到列表中
-                extracted_list.append(data_value)
-                logging.info(f"      提取单元格 {cell_address} 的值: {data_value}")
-                
-                # 更新None值计数器
-                if data_value is None:
-                    consecutive_none_count += 1
-                else:
-                    consecutive_none_count = 0
-                
-                # 检查是否满足终止条件
-                if consecutive_none_count >= 2:
-                    logging.info(f"    检测到连续两次None值，提取在第 {current_row} 行提前终止。")
-                    break
-
-                current_row += step
-
-            # --- 5. 清理并存储提取结果 ---
-            # 如果循环是因为检测到两次None而中断的，移除末尾的两个None
-            if consecutive_none_count >= 2:
-                final_list = extracted_list[:-2]
-            else:
-                final_list = extracted_list
-
-            if final_list:
-                self.calculated_data['bp_target'] = final_list
-                logging.info(f"    数据提取成功: {'bp_target'} 已存为包含 {len(final_list)} 个值的列表。")
-            else:
-                logging.warning(f"    未能从指定的序列中提取到任何数据。")
-
-        except Exception as e:
-            logging.error(f"    处理任务 'extract_bp_target' 时发生意外错误: {e}", exc_info=True)
-
-
+            logging.error(f"  处理任务 '{output_key}' 时发生意外错误: {e}", exc_info=True)
+        finally:
+            if 'source_wb' in locals(): # 确保工作簿被关闭
+                source_wb.close()
+    
     def _execute_extract_tila_target_job(self, job_config: dict):
         """
         (新方法) 作为“提取提拉良率目标”这个多步骤任务的总调度方法。
@@ -342,7 +256,6 @@ class DataProcessor:
             logging.info(f" 第三步完成：找到当前月份所在列为 '{target_column}'。")
 
             # --- 第四步: 提取每个产品型号的提拉良率目标 ---
-             # --- 最后一步: 整合行列信息，提取最终数值 ---
             final_values = []
             for model in product_models:
                 if model in model_to_row_map:
@@ -401,7 +314,7 @@ class DataProcessor:
 
         # 2. 遍历指定行来查找月份
         # 假设月份信息不会超过26列（Z列）
-        for col in range(1, 27):
+        for col in range(1, 50):
             cell = worksheet.cell(row=search_row, column=col)
             if cell.value and isinstance(cell.value, str) and search_text in cell.value:
                 return cell.column_letter # 返回找到的列字母，例如 'F'
@@ -596,380 +509,220 @@ class DataProcessor:
                 return cell.column_letter
         return None
     
-
-    def _execute_extract_batch_info_job(self, job_config: dict):
-        """
-        (新方法) “提取批次信息”的总调度方法。
-        """
-        logging.info("    开始执行“提取批次信息”任务...")
-        
-        try:
-            # --- 1. 定位并加载源文件 ---
-            # 从主配置中获取数据目录，并与任务配置中的文件名结合
-            source_path = Utils.get_safe_source_path(job_config)
-            sheet_name = job_config.get("sheet_name")
-            if not source_path or not sheet_name:
-                logging.error("    任务 'extract_batch_info' 配置不完整，缺少 file_name 或 sheet_name。")
-                return
-            source_wb = openpyxl.load_workbook(source_path, data_only=True)
-            source_ws = source_wb[sheet_name]
-            logging.info(f"    已成功加载源文件 '{source_path.name}' 中的工作表 '{sheet_name}'。")
-
-             # --- 2. (新增) 构建产品型号与列范围的映射，供后续复用 ---
-            model_range_map = self.__batch_info_build_model_range_map(source_ws, job_config)
-            if not model_range_map:
-                logging.warning(" 未能构建产品型号的列范围映射，后续步骤可能无法执行。")
-
-            # --- 3. 执行第一部分：寻找最新批次 ---
-            newest_batch_data = self.__batch_info_find_newest(source_ws, job_config, model_range_map)
-            if newest_batch_data:
-                self.calculated_data['newest_batch_info'] = newest_batch_data
-                logging.info(" -> 第一部分完成：已成功提取'最新批次'信息。")
-            
-            # --- 4. 执行第二部分：寻找最优批次 ---
-            best_batch_data = self.__batch_info_find_best(source_ws, job_config, model_range_map)
-            if best_batch_data:
-                self.calculated_data['best_batch_info'] = best_batch_data
-                logging.info(" -> 第二部分完成：已成功提取'最优批次'信息。")
-            
-            logging.info(" 任务 'extract_batch_info' 执行完毕。")
-
-        except Exception as e:
-            logging.error(f"    处理任务 'extract_batch_info' 时发生意外错误: {e}", exc_info=True)
-
-    def __batch_info_build_model_range_map(self, worksheet, config: dict) -> dict:
-        """(新增的通用方法) 构建产品型号与其覆盖的列范围之间的映射。"""
-        model_row = config.get("product_model_row")
-        
-        # 1. 建立起始单元格与合并范围的映射
-        merge_map = {f"{worksheet.cell(r.min_row, r.min_col).column_letter}{r.min_row}": r 
-            for r in worksheet.merged_cells.ranges if r.min_row == model_row}
-
-        # 2. 查找每个产品型号的起始单元格和列范围
-        model_range_map = {}
-        for model in self.product_models:
-            found = False
-            for cell in worksheet[model_row]:
-                if cell.value and isinstance(cell.value, str) and model in cell.value:
-                    if cell.coordinate in merge_map:
-                        # 是合并单元格
-                        merged_range = merge_map[cell.coordinate]
-                        model_range_map[model] = {'start_col': merged_range.min_col, 'end_col': merged_range.max_col}
-                    else:
-                        # 是单个单元格
-                        model_range_map[model] = {'start_col': cell.column, 'end_col': cell.column}
-                    found = True
-                    break # 找到该型号后就去找下一个
-            if not found:
-                logging.warning(f" 在第 {model_row} 行未找到型号 '{model}'。")
-        
-        return model_range_map
-
-    def __batch_info_find_newest(self, worksheet, config: dict, model_range_map: dict) -> dict:
-        """(已重构) 寻找每个产品型号对应的最新批次信息。"""
-        batch_row = config.get("batch_row")
-        yield_row = config.get("ct_yield_row")
-        output_rate_row = config.get("output_rate_row")
-        
-        results_map = {} # 改为创建字典
-        for model in self.product_models:
-            if model in model_range_map:
-                range_info = model_range_map[model]
-                latest_batch_col = range_info['end_col'] # 最新批次就是结束列
-
-                original_batch_num = worksheet.cell(row=batch_row, column=latest_batch_col).value
-                batch_num = self.__format_batch_number(original_batch_num)
-                ct_yield = worksheet.cell(row=yield_row, column=latest_batch_col).value
-                output_rate = worksheet.cell(row=output_rate_row, column=latest_batch_col).value
-                
-                raw_data = {
-                "batch_number": batch_num,
-                "ct_yield": ct_yield,
-                "output_rate": output_rate
-                }
-                # 调用格式化方法并存入字典
-                results_map[model] = self.__format_newest_batch_string(raw_data)
-                logging.info(f" 为型号 '{model}' 找到最新批次 '{batch_num}' (位于第 {get_column_letter(latest_batch_col)} 列)。")
-
-        return results_map
-    
-    def __batch_info_find_best(self, worksheet, config: dict, model_range_map: dict) -> dict:
-        """(新方法) 寻找每个产品型号对应的最优批次信息。"""
-        # 1. 获取配置参数
-        batch_row = config.get("batch_row")
-        yield_row = config.get("ct_yield_row")
-        output_rate_row = config.get("output_rate_row")
-        boundary = config.get("best_batch_locator", {}).get("output_rate_boundary")
-
-        results_map = {} # 改为创建字典
-        for model in self.product_models:
-            if model in model_range_map:
-                range_info = model_range_map[model]
-        
-                # 2. 筛选所有产出率达标的候选批次
-                candidates = []
-                for col_idx in range(range_info['start_col'], range_info['end_col'] + 1):
-                    output_rate = worksheet.cell(row=output_rate_row, column=col_idx).value
-                    # 确保产出率是有效的数字再进行比较
-                    if isinstance(output_rate, (int, float)) and output_rate > boundary:
-                        ct_yield = worksheet.cell(row=yield_row, column=col_idx).value
-                        if isinstance(ct_yield, (int, float)):
-                            candidates.append({'col': col_idx, 'ct_yield': ct_yield})
-
-                # 3. 从候选中找到CT良率最高的批次
-                if not candidates:
-                    logging.warning(f" 型号 '{model}' 没有产出率高于 {boundary} 的候选批次。")
-                    results_map[model] = "" # 如果没有最优批次，可以返回空字符串
-                    continue
-        
-                best_candidate = max(candidates, key=lambda x: x['ct_yield'])
-                best_col_idx = best_candidate['col']
-
-                # 4. 提取最优批次的数据
-                original_batch_num = worksheet.cell(row=batch_row, column=best_col_idx).value
-                batch_num = self.__format_batch_number(original_batch_num)
-                final_ct_yield = best_candidate['ct_yield']
-                final_output_rate = worksheet.cell(row=output_rate_row, column=best_col_idx).value
-
-                # 收集原始数据
-                raw_data = {
-                "batch_number": batch_num,
-                "ct_yield": final_ct_yield
-                }
-                # 调用格式化方法并存入字典
-                results_map[model] = self.__format_best_batch_string(raw_data)
-                
-                logging.info(f" 为型号 '{model}' 找到最优批次 '{batch_num}' (位于第 {get_column_letter(best_col_idx)} 列)。")
-                
-        return results_map
-    
-    def __format_batch_number(self, original_batch: str) -> str:
-        """(新辅助方法) 将原始批次号格式化为 '月/日批次' 的形式。"""
-        if not isinstance(original_batch, str):
-            return original_batch # 如果输入不是字符串，直接返回原值
-
-        # 正则表达式匹配 '任意两位数字/两位数字/两位数字' 开头的字符串
-        # 并捕获第一个和第二个'两位数字'（即月和日）
-        match = re.search(r'^\d{2}/(\d{2})/(\d{2})', original_batch)
-        
-        if match:
-            # 如果匹配成功，group(1)是月份，group(2)是日期
-            month = match.group(1)
-            day = match.group(2)
-            return f"{month}/{day}批次"
-        else:
-            # 如果不匹配，返回原始字符串并记录警告，避免程序出错
-            logging.warning(f"    批次号 '{original_batch}' 格式不符合预期，未进行格式化。")
-            return original_batch
-    
-    def __format_newest_batch_string(self, data: dict) -> str:
-        """(新辅助方法) 将最新批次信息字典格式化为标准字符串。"""
-        # 检查所需数据是否存在且有效
-        batch = data.get("batch_number", "")
-        ct_yield = data.get("ct_yield")
-        output_rate = data.get("output_rate")
-
-        # 使用f-string的百分比格式化功能，例如 0.889 -> 88.9%
-        yield_str = f"{ct_yield:.1%}" if isinstance(ct_yield, (int, float)) else "N/A"
-        output_str = f"{output_rate:.1%}" if isinstance(output_rate, (int, float)) else "N/A"
-
-        return f"{batch}CT良率{yield_str}，产出率{output_str}"
-
-    def __format_best_batch_string(self, data: dict) -> str:
-        """(新辅助方法) 将最优批次信息字典格式化为标准字符串。"""
-        batch = data.get("batch_number", "")
-        ct_yield = data.get("ct_yield")
-
-        yield_str = f"{ct_yield:.1%}" if isinstance(ct_yield, (int, float)) else "N/A"
-
-        return f"{batch}CT良率{yield_str}"
-
     def _execute_extract_risk_items_job(self, job_config: dict):
         """
-        (新方法) “提取风险品信息”的总调度方法。
+        (已重构) 1.提取模板中的风险品 2.获取基线释放计划 
+        3.获取更新释放计划 4.合并并生成最终报告字符串。
         """
         logging.info("    开始执行“提取风险品信息”任务...")
         
+        # --- 1. 解析配置 ---
+        reader_cfg = job_config.get("template_reader_config", {})
+        parser_cfg = job_config.get("parser_config", {})
+        plan_finder_cfg = job_config.get("plan_finder_config", {})
+        
+        model_text_map = {} # {model: "OLED: ... TP: ..."}
+        model_data_map = {} # {model: [('Item1', 'Yield1'), ('Item2', 'Yield2')]}
+        
         try:
-             # --- 第一部分：提取风险品良率数据 ---
-            yield_finder_config = job_config.get("risk_yield_finder")
-            yield_data_map = {}
-            if yield_finder_config:
-                yield_data_map = self.__risk_items_find_yield_data(yield_finder_config)
-                logging.info("      -> 第一部分完成：已提取'风险品良率数据'。")
-
-            # --- 第二部分：提取风险品释放计划 ---
-            release_plan_config = job_config.get("release_plan_finder")
-            release_plan_map = {}
-            if release_plan_config:
-                # 将第一部分的结果作为输入，以确保只查找相关的风险品
-                release_plan_map = self.__risk_items_find_release_plan(release_plan_config, yield_data_map)
-                logging.info("      -> 第二部分完成：已提取'风险品释放计划'。")
-
-            # --- 第三部分：合并数据并生成最终字符串 ---
-            final_risk_items_map = {}
-            logging.info("      -> 第三部分开始：合并数据并生成最终报告字符串...")
-            for model, risk_items in yield_data_map.items():
-                final_risk_items_map[model] = {}
-                for risk_name, yield_str in risk_items.items():
-                    # 从释放计划map中查找对应的计划
-                    plan_str = release_plan_map.get(model, {}).get(risk_name, "")
-                    
-                    # 按照您要求的标准格式拼接
-                    # 格式：风险品名称：良率数据，释放计划
-                    final_str = f"{risk_name}：{yield_str}"
-                    if plan_str: # 如果有释放计划，则用逗号拼接
-                        final_str += f"，{plan_str}"
-                    
-                    final_risk_items_map[model][risk_name] = final_str
+            # --- 2. 步骤1: 从(新)日报模板中提取“风险品”文本块和(名称, 良率)元组 ---
+            # (这部分逻辑与我们上一版中的步骤1和步骤2一致)
+            source_path = Utils.get_safe_source_path(reader_cfg)
+            wb = openpyxl.load_workbook(str(source_path), read_only=True, data_only=True)
+            ws = wb[reader_cfg.get("sheet_name")]
+            cell_sequence = reader_cfg.get("cell_sequence", {})
+            block_pattern = reader_cfg.get("block_pattern")
             
-            # 存储最终的、已合并的、格式化好的结果
-            if final_risk_items_map:
-                self.calculated_data['risk_items'] = final_risk_items_map
-                logging.info("      -> 所有部分完成：已生成最终的风险品信息。")
+            col_letter = ''.join(filter(str.isalpha, cell_sequence.get('start_cell')))
+            start_row = int(''.join(filter(str.isdigit, cell_sequence.get('start_cell'))))
+            step = cell_sequence.get('step')
+
+            patterns = [parser_cfg.get(k) for k in parser_cfg if k.startswith('item_pattern')]
             
-            logging.info("    任务 'extract_risk_items' 执行完毕。")
+            for i, model in enumerate(self.product_models):
+                current_row = start_row + i * step
+                cell_value = ws[f"{col_letter}{current_row}"].value
+                
+                if isinstance(cell_value, str):
+                    block_match = re.search(block_pattern, cell_value, re.DOTALL)
+                    if block_match:
+                        text_block = block_match.group(1).strip()
+                        model_text_map[model] = text_block # 存储原始文本块
+                        
+                        # 立即解析出 (名称, 良率) 元组
+                        model_data_map[model] = []
+                        for pat in patterns:
+                            if pat:
+                                matches = re.findall(pat, text_block)
+                                model_data_map[model].extend(matches)
+            wb.close()
+            logging.info("      -> 步骤1完成：已从新模板中解析出风险品名称和良率。")
+
+            # --- 3. 步骤2: 从“旧日报”中获取“基线”释放计划 ---
+            baseline_cfg = plan_finder_cfg.get("old_release_plan_finder", {})
+            baseline_plan_map = self.__risk_items_build_baseline_plan_lookup(baseline_cfg)
+            logging.info(f"      -> 步骤2完成：已获取 {len(baseline_plan_map)} 条“基线”释放计划。")
+
+            # --- 4. 步骤3: 从“风险品汇总表”中获取“更新”释放计划 ---
+            update_cfg = plan_finder_cfg.get("new_release_plan_finder", {})
+            update_plan_map = self.__risk_items_build_update_plan_lookup(update_cfg)
+            logging.info(f"      -> 步骤3完成：已获取 {len(update_plan_map)} 条“更新”释放计划。")
+
+            # --- 5. 步骤4: 合并释放计划 (更新的覆盖基线) ---
+            final_plan_map = baseline_plan_map.copy()
+            final_plan_map.update(update_plan_map)
+            logging.info(f"      -> 步骤4完成：已合并释放计划，共 {len(final_plan_map)} 条。")
+
+            # --- 6. 步骤5: 组装最终的报告字符串 ---
+            final_report_strings = {}
+            for model, text_block in model_text_map.items():
+                modified_text_block = text_block
+                
+                # 遍历此型号在模板中找到的 (名称, 良率) 元组
+                for risk_name_raw, yield_str_raw in model_data_map.get(model, []):
+                    risk_name = risk_name_raw.strip()
+                    yield_str = yield_str_raw.strip()
+                    
+                    # 从合并后的最终计划中查找
+                    plan_str = final_plan_map.get((model, risk_name), "") # 默认为空
+                    
+                    if plan_str: # 只有当计划非空时才进行拼接
+                        original_line_pattern = re.compile(re.escape(risk_name) + r'\s*' + re.escape(yield_str))
+                        replacement_line = f"{risk_name} {yield_str}：{plan_str}"
+                        modified_text_block = original_line_pattern.sub(replacement_line, modified_text_block)
+                
+                final_report_strings[model] = modified_text_block
+            
+            if final_report_strings:
+                self.calculated_data['risk_items'] = final_report_strings
+                logging.info("      -> 步骤5完成：已生成最终的风险品信息字符串。")
 
         except Exception as e:
             logging.error(f"    处理任务 'extract_risk_items' 时发生意外错误: {e}", exc_info=True)
-
-
-    def __risk_items_find_yield_data(self, config: dict) -> dict:
+        finally:
+            if 'wb' in locals() and wb:
+                wb.close()
+    
+    
+    def __risk_items_build_baseline_plan_lookup(self, config: dict) -> dict:
         """
-        (新辅助方法) 根据配置，提取每个产品型号下的风险品及其对应的月度良率数据。
+        (新增) 步骤1：从“最近的旧日报”中，按产品型号匹配，提取“基线”释放计划。
         """
-        # --- 1. 解析并验证配置 ---
+        baseline_plan_map = {}
+        if not config:
+            logging.warning("    未配置 'old_release_plan_finder'，跳过基线计划提取。")
+            return baseline_plan_map
+
+        # 1. 查找旧日报文件
+        dynamic_path_cfg = config.get("dynamic_path_config", {})
+        source_path = Utils.find_previous_report_file(dynamic_path_cfg) # 复用 ExceptionProcessor 的查找方法
+        if not source_path:
+            logging.warning("    未能找到旧日报文件，无法提取基线计划。")
+            return baseline_plan_map
+
+        source_file_path = Utils.get_local_copy(source_path, self.cache_dir)
+        if not source_file_path:
+            logging.warning("    复制旧日报文件失败，无法提取基线计划。")
+            return {}
+
+        # 2. 解析配置
+        sheet_name = config.get("sheet_name")
+        model_col = config.get("product_model_column")
+        model_start_row = config.get("model_start_row")
+        model_step = config.get("model_step")
+        risk_col = config.get("risk_content_column")
+        risk_offset = config.get("risk_content_offset")
+        block_pattern = config.get("block_pattern")
+        parser_pattern = config.get("parser_pattern")
+
+        if not all([sheet_name, model_col, model_start_row, model_step, risk_col, risk_offset is not None, block_pattern, parser_pattern]):
+            logging.error("    'old_release_plan_finder' 配置不完整，任务中止。")
+            return {}
+
+        try:
+            # 3. 加载旧日报
+            wb = openpyxl.load_workbook(source_file_path, read_only=True, data_only=True)
+            ws = wb[str(sheet_name)]
+
+            # 4. 按产品型号精确匹配
+            for model in self.product_models:
+                found = False
+
+                for row_idx in range(model_start_row, ws.max_row, model_step): # type: ignore
+
+                    cell_value = ws[f"{model_col}{row_idx}"].value
+                    if isinstance(cell_value, str) and model in cell_value:
+                        # 找到了产品型号，现在去D列+偏移量处查找
+                        risk_row = row_idx + risk_offset # type: ignore
+                        risk_cell_value = ws[f"{risk_col}{risk_row}"].value
+                        
+                        if isinstance(risk_cell_value, str):
+                            # 提取风险品文本块
+                            block_match = re.search(block_pattern, risk_cell_value, re.DOTALL) # type: ignore
+                            if block_match:
+                                text_block = block_match.group(1).strip()
+                                # 解析 (名称, 计划) 元组
+                                matches = re.findall(parser_pattern, text_block) # type: ignore
+                                for risk_name_raw, plan_str_raw in matches:
+                                    risk_name = risk_name_raw.strip()
+                                    plan_str = plan_str_raw.strip()
+                                    if risk_name and plan_str:
+                                        baseline_plan_map[(model, risk_name)] = plan_str
+                        
+                        found = True
+                        break # 找到了这个model，继续找下一个
+                
+                if not found:
+                    logging.warning(f"    在旧日报的 {model_col} 列未找到型号 '{model}'。")
+            
+            wb.close()
+            return baseline_plan_map
+            
+        except Exception as e:
+            logging.error(f"    提取“基线”释放计划时发生错误: {e}", exc_info=True)
+            if 'wb' in locals() and wb: wb.close()
+            return {}
+        
+    def __risk_items_build_update_plan_lookup(self, config: dict) -> dict:
+        """
+        (新增) 步骤2：从“风险品汇总表”中，提取“更新”释放计划。
+        (此方法逻辑基于旧的 __build_release_plan_lookup)
+        """
+        update_plan_map = {}
+        if not config:
+            logging.warning("    未配置 'new_release_plan_finder'，跳过更新计划提取。")
+            return update_plan_map
+            
         source_path = Utils.get_safe_source_path(config)
         sheet_name = config.get("sheet_name")
         if not source_path or not sheet_name:
-            logging.error(f"    未能获取有效的源文件路径，任务中止。")
-            return {}
-        
-        worksheet = openpyxl.load_workbook(source_path, data_only=True)[sheet_name]
-        
-        # --- 2. 获取风险品数据表结构定义 ---
-        model_locator_cfg = config.get("product_model_locator", {})
-        item_def_cfg = config.get("risk_item_definition", {})
-        
-        model_col = model_locator_cfg.get("search_column")
-        risk_item_col = item_def_cfg.get("item_column")
-        ignore_values = set(item_def_cfg.get("ignore_values", [])) # 使用set提高查找效率
-        data_cols = item_def_cfg.get("data_columns", [])
-        data_header_row = item_def_cfg.get("data_header_row")
-
-        # --- 3. 获取数据列的表头（月份） ---
-        header_map = {col: worksheet[f"{col}{data_header_row}"].value for col in data_cols}
-        
-        # --- 4. 构建产品型号的纵向合并单元格范围映射 ---
-        model_range_map = {}
-        for merged_range in worksheet.merged_cells.ranges:
-            # 检查合并是否发生在我们的目标列
-            if merged_range.min_col == column_index_from_string(model_col):
-                model_name_cell = worksheet.cell(row=merged_range.min_row, column=merged_range.min_col)
-                if model_name_cell.value in self.product_models:
-                    model_range_map[model_name_cell.value] = merged_range
-
-        # --- 5. 遍历每个产品型号，查找其下的风险品和数据 ---
-        final_results = {}
-        for model in self.product_models:
-            if model not in model_range_map:
-                logging.warning(f"        在 {sheet_name} 表中未找到型号 '{model}' 对应的合并单元格区域。")
-                continue
-
-            merged_range = model_range_map[model]
-            model_risk_items_dict = {} # 改为创建字典
-            
-            # 遍历该型号覆盖的所有行
-            for row_idx in range(merged_range.min_row, merged_range.max_row + 1):
-                risk_item_name = worksheet[f"{risk_item_col}{row_idx}"].value
-
-                # 检查是否是有效的风险品
-                if risk_item_name and str(risk_item_name).strip() not in ignore_values:
-                    # 提取该风险品对应的良率数据
-                    yield_data = {}
-                    for col_letter in data_cols:
-                        month_header = header_map.get(col_letter)
-                        if month_header: # 确保表头存在
-                            yield_value = worksheet[f"{col_letter}{row_idx}"].value
-                            yield_data[month_header] = yield_value
-                
-                    formatted_yield_str = self.__format_risk_yield_string(yield_data)
-                     # (核心改动) 存入新的嵌套字典结构
-                    model_risk_items_dict[risk_item_name] = formatted_yield_str
-            
-            final_results[model] = model_risk_items_dict
-            logging.info(f" 为型号 '{model}' 找到 {len(model_risk_items_dict)} 个风险品并格式化良率。")
-            
-        return final_results
-    
-    def __risk_items_find_release_plan(self, config: dict, yield_data_map: dict) -> dict:
-        """
-        (新方法) 提取每个风险品对应的释放计划。
-        """
-        # --- 1. 解析并验证配置 ---
-        full_path = Utils.get_safe_source_path(config)
-        sheet_name = config.get("sheet_name")
-        if not full_path or not sheet_name:
-            logging.error(f"    未能获取有效的源文件路径，任务中止。")
-            return {}
-        worksheet = openpyxl.load_workbook(full_path, data_only=True)[sheet_name]
-        
-        header_row = config.get("header_row", 1)
-        model_col_header = config.get("product_model_column")
-        risk_col_header = config.get("risk_item_column")
-        plan_col_header = config.get("release_plan_column")
-
-        # --- 2. 定位关键列 ---
-        model_col = self.__find_column_by_header(worksheet, {'header_name': model_col_header}, header_row)
-        risk_col = self.__find_column_by_header(worksheet, {'header_name': risk_col_header}, header_row)
-        plan_col = self.__find_column_by_header(worksheet, {'header_name': plan_col_header}, header_row)
-        if not all([model_col, risk_col, plan_col]):
-            logging.error("    未能在释放计划表中定位到所有必需的列。")
+            logging.error(f"    未能获取有效的“风险品汇总表”路径，任务中止。")
             return {}
 
-        # --- 3. 构建 (型号, 风险品) -> 释放计划 的查询字典，以提高效率 ---
-        plan_lookup_map = {}
-        for row_idx in range(header_row + 1, worksheet.max_row + 1):
-            model = worksheet[f"{model_col}{row_idx}"].value
-            risk = worksheet[f"{risk_col}{row_idx}"].value
-            plan = worksheet[f"{plan_col}{row_idx}"].value
-            if model and risk:
-                # 使用元组 (model, risk) 作为唯一的键
-                plan_lookup_map[(str(model).strip(), str(risk).strip())] = plan
-
-        # --- 4. 遍历第一部分的结果，查找并构建输出字典 ---
-        release_plan_results = {}
-        for model, risk_items in yield_data_map.items():
-            release_plan_results[model] = {}
-            for risk_name in risk_items.keys():
-                # 在查询字典中查找释放计划
-                plan = plan_lookup_map.get((model, risk_name))
-                if plan:
-                    release_plan_results[model][risk_name] = str(plan)
-        
-        return release_plan_results
-
-    def __format_risk_yield_string(self, yield_data: dict) -> str:
-        """
-        (新辅助方法) 将良率数据字典格式化为 'M08 1.14%，M09 0.98%' 的字符串。
-        """
-        parts = []
-        for month_header, value in yield_data.items():
-            # 确保值是数字类型
-            if not isinstance(value, (int, float)):
-                continue
+        try:
+            worksheet = openpyxl.load_workbook(source_path, data_only=True)[sheet_name]
             
-            # 从表头（如 '8月'）中提取月份数字
-            month_match = re.search(r'(\d+)', str(month_header))
-            if not month_match:
-                continue
-        
-            month_num = int(month_match.group(1))
-        
-            # 使用 Python 的格式化功能，自动处理补零和百分比转换
-            # 例如: M{8:02} {0.0114:.2%} -> M08 1.14%
-            formatted_part = f"M{month_num:02} {value:.2%}"
-            parts.append(formatted_part)
-        
-        # 使用中文逗号将各部分连接起来
-        return "，".join(parts)
+            header_row = config.get("header_row", 1)
+            model_col_header = config.get("product_model_column")
+            risk_col_header = config.get("risk_item_column")
+            plan_col_header = config.get("release_plan_column")
+
+            model_col = self.__find_column_by_header(worksheet, {'header_name': model_col_header}, header_row)
+            risk_col = self.__find_column_by_header(worksheet, {'header_name': risk_col_header}, header_row)
+            plan_col = self.__find_column_by_header(worksheet, {'header_name': plan_col_header}, header_row)
+            if not all([model_col, risk_col, plan_col]):
+                logging.error("    未能在“风险品汇总表”中定位到所有必需的列。")
+                return {}
+
+            # 构建查询字典
+            for row_idx in range(header_row + 1, worksheet.max_row + 1):
+                model = worksheet[f"{model_col}{row_idx}"].value
+                risk = worksheet[f"{risk_col}{row_idx}"].value
+                plan = worksheet[f"{plan_col}{row_idx}"].value
+                if model and risk:
+                    update_plan_map[(str(model).strip(), str(risk).strip())] = str(plan).strip() if plan else ""
+            
+            return update_plan_map
+        except Exception as e:
+            logging.error(f"    加载“风险品汇总表”时出错: {e}", exc_info=True)
+            return {}
