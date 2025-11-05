@@ -3,11 +3,14 @@ import xlsxwriter
 import zipfile
 import shutil
 import os, re
-
+from pathlib import Path
 from openpyxl import load_workbook
 from xml.etree import ElementTree as ET
 
 from excel_generator_project.utils.utils import Utils # 假设您的文本处理函数在这里
+from excel_generator_project.config import TEMP_DIR
+
+
 
 # 预定义XML命名空间
 NAMESPACES = {
@@ -138,12 +141,12 @@ class _RichTextXMLHelper:
 
     def run_single_cell_pipeline(self, fragments: list, sheet_name: str, cell_address: str):
         """(已回退) 在内存中对单个单元格执行富文本注入。"""
-        donor_file = 'data/temp/donor.xlsx'
+        donor_file = TEMP_DIR / 'donor.xlsx'
         try:
-            if not self._create_rich_text_donor_file(donor_file, fragments):
+            if not self._create_rich_text_donor_file(str(donor_file), fragments):
                 raise Exception("创建'供体'文件失败。")
             
-            rich_text_element = self._extract_rich_text_from_donor(donor_file)
+            rich_text_element = self._extract_rich_text_from_donor(str(donor_file))
             if rich_text_element is None:
                 raise Exception("从'供体'文件提取富文本失败。")
 
@@ -174,6 +177,7 @@ class _RichTextXMLHelper:
         """根据传入的样式配置字典，动态创建多种格式。"""
         workbook = None
         try:
+            # 确保父目录存在
             workbook = xlsxwriter.Workbook(donor_filename)
             worksheet = workbook.add_worksheet()
             format_objects = {name: workbook.add_format(config) for name, config in self.style_configs.items()}

@@ -6,9 +6,10 @@ paths:
   data_dir: 'resources'  # 数据文件夹路径
   temp_dir: 'data/temp'  # 临时文件夹路径
   log_dir: 'logs'  # 日志文件夹路径
-  template_file: 'resources/V3屏体良率日报-A版.xlsx'  # 模板文件路径
-  temp_file: 'output/V3屏体良率日报-temp.xlsx'  # 临时文件路径
-  output_file: 'output/V3屏体良率日报-output.xlsx'  # 输出文件路径
+  output_dir: 'output'  # 输出文件夹路径
+  template_file: 'V3屏体良率日报-A版.xlsx'  # 模板文件路径
+  temp_file: 'V3屏体良率日报-temp.xlsx'  # 临时文件路径
+  output_file: 'V3屏体良率日报-output.xlsx'  # 输出文件路径
   downloader_script_path: 'D:/wzy/Python/pyautogui-project/daily_report_files_downloader.py'  # 下载脚本路径
   downloader_python_executable: 'D:/wzy/Python/pyautogui-project/pyautogui-project/Scripts/python.exe'  # 下载脚本使用的Python解释器路径
   content_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/content_generator.py'  # 内容生成脚本路径
@@ -47,7 +48,7 @@ style_definitions:
     bold: True
 
 model_definitions:  # 任务类型标识符
-  source_file: 'resources/V3屏体良率日报-A版.xlsx'
+  source_file: 'V3屏体良率日报-A版.xlsx'
   sheet_name: 'sheet1'
   pattern: '^([^\n]*)'
   start_cell: 'B2'

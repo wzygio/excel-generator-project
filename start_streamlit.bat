@@ -12,8 +12,6 @@ ECHO [INFO] Changing working directory to 'src'...
 pushd src
 
 REM 4. 启动 Streamlit 服务：
-REM    [核心修改] 因为我们已在 'src' 目录中，所以需要用 '..\' 来返回上一级才能找到 'Vivo_project' 虚拟环境。
-REM    同时，运行的脚本路径也变为 'vivo_project\app\home.py'
 ECHO [INFO] Starting Streamlit server on port 8503...
 ..\excel-generator-project\Scripts\python.exe -m streamlit run excel_generator_project\app\app.py --server.headless true --server.port 8502
 

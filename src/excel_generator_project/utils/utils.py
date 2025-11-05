@@ -12,8 +12,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from typing import Optional
 
-from excel_generator_project.config import BASE_DIR, DATA_DIR, LOG_DIR
-
+from excel_generator_project.config import BASE_DIR, DATA_DIR, LOG_DIR, DATA_DIR
 class Utils:
     @staticmethod
     def setup_logging(log_filename: str = "app.log"):
@@ -74,9 +73,8 @@ class Utils:
         )
 
         # 4. 创建处理器 1: 写入到文件
-        log_dir = Path("./logs") # 建议将所有日志文件统一存放在logs目录
-        log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_dir / log_filename, mode='w', encoding='utf-8')
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.FileHandler(LOG_DIR / log_filename, mode='w', encoding='utf-8')
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
@@ -103,7 +101,7 @@ class Utils:
             if not source_file:
                 logging.error("任务 'daily_yield_change' 配置中缺少 'source_file' 参数。")
                 return []
-        source_path = Path(source_file)
+        source_path = DATA_DIR / Path(source_file)
         
         sheet_name = model_config.get("sheet_name")
         pattern = model_config.get("pattern")
@@ -111,9 +109,43 @@ class Utils:
         step = model_config.get("step")
         end_row = model_config.get("end_row")
 
-        if not all([source_path.is_file(), sheet_name, pattern, start_cell, isinstance(step, int), isinstance(end_row, int)]):
-            logging.error(" 步骤1 'step1_product_models' 配置不完整、类型错误或源文件不存在。")
-            return [] # 返回一个空列表
+        # if not all([source_path.is_file(), sheet_name, pattern, start_cell, isinstance(step, int), isinstance(end_row, int)]):
+        #     logging.error(" 步骤1 'step1_product_models' 配置不完整、类型错误或源文件不存在。")
+        #     return [] # 返回一个空列表
+
+        # --- 1.1. 检查所有必需条件 ---
+        # 检查源文件是否存在
+        if not source_path.is_file():
+            raise FileNotFoundError(f"步骤1 'step1_product_models' 错误：源文件不存在 - {source_path}")
+            
+        # 检查必需参数和类型
+        required_checks = {
+            'sheet_name': sheet_name,
+            'pattern': pattern,
+            'start_cell': start_cell,
+            'step': (step, int),
+            'end_row': (end_row, int)
+        }
+        
+        errors = []
+        for param, value in required_checks.items():
+            if isinstance(value, tuple):  # 类型检查
+                val, expected_type = value
+                if not isinstance(val, expected_type):
+                    errors.append(f"{param} 应为 {expected_type.__name__}，实际为 {type(val).__name__}")
+            else:  # 存在性检查
+                if not value:
+                    errors.append(param)
+                    
+        if errors:
+            error_msg = f"步骤1 'step1_product_models' 错误："
+            if any(e in ['sheet_name', 'pattern', 'start_cell'] for e in errors):
+                error_msg += f"缺少必需参数 - {', '.join(e for e in errors if e in ['sheet_name', 'pattern', 'start_cell'])}"
+            if any(e not in ['sheet_name', 'pattern', 'start_cell'] for e in errors):
+                if error_msg != f"步骤1 'step1_product_models' 错误：":
+                    error_msg += "；"
+                error_msg += f"参数类型错误 - {'; '.join(e for e in errors if e not in ['sheet_name', 'pattern', 'start_cell'])}"
+            raise ValueError(error_msg)
 
         # --- 2. 加载源数据文件 ---
         source_wb = openpyxl.load_workbook(source_path, read_only=True, data_only=True)

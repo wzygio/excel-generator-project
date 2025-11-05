@@ -84,10 +84,12 @@ class DataProcessor:
     # --- 核心修改 2：使用以下代码替换现有的 __prepare_data_for_templating 方法 ---
     def __prepare_data_for_templating(self) -> list[dict]:
         """
-        (已更新) 增加了“与提拉目标Gap”的衍生计算逻辑。
+        (已更新) 增加了"与提拉目标Gap"的衍生计算逻辑。
         """
+        logging.info("开始准备模板数据...")
         all_reports_data = []
         num_models = len(self.product_models)
+        logging.info(f"需要处理 {num_models} 个产品型号")
 
         # (从 self.calculated_data 中获取数据的部分保持不变)
         dc = self.calculated_data
@@ -101,6 +103,7 @@ class DataProcessor:
         risk_items_map = dc.get('risk_items', {}) # <- 'risk_items' 现在是 {model: "完整字符串"}
 
         for i, model in enumerate(self.product_models):
+            logging.info(f"正在处理产品型号 {i+1}/{num_models}: {model}")
             # --- 新增的Gap计算逻辑 ---
             # 1. 安全地获取原始数据
             estimated_yield_str = month_yield_list[i] if i < len(month_yield_list) else "N/A"
@@ -116,6 +119,7 @@ class DataProcessor:
                 gap_value = float_yield - float_tila
                 # 将结果格式化回带一位小数的百分比字符串
                 estimated_tila_gap_str = f"{gap_value:.1%}"
+                logging.info(f"型号 {model} 的Gap计算结果: {estimated_yield_str} - {tila_target_str} = {estimated_tila_gap_str}")
 
             # 构建数据字典
             report_data = {
@@ -138,7 +142,9 @@ class DataProcessor:
             }
             all_reports_data.append(report_data)
 
+        logging.info(f"模板数据准备完成，共处理 {len(all_reports_data)} 个产品型号的数据")
         return all_reports_data
+
 
 
     def _execute_parse_text_from_cells_job(self, job_config: dict):

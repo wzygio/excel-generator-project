@@ -17,6 +17,7 @@ from excel_generator_project.config import (
 
 from excel_generator_project.utils.utils import Utils
 from excel_generator_project.app.setup import AppSetup
+AppSetup.initialize_app()
 
 PYTHON_EXECUTABLE = sys.executable
 
