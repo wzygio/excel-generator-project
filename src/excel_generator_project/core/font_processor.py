@@ -10,8 +10,6 @@ from xml.etree import ElementTree as ET
 from excel_generator_project.utils.utils import Utils # 假设您的文本处理函数在这里
 from excel_generator_project.config import TEMP_DIR
 
-
-
 # 预定义XML命名空间
 NAMESPACES = {
     'main': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'

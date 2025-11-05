@@ -13,7 +13,7 @@ pushd src
 
 REM 4. 启动 Streamlit 服务：
 ECHO [INFO] Starting Streamlit server on port 8503...
-..\excel-generator-project\Scripts\python.exe -m streamlit run excel_generator_project\app\app.py --server.headless true --server.port 8502
+..\excel-generator-project\Scripts\python.exe -m streamlit run excel_generator_project\app\app.py --server.port 8502
 
 REM 5. [推荐] 当服务停止后 (例如你按了 Ctrl+C)，退出 'src' 目录
 popd

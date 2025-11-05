@@ -117,35 +117,10 @@ class Utils:
         # 检查源文件是否存在
         if not source_path.is_file():
             raise FileNotFoundError(f"步骤1 'step1_product_models' 错误：源文件不存在 - {source_path}")
-            
-        # 检查必需参数和类型
-        required_checks = {
-            'sheet_name': sheet_name,
-            'pattern': pattern,
-            'start_cell': start_cell,
-            'step': (step, int),
-            'end_row': (end_row, int)
-        }
-        
-        errors = []
-        for param, value in required_checks.items():
-            if isinstance(value, tuple):  # 类型检查
-                val, expected_type = value
-                if not isinstance(val, expected_type):
-                    errors.append(f"{param} 应为 {expected_type.__name__}，实际为 {type(val).__name__}")
-            else:  # 存在性检查
-                if not value:
-                    errors.append(param)
-                    
-        if errors:
-            error_msg = f"步骤1 'step1_product_models' 错误："
-            if any(e in ['sheet_name', 'pattern', 'start_cell'] for e in errors):
-                error_msg += f"缺少必需参数 - {', '.join(e for e in errors if e in ['sheet_name', 'pattern', 'start_cell'])}"
-            if any(e not in ['sheet_name', 'pattern', 'start_cell'] for e in errors):
-                if error_msg != f"步骤1 'step1_product_models' 错误：":
-                    error_msg += "；"
-                error_msg += f"参数类型错误 - {'; '.join(e for e in errors if e not in ['sheet_name', 'pattern', 'start_cell'])}"
-            raise ValueError(error_msg)
+        if not source_path.exists():
+            raise FileNotFoundError(f"文件不存在: {source_path}")
+        if not source_path.suffix.lower() == '.xlsx':
+            raise ValueError(f"文件不是 .xlsx 格式: {source_path}")
 
         # --- 2. 加载源数据文件 ---
         source_wb = openpyxl.load_workbook(source_path, read_only=True, data_only=True)
