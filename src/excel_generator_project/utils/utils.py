@@ -538,25 +538,25 @@ class Utils:
         """
         一个更安全的字符串格式化辅助方法。
         - 自动为良率数据补全百分号 '%'。
-        - 如果模板中的占位符在数据字典中不存在，会使用 'N/A' 代替并记录警告，而不是抛出异常。
+        - 如果模板中的占位符在数据字典中不存在，会使用 '／' 代替并记录警告，而不是抛出异常。
         """
         # 1. 创建数据的安全副本，以避免修改原始字典
         safe_data = data.copy()
 
         # 2. 对特定字段进行格式化预处理
-        #    只有当值不是 'N/A' 时才添加 '%'
-        if 'daily_loss_rate' in safe_data and safe_data.get('daily_loss_rate') != 'N/A':
+        #    只有当值不是 '／' 时才添加 '%'
+        if 'daily_loss_rate' in safe_data and safe_data.get('daily_loss_rate') != '／':
             safe_data['daily_loss_rate'] = str(safe_data['daily_loss_rate']) + '%'
-        if 'monthly_loss_rate' in safe_data and safe_data.get('monthly_loss_rate') != 'N/A':
+        if 'monthly_loss_rate' in safe_data and safe_data.get('monthly_loss_rate') != '／':
             safe_data['monthly_loss_rate'] = str(safe_data['monthly_loss_rate']) + '%'
 
         # 3. 定义一个内部类，用于处理缺失的键
         class SafeDict(dict):
             def __missing__(self, key):
                 logging.warning(
-                    f"模板中的占位符 '{{{key}}}' 在数据中未找到，将使用 'N/A' 代替。"
+                    f"模板中的占位符 '{{{key}}}' 在数据中未找到，将使用 '／' 代替。"
                 )
-                return 'N/A'
+                return '／'
         
         # 4. 使用 .format_map 和自定义的SafeDict进行安全的格式化
         return template.format_map(SafeDict(safe_data))

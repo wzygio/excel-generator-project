@@ -106,15 +106,15 @@ class DataProcessor:
             logging.info(f"正在处理产品型号 {i+1}/{num_models}: {model}")
             # --- 新增的Gap计算逻辑 ---
             # 1. 安全地获取原始数据
-            estimated_yield_str = month_yield_list[i] if i < len(month_yield_list) else "N/A"
-            tila_target_str = tila_target_list[i] if i < len(tila_target_list) else "N/A"
+            estimated_yield_str = month_yield_list[i] if i < len(month_yield_list) else "／"
+            tila_target_str = tila_target_list[i] if i < len(tila_target_list) else "／"
 
             # 2. 调用辅助函数进行安全转换
             float_yield = Utils.safe_convert_percent_to_float(estimated_yield_str)
             float_tila = Utils.safe_convert_percent_to_float(tila_target_str)
 
             # 3. 执行计算
-            estimated_tila_gap_str = "N/A" # 默认值
+            estimated_tila_gap_str = "／" # 默认值
             if float_yield is not None and float_tila is not None:
                 gap_value = float_yield - float_tila
                 # 将结果格式化回带一位小数的百分比字符串
@@ -124,16 +124,16 @@ class DataProcessor:
             # 构建数据字典
             report_data = {
                 'model_name': model,
-                'daily_yield_change': daily_yield_list[i] if i < len(daily_yield_list) else "N/A",
+                'daily_yield_change': daily_yield_list[i] if i < len(daily_yield_list) else "／",
                 'new_exceptions': "/", 
                 'known_exceptions': "/",
-                'bp_target': bp_target_list[i] if i < len(bp_target_list) else "N/A",
+                'bp_target': bp_target_list[i] if i < len(bp_target_list) else "／",
                 'tila_target': tila_target_str, # 使用我们获取的原始字符串
-                'prod_target': prod_yield_list[i] if i < len(prod_yield_list) else "N/A",
+                'prod_target': prod_yield_list[i] if i < len(prod_yield_list) else "／",
                 'estimated_yield': estimated_yield_str, # 使用我们获取的原始字符串
                 'estimated_tila_gap': estimated_tila_gap_str, # <-- 4. 插入新计算出的Gap值
-                'best_batch': best_batch_list[i] if i < len(bp_target_list) else "N/A",
-                'latest_batch': latest_batch_list[i] if i < len(bp_target_list) else "N/A",
+                'best_batch': best_batch_list[i] if i < len(bp_target_list) else "／",
+                'latest_batch': latest_batch_list[i] if i < len(bp_target_list) else "／",
                 'risk_items': risk_items_map.get(model, "/"),
                 'unique_exceptions': "/",
                 'array_opportunities': "/",

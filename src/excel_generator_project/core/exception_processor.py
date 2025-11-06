@@ -120,10 +120,10 @@ class ExceptionProcessor:
 
                     # 步骤1：检查是否为空，如果不为空，则转换为字符串并执行替换和清理
                     if pd.isna(cell_content):
-                        processed_content = ""
+                        processed_content = "无"
                     else:
                         # 转换为字符串。精确替换 "無\n"。使用 .strip() 清理替换后可能留下的首尾空白
-                        processed_content = str(cell_content).replace("无\n", "").strip()
+                        processed_content = str(cell_content).replace("无", "无").strip()
                     
                     # 步骤 2: 应用更复杂的文本转换规则
                     if current_hour >= 12 and transformations:
@@ -236,7 +236,7 @@ class ExceptionProcessor:
             if match:
                 parsed_data[key] = match.group(1).strip()
             else:
-                parsed_data[key] = "N/A"
+                parsed_data[key] = "/"
                 logging.warning(f"配置的 '{key}' 正则表达式未在文本中找到匹配项。")
         return parsed_data
     
@@ -417,57 +417,3 @@ class ExceptionProcessor:
 
             # 5. 将修改后的文本写回 self.processed_results
             self.processed_results[model]['previous_exceptions'][target_module_key] = modified_text
-
-    # def _execute_write_processed_exceptions(self, job_config: dict):
-    #     """
-    #     (新增任务) 将最终处理好的异常模块文本，按顺序写回到目标Excel文件的单元格中。
-    #     """   
-    #     if not self.excel_handler:
-    #         logging.error("  ExcelHandler 未初始化，无法执行写入任务。")
-    #         return
-
-    #     logging.info("  开始执行'写入已处理异常'任务...")
-    #     sheet_name = job_config['sheet_name']
-    #     data_column_name = job_config['data_column']
-    #     rules = job_config.get('sequential_extraction_rules', {})
-    #     module_definitions = rules.get('module_definitions', [])
-
-    #     try:
-    #         self.excel_handler.set_active_sheet(sheet_name)
-    #         if not self.excel_handler or not self.excel_handler.ws:
-    #             logging.error("  工作表未正确初始化，无法执行写入操作")
-    #             return
-            
-    #         # 从表头找到目标列的索引，进而得到列字母
-    #         header_row = self.excel_handler.ws[1]
-    #         col_idx = None
-    #         for cell in header_row:
-    #             if cell.value == data_column_name:
-    #                 col_idx = cell.column
-    #                 break
-            
-    #         if col_idx is None:
-    #             logging.error(f"  在工作表 '{sheet_name}' 中未找到列标题 '{data_column_name}'。")
-    #             return
-            
-    #         col_letter = get_column_letter(col_idx)
-
-    #     except Exception as e:
-    #         logging.error(f"  准备写入时出错（例如，工作表不存在）: {e}", exc_info=True)
-    #         return
-
-    #     # 遍历每个产品，计算位置并写入数据
-    #     for product_index, model in enumerate(self.product_models):
-    #         processed_data = self.processed_results.get(model, {}).get('previous_exceptions', {})
-            
-    #         for module_def in module_definitions:
-    #             key_name = module_def['key_name']
-    #             text_to_write = processed_data.get(key_name, "错误: 未找到已处理的文本")
-
-    #             start_row = module_def['start_row']
-    #             step = module_def['step']
-    #             target_row = start_row + (product_index * step)
-                
-    #             target_cell_address = f"{col_letter}{target_row}"
-    #             logging.info(f"    正在将产品 '{model}' 的 '{key_name}' 写入到单元格 {target_cell_address}")
-    #             self.excel_handler.write_cell(target_cell_address, text_to_write)
