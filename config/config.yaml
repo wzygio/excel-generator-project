@@ -15,6 +15,7 @@ paths:
   content_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/content_generator.py'  # 内容生成脚本路径
   style_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/style_generator.py'  # 样式生成脚本路径
 
+
 # --- 2. 样式定义 (Style Definitions) ---
 style_definitions:
   # 第一部分任务所需的样式 (保持不变)
@@ -338,7 +339,7 @@ report_generator_jobs:
 # --- 4. 字体样式任务批量处理定义 (Batch Processing Jobs) ---
 font_processing_jobs:
 
-  # 任务一：处理 B 列的良率数据
+  # 任务一：处理 D 列的良率数据
   - job_name: 'Process Part 1 Yield Data'
     sheet_name: 'sheet1'
     cell_sequence:
@@ -353,7 +354,7 @@ font_processing_jobs:
         pattern: '^\s*\d+\.(?!\d)\s*[^\n]*?(?:[:：]|$)'
         style: 'part1_title_style'
 
-  # 任务二：处理 U 列的异常分析数据 (应用新的嵌套结构)
+  # 任务二：处理 G 列的异常分析数据 (应用新的嵌套结构)
   - job_name: 'Process Part 2 Anomaly Data'
     sheet_name: 'sheet1'
     cell_sequence:
@@ -369,7 +370,7 @@ font_processing_jobs:
         sub_definitions: # 二级标题
         - name: 'u_column_L2_title'
           # 精准匹配后面跟着 \n【 的二级标题
-          pattern: '\n(\d\.\d[^\n]+)(?=\n【)|【异常】([^\n]+?)\s*([\d.]+%)\s*（([^）]+)）'
+          pattern: '\n(\d\.\d[^\n]+)(?=\n【)|【异常】([^\n]+?)\s*([\d.]+%)\s*[（(]([^）)]+)[）)]'
           default_style: 'subtitle_black_bold'
           conditional_styles:
             - if_parent_contains: '当日异常'
@@ -379,8 +380,7 @@ font_processing_jobs:
             - name: 'u_column_L3_title'
               pattern: '(【[^】]+】)'
               style: 'subtitle_L3_bold'
-            
-
+          
 # 日报生成相关配置
 report:
   report_date: ''  # 数据日期（由用户输入）
