@@ -312,7 +312,7 @@ class ExceptionProcessor:
                     data_for_title['exception_name'] = str(data_for_title['exception_name']).replace("'", "")
 
                 # 格式化细节3: 统一序号
-                title_format_data = {'index': "1.1", 'month_str': month_str, **data_for_title}
+                title_format_data = {'index': "【异常】", 'month_str': month_str, **data_for_title}
                 
                 # 假设 format_string 已移至 Utils
                 title_part = Utils.format_string(title_template, title_format_data)

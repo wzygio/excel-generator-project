@@ -100,7 +100,7 @@ class DataProcessor:
         month_yield_list = dc.get('monthly_yield_values', []) # <--- estimated_yield 在这里
         best_batch_list = dc.get('best_batch', [])
         latest_batch_list = dc.get('latest_batch', [])
-        risk_items_map = dc.get('risk_items', {}) # <- 'risk_items' 现在是 {model: "完整字符串"}
+        risk_items_map = dc.get('risk_items', "/") # <- 'risk_items' 现在是 {model: "完整字符串"}
 
         for i, model in enumerate(self.product_models):
             logging.info(f"正在处理产品型号 {i+1}/{num_models}: {model}")
