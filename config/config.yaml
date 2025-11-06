@@ -3,7 +3,7 @@
 # 项目路径配置
 paths:
   base_dir: 'D:/wzy/Python/excel-generator-project'  # 项目根目录（相对路径）
-  data_dir: 'resources'  # 数据文件夹路径
+  resources_dir: 'resources'  # 数据文件夹路径
   temp_dir: 'data/temp'  # 临时文件夹路径
   log_dir: 'logs'  # 日志文件夹路径
   output_dir: 'output'  # 输出文件夹路径

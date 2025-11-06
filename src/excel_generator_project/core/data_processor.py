@@ -9,7 +9,7 @@ from datetime import datetime as dt
 import openpyxl
 from openpyxl.utils import column_index_from_string, get_column_letter
 
-from excel_generator_project.config import BASE_DIR, DATA_DIR, TEMP_DIR
+from excel_generator_project.config import PROJECT_ROOT, RESOURCES_DIR, TEMP_DIR
 from excel_generator_project.utils.utils import Utils
 
 class DataProcessor:
@@ -342,7 +342,7 @@ class DataProcessor:
                 return
             
             source_path = Utils.resolve_lock_file(initial_target_path)
-            local_cache_dir = BASE_DIR /  DATA_DIR
+            local_cache_dir = PROJECT_ROOT /  RESOURCES_DIR
             source_file_path = Utils.get_local_copy(source_path, local_cache_dir)
             if not source_file_path:
                 logging.error("    未能根据 file_locator 配置找到源文件，任务中止。")

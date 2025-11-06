@@ -51,12 +51,11 @@ CONFIG = load_config()
 
 # --- 2. 导出配置常量 ---
 PATHS = CONFIG.get("paths", {})
-BASE_DIR = PROJECT_ROOT
-DATA_DIR = PROJECT_ROOT / Path(PATHS.get("data_dir", ""))
+RESOURCES_DIR = PROJECT_ROOT / Path(PATHS.get("data_dir", ""))
 TEMP_DIR = PROJECT_ROOT / Path(PATHS.get("temp_dir", ""))
 LOG_DIR = PROJECT_ROOT / Path(PATHS.get("log_dir", ""))
 OUTPUT_DIR = PROJECT_ROOT / Path(PATHS.get("output_dir", ""))
-TEMPLATE_PATH = DATA_DIR / Path(PATHS.get("template_file", ""))
+TEMPLATE_PATH = RESOURCES_DIR / Path(PATHS.get("template_file", ""))
 TEMP_PATH = OUTPUT_DIR / Path(PATHS.get("temp_file", ""))
 OUTPUT_PATH = OUTPUT_DIR / Path(PATHS.get("output_file", ""))
 

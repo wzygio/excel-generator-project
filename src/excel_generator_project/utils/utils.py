@@ -12,12 +12,12 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 from typing import Optional
 
-from excel_generator_project.config import BASE_DIR, DATA_DIR, LOG_DIR, DATA_DIR
+from excel_generator_project.config import PROJECT_ROOT, RESOURCES_DIR, LOG_DIR, RESOURCES_DIR
 class Utils:
     @staticmethod
     def setup_logging(log_filename: str = "app.log"):
         """初始化日志系统，输出到文件(覆盖模式)和控制台。"""
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        LOG_DIR.mkdir(parents=True, exist_ok=True)  
         log_filepath = LOG_DIR / log_filename
 
         log_format = '%(asctime)s - %(levelname)s - [%(module)s] - %(message)s'
@@ -33,7 +33,6 @@ class Utils:
                 handler.close()
                 root_logger.removeHandler(handler)
 
-        # --- [核心修改] 文件处理器，使用 mode='w' ---
         try:
             file_handler = logging.FileHandler(log_filepath, mode='w', encoding='utf-8') # <-- 添加 mode='w'
             file_handler.setFormatter(logging.Formatter(log_format, datefmt=log_date_format))
@@ -44,7 +43,6 @@ class Utils:
 
 
         # --- 控制台处理器 (保持不变) ---
-        # 避免重复添加控制台处理器（如果之前被清除了）
         if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
              console_handler = logging.StreamHandler(sys.stdout)
              console_handler.setFormatter(logging.Formatter(log_format, datefmt=log_date_format))
@@ -101,7 +99,7 @@ class Utils:
             if not source_file:
                 logging.error("任务 'daily_yield_change' 配置中缺少 'source_file' 参数。")
                 return []
-        source_path = DATA_DIR / Path(source_file)
+        source_path = RESOURCES_DIR / Path(source_file)
         
         sheet_name = model_config.get("sheet_name")
         pattern = model_config.get("pattern")
@@ -195,7 +193,7 @@ class Utils:
             return None
             
         # 复制净化后的、最终确定的文件
-        local_cache_dir = BASE_DIR / DATA_DIR
+        local_cache_dir = PROJECT_ROOT / RESOURCES_DIR
         local_cache_dir.mkdir(parents=True, exist_ok=True)
         
         return Utils.get_local_copy(final_path_to_copy, local_cache_dir)
