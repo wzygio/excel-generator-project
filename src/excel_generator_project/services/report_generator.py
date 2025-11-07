@@ -1,7 +1,7 @@
 # src/generators/report_generator.py
 import logging
 from pathlib import Path
-import shutil
+import shutil, re
 
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
@@ -128,6 +128,12 @@ class ReportGenerator:
             for module_def in module_definitions:
                 key_name = module_def['key_name']
                 text_to_write = previous_exceptions.get(key_name, default_text)
+                
+                # 确保格式完整
+                if text_to_write:
+                    # 检查并修正格式问题
+                    text_to_write = re.sub(r'(1、当日异常)((?:[ \t]*\r?\n){2,})', r'\1\n无\n\n', text_to_write)
+                    text_to_write = re.sub(r'(2、各工厂还原时序)((?:[ \t]*\r?\n){2,})', r'\1\n无\n\n', text_to_write)
 
                 start_row = module_def['start_row']
                 step = module_def['step']
