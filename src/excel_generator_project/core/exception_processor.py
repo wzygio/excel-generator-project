@@ -118,19 +118,19 @@ class ExceptionProcessor:
                     # 使用 .iat 进行高性能、精确的单点值访问
                     cell_content = df.iat[target_df_index, data_column_index]
 
-                    # 步骤1：检查是否为空，如果不为空，则转换为字符串并执行替换和清理
                     if pd.isna(cell_content):
                         processed_content = "无"
+                        logging.info(f"      '{model}' 的 '{key_name}' 模块为空。")
                     else:
-                        # 转换为字符串。精确替换 "無\n"。使用 .strip() 清理替换后可能留下的首尾空白
-                        processed_content = str(cell_content).replace("无", "无").strip()
-                    
+                        processed_content = cell_content
+                        logging.info(f"      '{model}' 的 '{key_name}' 模块提取完成。")
+
                     # 步骤 2: 应用更复杂的文本转换规则
                     if current_hour >= 12 and transformations:
                         final_content = self._apply_text_transformations(processed_content, transformations)
                     else:
                         final_content = processed_content
-                    
+                        
                     extracted_modules[key_name] = final_content
                 except IndexError:
                     logging.error(f"      计算出的行索引 {target_df_index} 超出范围，无法为 '{model}' 提取 '{key_name}'。")
@@ -141,6 +141,53 @@ class ExceptionProcessor:
             
             self.processed_results[model]['previous_exceptions'] = extracted_modules
             logging.info(f"    -> 已为 '{model}' 存入 {len(extracted_modules)} 个旧有记录模块。")
+
+    def _apply_text_transformations(self, text: str, transformations: list) -> str:
+        """
+        (已更新) 根据配置规则，对输入的文本进行一系列转换操作。
+        使用替换函数来安全地处理包含特殊字符的文本。
+        """
+        if not text:
+            return ""
+
+        transformed_text = text
+        for rule in transformations:
+            rule_name = rule.get("rule_name")
+            logging.info(f"      应用文本转换规则: '{rule_name}'")
+
+            if rule_name == "move_down_daily_exception":
+                source_pattern = rule.get('source_pattern')
+                destination_pattern = rule.get('destination_pattern')
+                
+                if not source_pattern or not destination_pattern:
+                    continue
+
+                match = re.search(source_pattern, transformed_text)
+                
+                if match:
+                    block_to_move = match.group(2).strip()
+                    block_to_move = re.sub(r'【异常】', '2.1', block_to_move)
+                    text_after_cut = re.sub(source_pattern, r'\1无\3', transformed_text, count=1).strip()
+                    
+                    # --- 核心修改：使用替换函数来安全地执行“粘贴” ---
+                    def replacer(match_obj):
+                        # match_obj.group(1) 是 destination_pattern 匹配到的内容 (即 "2、各工厂还原时序\n")
+                        # block_to_move 在这里被当作纯文本字符串，不会被re引擎解析
+                        return f"{match_obj.group(1)}{block_to_move}\n"
+
+                    final_text = re.sub(destination_pattern, replacer, text_after_cut, count=1)
+                    # --- 修改结束 ---
+                    
+                    transformed_text = final_text
+
+            elif rule_name == "cleanup_daily_exception_section":
+                pattern = rule.get('pattern')
+                replacement = rule.get('replacement')
+
+                if pattern and replacement is not None:
+                    transformed_text = re.sub(pattern, replacement, transformed_text)
+
+        return transformed_text
 
     def _execute_extract_daily_exception(self, job_config: dict):
         """(任务执行方法) 使用Parquet缓存高效地提取每日异常数据。"""
@@ -219,12 +266,11 @@ class ExceptionProcessor:
                 raw_data = parsed_title | parsed_details
                 raw_data['factory'] = factory_str # 将厂别信息存入raw_data
 
-                # 在 self.processed_results 中为该型号创建主键
+                # 如果当前产品型号不在 self.processed_results 中，则在 self.processed_results 中为该型号创建主键
                 if model not in self.processed_results:
                     self.processed_results[model] = {}
                 # 将提取的原始数据存入 'raw_data' 子字典
                 self.processed_results[model]['raw_data'] = raw_data
-
 
     def _parse_text_with_patterns(self, text: str, patterns: dict) -> dict:
         """(辅助方法) 使用指定的正则表达式字典来解析一段文本。"""
@@ -323,53 +369,7 @@ class ExceptionProcessor:
 
                 # 将生成的段落添加回该产品型号的子字典中
                 self.processed_results[model]['report_paragraph'] = report_paragraph
-
-    def _apply_text_transformations(self, text: str, transformations: list) -> str:
-        """
-        (已更新) 根据配置规则，对输入的文本进行一系列转换操作。
-        使用替换函数来安全地处理包含特殊字符的文本。
-        """
-        if not text:
-            return ""
-
-        transformed_text = text
-        for rule in transformations:
-            rule_name = rule.get("rule_name")
-            logging.info(f"      应用文本转换规则: '{rule_name}'")
-
-            if rule_name == "move_down_daily_exception":
-                source_pattern = rule.get('source_pattern')
-                destination_pattern = rule.get('destination_pattern')
-                
-                if not source_pattern or not destination_pattern:
-                    continue
-
-                match = re.search(source_pattern, transformed_text)
-                
-                if match:
-                    block_to_move = match.group(2).strip()
-                    block_to_move = re.sub(r'^1\.', '2.', block_to_move)
-                    text_after_cut = re.sub(source_pattern, r'\1\3', transformed_text, count=1).strip()
-                    
-                    # --- 核心修改：使用替换函数来安全地执行“粘贴” ---
-                    def replacer(match_obj):
-                        # match_obj.group(1) 是 destination_pattern 匹配到的内容 (即 "2、各工厂还原时序\n")
-                        # block_to_move 在这里被当作纯文本字符串，不会被re引擎解析
-                        return f"{match_obj.group(1)}{block_to_move}\n"
-
-                    final_text = re.sub(destination_pattern, replacer, text_after_cut, count=1)
-                    # --- 修改结束 ---
-                    
-                    transformed_text = final_text
-
-            elif rule_name == "cleanup_daily_exception_section":
-                pattern = rule.get('pattern')
-                replacement = rule.get('replacement')
-
-                if pattern and replacement is not None:
-                    transformed_text = re.sub(pattern, replacement, transformed_text)
-
-        return transformed_text
+    
     
     def _execute_merge_daily_into_previous(self, job_config: dict):
         """(任务4) 将当日异常根据厂别，合并到前一日的异常记录模块中。"""
@@ -409,7 +409,6 @@ class ExceptionProcessor:
             logging.info(f"    正在将产品 '{model}' 的异常报告插入到 '{target_module_key}'...")
             def replacer(match_obj):
                 # match_obj.group(1) 是捕获的 "1、当日异常\n"
-                # report_paragraph 在此被视为纯文本，安全地插入
                 return f"{match_obj.group(1)}{report_paragraph}\n"
             
             # count=1 确保只替换第一个匹配项
@@ -417,3 +416,5 @@ class ExceptionProcessor:
 
             # 5. 将修改后的文本写回 self.processed_results
             self.processed_results[model]['previous_exceptions'][target_module_key] = modified_text
+
+            

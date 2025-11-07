@@ -272,7 +272,7 @@ class DataProcessor:
                         final_values.append(f"{value:.1%}")
                     logging.info(f" -> 型号 '{model}' (行 {target_row}) 的目标值为: {value}")
                 else:
-                    final_values.append(None) # 如果某个型号没找到对应的行，则添加None占位
+                    final_values.append("/") # 如果某个型号没找到对应的行，则添加None占位
                     logging.warning(f" -> 型号 '{model}' 未在指定列中找到，结果记为 None。")
             
             # 将最终提取到的数值列表存入 calculated_data
@@ -403,8 +403,8 @@ class DataProcessor:
                     monthly_yield_list.append(f"{month_value:.1%}")
                 else:
                     # 如果找不到，用None占位以保证列表顺序和长度一致
-                    production_yield_list.append(None)
-                    monthly_yield_list.append(None)
+                    production_yield_list.append("/")
+                    monthly_yield_list.append("/")
                     logging.warning(f"      在 {model_col} 列中未找到型号 '{model}' 对应的行。")
             
             # --- 步骤5: 存储最终结果 ---
