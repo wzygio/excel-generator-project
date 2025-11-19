@@ -145,8 +145,6 @@ class DataProcessor:
         logging.info(f"模板数据准备完成，共处理 {len(all_reports_data)} 个产品型号的数据")
         return all_reports_data
 
-
-
     def _execute_parse_text_from_cells_job(self, job_config: dict):
         """
         (新增的通用方法)

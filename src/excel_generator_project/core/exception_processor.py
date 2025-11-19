@@ -103,10 +103,10 @@ class ExceptionProcessor:
 
         # --- 新增：从配置中获取转换规则 ---
         transformations = job_config.get('text_transformations', [])
-        product_models = Utils.extract_product_models(self.config.get('model_definitions', []), source_file_path)
-        for product_index, model in enumerate(product_models):
+        previous_product_models = Utils.extract_product_models(self.config.get('model_definitions', []), source_file_path) # 提取昨日产品型号
+        for product_index, previous_model in enumerate(previous_product_models):
             extracted_modules = {}
-            logging.info(f"    正在为产品 '{model}' (序号 {product_index}) 提取旧有记录...")
+            logging.info(f"    正在为产品 '{previous_model}' (序号 {product_index}) 提取旧有记录...")
             
             # (模块定义和循环部分代码不变)
             module_definitions = job_config.get('sequential_extraction_rules', {}).get('module_definitions', [])
@@ -115,32 +115,60 @@ class ExceptionProcessor:
                 key_name = module_def['key_name']
 
                 try:
+                    # 步骤1: 提取旧有记录
                     # 使用 .iat 进行高性能、精确的单点值访问
-                    cell_content = df.iat[target_df_index, data_column_index]
-
-                    if pd.isna(cell_content):
-                        processed_content = "无"
-                        logging.info(f"      '{model}' 的 '{key_name}' 模块为空。")
-                    else:
-                        processed_content = cell_content
-                        logging.info(f"      '{model}' 的 '{key_name}' 模块提取完成。")
+                    cell_content = df.iat[target_df_index, data_column_index] # type: ignore
+                    processed_content = cell_content
+                    logging.info(f"      '{previous_model}' 的 '{key_name}' 模块提取完成。")
 
                     # 步骤 2: 应用更复杂的文本转换规则
                     if current_hour >= 12 and transformations:
-                        final_content = self._apply_text_transformations(processed_content, transformations)
+                        final_content = self._apply_text_transformations(processed_content, transformations) # type: ignore
                     else:
                         final_content = processed_content
                         
                     extracted_modules[key_name] = final_content
                 except IndexError:
-                    logging.error(f"      计算出的行索引 {target_df_index} 超出范围，无法为 '{model}' 提取 '{key_name}'。")
+                    logging.error(f"      计算出的行索引 {target_df_index} 超出范围，无法为 '{previous_model}' 提取 '{key_name}'。")
                     extracted_modules[key_name] = "错误：行越界"
 
-            if model not in self.processed_results:
-                self.processed_results[model] = {}
+            if previous_model not in self.processed_results:
+                self.processed_results[previous_model] = {}
             
-            self.processed_results[model]['previous_exceptions'] = extracted_modules
-            logging.info(f"    -> 已为 '{model}' 存入 {len(extracted_modules)} 个旧有记录模块。")
+            self.processed_results[previous_model]['previous_exceptions'] = extracted_modules
+            logging.info(f"    -> 已为 '{previous_model}' 存入 {len(extracted_modules)} 个旧有记录模块。")
+        
+        # --- 核心修改：为今日新增的型号补全默认的异常模块结构 ---
+        logging.info("    正在检查并补全新增型号的默认结构...")
+        default_text = self.config['report_text_templates']['default_empty_exception_module']
+        # 获取提取规则中定义的所有 key_name (例如 ['previous_module_1', 'previous_module_2'])
+        module_definitions = job_config.get('sequential_extraction_rules', {}).get('module_definitions', [])
+        
+        if not default_text:
+            logging.warning("    配置中未找到 'default_empty_exception_module' 模板，无法补全默认结构。")
+        else:
+            # 遍历今日所有需要处理的型号 (self.product_models 来自 config['model_definitions'])
+            for model in self.product_models:
+                clean_model = str(model).strip()
+                
+                # 如果该型号不在 processed_results 中，或者虽然在但没有 previous_exceptions
+                if clean_model not in self.processed_results or 'previous_exceptions' not in self.processed_results[clean_model]:
+                    logging.info(f"    -> 发现新增型号 '{clean_model}' (昨日无记录)，正在应用默认模板...")
+                    
+                    # 确保主字典存在
+                    if clean_model not in self.processed_results:
+                        self.processed_results[clean_model] = {}
+                    
+                    # 构建默认模块字典
+                    default_modules = {}
+                    for module_def in module_definitions:
+                        key_name = module_def.get('key_name')
+                        if key_name:
+                            default_modules[key_name] = default_text
+                    
+                    self.processed_results[clean_model]['previous_exceptions'] = default_modules
+                    logging.info(f"       已为 '{clean_model}' 补全了 {len(default_modules)} 个默认模块。")
+        # --- 修改结束 ---
 
     def _apply_text_transformations(self, text: str, transformations: list) -> str:
         """
@@ -155,6 +183,7 @@ class ExceptionProcessor:
             rule_name = rule.get("rule_name")
             logging.info(f"      应用文本转换规则: '{rule_name}'")
 
+            # 1. 先将昨日异常下移
             if rule_name == "move_down_daily_exception":
                 source_pattern = rule.get('source_pattern')
                 destination_pattern = rule.get('destination_pattern')
@@ -165,21 +194,21 @@ class ExceptionProcessor:
                 match = re.search(source_pattern, transformed_text)
                 
                 if match:
+                    # 提取需要下移的文本块
                     block_to_move = match.group(2).strip()
-                    block_to_move = re.sub(r'【异常】', '2.1', block_to_move)
-                    text_after_cut = re.sub(source_pattern, r'\1无\3', transformed_text, count=1).strip()
+                    block_to_move = re.sub(r'【异常】', '2.1', block_to_move) # 将 "【异常】" 替换为 "2.1"
+                    text_after_cut = re.sub(source_pattern, r'\1\3', transformed_text, count=1).strip() 
                     
-                    # --- 核心修改：使用替换函数来安全地执行“粘贴” ---
                     def replacer(match_obj):
                         # match_obj.group(1) 是 destination_pattern 匹配到的内容 (即 "2、各工厂还原时序\n")
                         # block_to_move 在这里被当作纯文本字符串，不会被re引擎解析
                         return f"{match_obj.group(1)}{block_to_move}\n"
 
                     final_text = re.sub(destination_pattern, replacer, text_after_cut, count=1)
-                    # --- 修改结束 ---
-                    
-                    transformed_text = final_text
 
+                    transformed_text = final_text
+            
+            # 2. 清理昨日的当日异常
             elif rule_name == "cleanup_daily_exception_section":
                 pattern = rule.get('pattern')
                 replacement = rule.get('replacement')

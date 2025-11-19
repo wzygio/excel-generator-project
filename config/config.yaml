@@ -410,7 +410,8 @@ report_text_templates:
   exception_report_details: |
     【异常原因】{exception_reason}
     【Inline监控】{inline_monitoring}
-    【是否止血】{is_stopped}；影响范围{impact_scope}
+    【是否止血】{is_stopped}
+    【影响范围】{impact_scope}
     【改善措施】{improvement_measures}
   # --- 新增：用于异常记录缺失时的默认文本 ---
   default_empty_exception_module: |
