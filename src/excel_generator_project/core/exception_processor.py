@@ -271,35 +271,53 @@ class ExceptionProcessor:
         logging.info("  [净化] 正在清理DataFrame中的产品型号列...")
         todays_df[product_model_col] = todays_df[product_model_col].astype(str).str.strip()
 
-        # 步骤 3: 遍历产品型号，并在DataFrame中查找匹配的数据
+        # 步骤 3: 遍历产品型号
         for model in self.product_models:
             logging.info(f"正在为产品 '{model}' 查找异常数据...")
-
-            # 2. 净化 self.product_models 中的当前型号
+            
             clean_model = str(model).strip()
             model_data = todays_df[todays_df[product_model_col] == clean_model]
             
             if not model_data.empty:
-                # 提取第一条匹配记录的数据
-                record = model_data.iloc[0]
-                logging.info(f"  --> 找到匹配 '{model}' 的记录，开始解析。")
-                factory = record.get(job_config['factory_column'], "")
-                factory_str = "" if pd.isna(factory) else str(factory).upper().strip()
-
-                title_text = record[job_config['title_column']]
-                details_text = record[job_config['details_column']]
+                # --- 核心修改开始：从取单行改为遍历所有匹配行 ---
+                logging.info(f"   --> 找到 {len(model_data)} 条匹配 '{model}' 的记录，开始解析。")
                 
-                parsed_title = self._parse_text_with_patterns(title_text, job_config.get('title_patterns', {}))
-                parsed_details = self._parse_text_with_patterns(details_text, job_config.get('details_patterns', {}))
+                daily_records_list = [] # 用于存储该产品的所有异常记录
                 
-                raw_data = parsed_title | parsed_details
-                raw_data['factory'] = factory_str # 将厂别信息存入raw_data
+                # 使用 iterrows 遍历每一行
+                for index, record in model_data.iterrows():
+                    factory = record.get(job_config['factory_column'], "")
+                    factory_str = "" if pd.isna(factory) else str(factory).upper().strip()
 
-                # 如果当前产品型号不在 self.processed_results 中，则在 self.processed_results 中为该型号创建主键
+                    title_text = record[job_config['title_column']]
+                    details_text = record[job_config['details_column']]
+                    
+                    parsed_title = self._parse_text_with_patterns(title_text, job_config.get('title_patterns', {}))
+                    parsed_details = self._parse_text_with_patterns(details_text, job_config.get('details_patterns', {}))
+                    
+                    single_record_data = parsed_title | parsed_details
+                    single_record_data['factory'] = factory_str # 存入厂别
+                    
+                    daily_records_list.append(single_record_data)
+
+                # 初始化主键
                 if model not in self.processed_results:
                     self.processed_results[model] = {}
-                # 将提取的原始数据存入 'raw_data' 子字典
-                self.processed_results[model]['raw_data'] = raw_data
+                
+                # 1. 存储完整列表供格式化使用
+                self.processed_results[model]['daily_records_list'] = daily_records_list
+                
+                # 2. 兼容性处理：保留 raw_data 指向第一条记录
+                # 这样后续的 _execute_merge_daily_into_previous 在读取 factory 时不会报错
+                self.processed_results[model]['raw_data'] = daily_records_list[0]
+                
+                logging.info(f"   --> '{model}' 解析完成，共缓存 {len(daily_records_list)} 条异常。")
+                # --- 修改结束 ---
+
+        # 统计并记录提取的异常数量
+        total_exceptions = sum(len(data.get('daily_records_list', [])) for data in self.processed_results.values())
+        logging.info(f"本日共提取到 {total_exceptions} 条异常记录")
+
 
     def _parse_text_with_patterns(self, text: str, patterns: dict) -> dict:
         """(辅助方法) 使用指定的正则表达式字典来解析一段文本。"""
@@ -361,7 +379,7 @@ class ExceptionProcessor:
             return df
     
     def _execute_format_exception_report(self, job_config: dict):
-        """(任务2, 已重构) 为每个产品生成报告段落，并添加到各自的子字典中。"""
+        """(任务2, 已重构) 为每个产品生成报告段落（支持多条异常合并）。"""
         if not self.processed_results:
             logging.warning("没有可供格式化的原始数据，格式化任务已跳过。")
             return
@@ -369,36 +387,46 @@ class ExceptionProcessor:
         title_template = self.templates.get('exception_report_title')
         details_template = self.templates.get('exception_report_details')
         if not title_template or not details_template:
-            logging.error("报告模板 'exception_report_title' 或 'exception_report_details' 未找到。")
+            logging.error("报告模板缺失。")
             return
 
         month_str = datetime.date.today().strftime('M%m')
         
-        # 遍历 self.processed_results 中已有的产品型号
         for model, model_data in self.processed_results.items():
-            raw_data = model_data.get('raw_data')
+            # --- 核心修改开始：优先使用列表数据 ---
+            records_list = model_data.get('daily_records_list')
             
-            # 仅当该产品有原始数据时才进行格式化
-            if raw_data:
-                data_for_title = raw_data.copy()
-
-                # 格式化细节1: 去掉单引号
-                if 'exception_name' in data_for_title:
-                    data_for_title['exception_name'] = str(data_for_title['exception_name']).replace("'", "")
-
-                # 格式化细节3: 统一序号
-                title_format_data = {'index': "【异常】", 'month_str': month_str, **data_for_title}
+            # 如果没有列表（可能是旧逻辑或某种异常），尝试回退到单条 raw_data 放入列表
+            if not records_list and model_data.get('raw_data'):
+                records_list = [model_data.get('raw_data')]
+            
+            if records_list:
+                formatted_paragraphs = [] # 用于存储该产品所有格式化好的异常段落
                 
-                # 假设 format_string 已移至 Utils
-                title_part = Utils.format_string(title_template, title_format_data)
-                details_part = Utils.format_string(details_template, raw_data)
-                
-                # 格式化细节2: 确保单换行
-                report_paragraph = f"{title_part.strip()}\n{details_part.strip()}"
+                for i, raw_data in enumerate(records_list):
+                    data_for_title = raw_data.copy()
+                    
+                    # 格式化细节1: 去掉单引号
+                    if 'exception_name' in data_for_title:
+                        data_for_title['exception_name'] = str(data_for_title['exception_name']).replace("'", "")
 
-                # 将生成的段落添加回该产品型号的子字典中
-                self.processed_results[model]['report_paragraph'] = report_paragraph
-    
+                    # 格式化细节3: 统一序号 (如果是多条异常，您可能希望序号不同？目前统一用【异常】)
+                    title_format_data = {'index': "【异常】", 'month_str': month_str, **data_for_title}
+                    
+                    title_part = Utils.format_string(title_template, title_format_data)
+                    details_part = Utils.format_string(details_template, raw_data)
+                    
+                    # 单个异常的完整段落
+                    single_paragraph = f"{title_part.strip()}\n{details_part.strip()}"
+                    formatted_paragraphs.append(single_paragraph)
+                
+                # 拼接：将所有异常段落用换行符连接
+                # 这样 report_paragraph 依然是一个字符串，可以直接被后续的正则替换使用
+                full_report_paragraph = "\n".join(formatted_paragraphs)
+                
+                self.processed_results[model]['report_paragraph'] = full_report_paragraph
+                logging.info(f"   --> 产品 '{model}' 已生成包含 {len(formatted_paragraphs)} 条异常的合并报告段落。")
+            # --- 修改结束 ---
     
     def _execute_merge_daily_into_previous(self, job_config: dict):
         """(任务4) 将当日异常根据厂别，合并到前一日的异常记录模块中。"""
