@@ -44,7 +44,7 @@ def main_report_flow():
 
     logging.info("  正在运行 DataProcessor...")
     # 假设DataProcessor也只需要config进行初始化
-    data_processor = DataProcessor(CONFIG) 
+    data_processor = DataProcessor(CONFIG, exception_results) 
     data_results = data_processor.run()
     
     # 3. 准备生成器的配置，注入处理器返回的数据

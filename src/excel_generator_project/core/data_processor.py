@@ -16,7 +16,7 @@ class DataProcessor:
     """
     配置驱动的Excel报告处理器。
     """
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, external_data: dict):
         """
         (已更新) 初始化处理器。
         'output_path' 是指本次处理流程中使用的临时文件路径。
@@ -24,6 +24,7 @@ class DataProcessor:
         self.config = config
         self.excel_handler = None # 统一命名
         self.calculated_data = {}
+        self.external_data = external_data or {}
         self.cache_dir = TEMP_DIR
         self.product_models = Utils.extract_product_models(config.get("model_definitions", "")) # 提取日报中产品型号
         
@@ -108,6 +109,10 @@ class DataProcessor:
             # 1. 安全地获取原始数据
             estimated_yield_str = month_yield_list[i] if i < len(month_yield_list) else "／"
             tila_target_str = tila_target_list[i] if i < len(tila_target_list) else "／"
+            # 获取ExceptionProcessor处理后的formatted_titles
+            formatted_titles = self.external_data.get(model, {}).get('formatted_titles', [])
+            # 将titles用换行符连接
+            new_exceptions = '、'.join(formatted_titles) if formatted_titles else "/"
 
             # 2. 调用辅助函数进行安全转换
             float_yield = Utils.safe_convert_percent_to_float(estimated_yield_str)
@@ -125,7 +130,7 @@ class DataProcessor:
             report_data = {
                 'model_name': model,
                 'daily_yield_change': daily_yield_list[i] if i < len(daily_yield_list) else "／",
-                'new_exceptions': "/", 
+                'new_exceptions': new_exceptions,
                 'known_exceptions': "/",
                 'bp_target': bp_target_list[i] if i < len(bp_target_list) else "／",
                 'tila_target': tila_target_str, # 使用我们获取的原始字符串
@@ -588,7 +593,7 @@ class DataProcessor:
                     yield_str = yield_str_raw.strip()
                     
                     # 从合并后的最终计划中查找
-                    plan_str = final_plan_map.get((model, risk_name), "") # 默认为空
+                    plan_str = final_plan_map.get((model, risk_name)) # 默认为空
                     
                     if plan_str: # 只有当计划非空时才进行拼接
                         original_line_pattern = re.compile(re.escape(risk_name) + r'\s*' + re.escape(yield_str))

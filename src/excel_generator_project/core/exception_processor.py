@@ -115,17 +115,13 @@ class ExceptionProcessor:
                 key_name = module_def['key_name']
 
                 try:
-                    # 步骤1: 提取旧有记录
-                    # 使用 .iat 进行高性能、精确的单点值访问
+                    # 步骤1: 提取旧有记录：使用 .iat 进行高性能、精确的单点值访问
                     cell_content = df.iat[target_df_index, data_column_index] # type: ignore
                     processed_content = cell_content
                     logging.info(f"      '{previous_model}' 的 '{key_name}' 模块提取完成。")
 
-                    # 步骤 2: 应用更复杂的文本转换规则
-                    if current_hour >= 12 and transformations:
-                        final_content = self._apply_text_transformations(processed_content, transformations) # type: ignore
-                    else:
-                        final_content = processed_content
+                    # 步骤 2: 应用复杂的文本转换规则
+                    final_content = self._apply_text_transformations(processed_content, transformations) # type: ignore
                         
                     extracted_modules[key_name] = final_content
                 except IndexError:
@@ -168,23 +164,27 @@ class ExceptionProcessor:
                     
                     self.processed_results[clean_model]['previous_exceptions'] = default_modules
                     logging.info(f"       已为 '{clean_model}' 补全了 {len(default_modules)} 个默认模块。")
-        # --- 修改结束 ---
 
     def _apply_text_transformations(self, text: str, transformations: list) -> str:
         """
         (已更新) 根据配置规则，对输入的文本进行一系列转换操作。
         使用替换函数来安全地处理包含特殊字符的文本。
+        12点前只执行清理操作，不进行下移。
         """
         if not text:
             return ""
+
+        # 获取当前小时
+        current_hour = datetime.datetime.now().hour
+        is_before_noon = current_hour < 12
 
         transformed_text = text
         for rule in transformations:
             rule_name = rule.get("rule_name")
             logging.info(f"      应用文本转换规则: '{rule_name}'")
 
-            # 1. 先将昨日异常下移
-            if rule_name == "move_down_daily_exception":
+            # 1. 先将昨日异常下移（12点后执行）
+            if rule_name == "move_down_daily_exception" and not is_before_noon:
                 source_pattern = rule.get('source_pattern')
                 destination_pattern = rule.get('destination_pattern')
                 
@@ -205,10 +205,9 @@ class ExceptionProcessor:
                         return f"{match_obj.group(1)}{block_to_move}\n"
 
                     final_text = re.sub(destination_pattern, replacer, text_after_cut, count=1)
-
                     transformed_text = final_text
             
-            # 2. 清理昨日的当日异常
+            # 2. 清理昨日的当日异常（始终执行）
             elif rule_name == "cleanup_daily_exception_section":
                 pattern = rule.get('pattern')
                 replacement = rule.get('replacement')
@@ -218,121 +217,77 @@ class ExceptionProcessor:
 
         return transformed_text
 
-    def _execute_extract_daily_exception(self, job_config: dict):
-        """(任务执行方法) 使用Parquet缓存高效地提取每日异常数据。"""
-        today = datetime.date.today()
-        date_to_find = today.strftime('%m/%d')
-        
-        source_path = Utils.get_safe_source_path(job_config)
-        if not source_path or not source_path.is_file():
-            logging.error(f"    未能获取有效的源文件路径，任务中止。")
-            return
-        
-        # 步骤 1: 使用新的缓存方法获取DataFrame
-        try:
-            df = self._get_data_as_dataframe(source_path, job_config['sheet_name'])
-        except Exception as e:
-            logging.error(f"无法加载源数据或创建缓存: {e}", exc_info=True)
-            return
 
-        # --- 核心修改 2: 重构数据筛选逻辑以使用来自前一任务的路径 ---
-        logging.info("  正在执行数据筛选...")
+    def _execute_extract_daily_exception(self, job_config: dict):
+        """使用Parquet缓存高效地提取每日异常数据。"""
+        try:
+            # 1. 初始化和验证
+            source_path = Utils.get_safe_source_path(job_config)
+            if not source_path or not source_path.is_file():
+                logging.error(f"未能获取有效的源文件路径，任务中止。")
+                return
+
+            # 2. 加载数据
+            df = self._get_data_as_dataframe(source_path, job_config['sheet_name'])
+            
+            # 3. 应用时间筛选
+            filtered_df = self._apply_time_filters(df, job_config)
+            if filtered_df.empty:
+                logging.info(f"在 '{source_path.name}' 中未找到符合条件的记录。")
+                return
+
+            # 4. 处理产品型号数据
+            self._process_product_models(filtered_df, job_config)
+
+            # 5. 记录统计信息
+            total_exceptions = sum(
+                len(data.get('daily_records_list', [])) 
+                for data in self.processed_results.values()
+            )
+            logging.info(f"本日共提取到 {total_exceptions} 条异常记录")
+
+        except Exception as e:
+            logging.error(f"提取异常数据时发生错误: {e}", exc_info=True)
+
+    def _apply_time_filters(self, df: pd.DataFrame, job_config: dict) -> pd.DataFrame:
+        """根据时间规则筛选数据。"""
         date_col = job_config['date_column']
         
-        # 将日期列转换为日期时间格式，并检查是否所有值都为空
         # 1. 强制转换为字符串并清除首尾空格
         cleaned_date_series = df[date_col].astype(str).str.strip()
         # 2. 在清理后的数据上进行日期时间转换
         datetime_series = pd.to_datetime(cleaned_date_series, errors='coerce')
+        
         if datetime_series.isnull().all():
-            logging.warning(f"  日期列 '{date_col}' 中所有值都无法解析为有效日期，任务中止。")
-            return
-        date_filter = (datetime_series.dt.date == today)
+            logging.warning(f"日期列 '{date_col}' 中所有值都无法解析为有效日期。")
+            return pd.DataFrame()
 
+        # 获取当前时间和日期
+        now = datetime.datetime.now()
+        today = now.date()
+        
         # 默认不应用时间过滤器
-        time_filter = pd.Series(True, index=df.index) 
-        previous_report_path = self.intermediate_data.get('previous_exceptions_source_path')
-        # 根据前一任务找到的文件名，条件性地激活时间过滤器
-        if previous_report_path and "14：00" in previous_report_path.name:
-            logging.info(f"  检测到上一版日报为 '{previous_report_path.name}'，已激活14:30之后的时间过滤器。")
-            time_filter = (datetime_series.dt.time >= datetime.time(14, 30))
+        time_filter = pd.Series(True, index=df.index)
         
-        combined_filter = date_filter & time_filter
-        todays_df = df[combined_filter].copy()
-
-        if todays_df.empty:
-            logging.info(f"在 '{source_path.name}' 中未找到日期为 '{date_to_find}' 的记录。")
-            return
-
-        # --- 核心修改：在这里增加数据清洗步骤 ---
-        product_model_col = job_config['product_model_column']
+        # 根据时间确定筛选规则
+        if now.hour <12:
+            # 9点前：提取昨日数据
+            target_date = today - datetime.timedelta(days=1)
+            date_filter = (datetime_series.dt.date == target_date)
+            logging.info(f"当前时间早于9点，正在提取昨日({target_date.strftime('%m/%d')})的异常数据...")
+        else:
+            # 9点后：提取今日数据
+            date_filter = (datetime_series.dt.date == today)
+            
+            # 检查是否需要时间过滤
+            previous_report_path = self.intermediate_data.get('previous_exceptions_source_path')
+            if previous_report_path and "14：00" in previous_report_path.name:
+                time_filter = (datetime_series.dt.time >= datetime.time(14, 30))
+                logging.info(f"检测到上一版日报为 '{previous_report_path.name}'，已激活14:30之后的时间过滤器。")
         
-        # 1. 强制净化DataFrame中的产品型号列
-        logging.info("  [净化] 正在清理DataFrame中的产品型号列...")
-        todays_df[product_model_col] = todays_df[product_model_col].astype(str).str.strip()
+        # 应用组合过滤器
+        return df[date_filter & time_filter].copy()
 
-        # 步骤 3: 遍历产品型号
-        for model in self.product_models:
-            logging.info(f"正在为产品 '{model}' 查找异常数据...")
-            
-            clean_model = str(model).strip()
-            model_data = todays_df[todays_df[product_model_col] == clean_model]
-            
-            if not model_data.empty:
-                # --- 核心修改开始：从取单行改为遍历所有匹配行 ---
-                logging.info(f"   --> 找到 {len(model_data)} 条匹配 '{model}' 的记录，开始解析。")
-                
-                daily_records_list = [] # 用于存储该产品的所有异常记录
-                
-                # 使用 iterrows 遍历每一行
-                for index, record in model_data.iterrows():
-                    factory = record.get(job_config['factory_column'], "")
-                    factory_str = "" if pd.isna(factory) else str(factory).upper().strip()
-
-                    title_text = record[job_config['title_column']]
-                    details_text = record[job_config['details_column']]
-                    
-                    parsed_title = self._parse_text_with_patterns(title_text, job_config.get('title_patterns', {}))
-                    parsed_details = self._parse_text_with_patterns(details_text, job_config.get('details_patterns', {}))
-                    
-                    single_record_data = parsed_title | parsed_details
-                    single_record_data['factory'] = factory_str # 存入厂别
-                    
-                    daily_records_list.append(single_record_data)
-
-                # 初始化主键
-                if model not in self.processed_results:
-                    self.processed_results[model] = {}
-                
-                # 1. 存储完整列表供格式化使用
-                self.processed_results[model]['daily_records_list'] = daily_records_list
-                
-                # 2. 兼容性处理：保留 raw_data 指向第一条记录
-                # 这样后续的 _execute_merge_daily_into_previous 在读取 factory 时不会报错
-                self.processed_results[model]['raw_data'] = daily_records_list[0]
-                
-                logging.info(f"   --> '{model}' 解析完成，共缓存 {len(daily_records_list)} 条异常。")
-                # --- 修改结束 ---
-
-        # 统计并记录提取的异常数量
-        total_exceptions = sum(len(data.get('daily_records_list', [])) for data in self.processed_results.values())
-        logging.info(f"本日共提取到 {total_exceptions} 条异常记录")
-
-
-    def _parse_text_with_patterns(self, text: str, patterns: dict) -> dict:
-        """(辅助方法) 使用指定的正则表达式字典来解析一段文本。"""
-        parsed_data = {}
-        if not text:
-            return parsed_data
-        for key, pattern in patterns.items():
-            match = re.search(pattern, text)
-            if match:
-                parsed_data[key] = match.group(1).strip()
-            else:
-                parsed_data[key] = "/"
-                logging.warning(f"配置的 '{key}' 正则表达式未在文本中找到匹配项。")
-        return parsed_data
-    
     def _get_data_as_dataframe(self, excel_path: Path, sheet_name: str) -> pd.DataFrame:
         """
         (新增辅助方法)
@@ -377,6 +332,68 @@ class ExceptionProcessor:
             df.to_parquet(cache_path, index=False)
             logging.info(f"缓存已成功创建: {cache_path.name}")
             return df
+        
+    def _process_product_models(self, df: pd.DataFrame, job_config: dict):
+        """处理每个产品型号的异常数据。"""
+        product_model_col = job_config['product_model_column']
+        
+        # 清理产品型号列
+        df[product_model_col] = df[product_model_col].astype(str).str.strip()
+
+        # 处理每个产品型号
+        for model in self.product_models:
+            clean_model = str(model).strip()
+            model_data = df[df[product_model_col] == clean_model]
+            
+            if not model_data.empty:
+                logging.info(f"找到 {len(model_data)} 条匹配 '{model}' 的记录，开始解析...")
+                self._parse_model_records(model, model_data, job_config)
+
+    def _parse_model_records(self, model: str, model_data: pd.DataFrame, job_config: dict):
+        """解析单个产品型号的所有记录。"""
+        daily_records_list = []
+        
+        for _, record in model_data.iterrows():
+            # 提取基本信息
+            factory = record.get(job_config['factory_column'], "")
+            factory_str = "" if pd.isna(factory) else str(factory).upper().strip()
+
+            # 解析标题和详情
+            title_text = record[job_config['title_column']]
+            details_text = record[job_config['details_column']]
+            
+            parsed_title = self._parse_text_with_patterns(title_text, job_config.get('title_patterns', {})) # type: ignore
+            parsed_details = self._parse_text_with_patterns(details_text, job_config.get('details_patterns', {})) # type: ignore
+            
+            # 合并数据
+            single_record_data = parsed_title | parsed_details
+            single_record_data['factory'] = factory_str
+            daily_records_list.append(single_record_data)
+
+        # 存储结果
+        if model not in self.processed_results:
+            self.processed_results[model] = {}
+        
+        self.processed_results[model]['daily_records_list'] = daily_records_list
+        self.processed_results[model]['raw_data'] = daily_records_list[0]  # 兼容性处理
+        
+        logging.info(f"'{model}' 解析完成，共缓存 {len(daily_records_list)} 条异常。")
+
+
+    def _parse_text_with_patterns(self, text: str, patterns: dict) -> dict:
+        """(辅助方法) 使用指定的正则表达式字典来解析一段文本。"""
+        parsed_data = {}
+        if not text:
+            return parsed_data
+        for key, pattern in patterns.items():
+            match = re.search(pattern, text)
+            if match:
+                parsed_data[key] = match.group(1).strip()
+            else:
+                parsed_data[key] = "/"
+                logging.warning(f"配置的 '{key}' 正则表达式未在文本中找到匹配项。")
+        return parsed_data
+    
     
     def _execute_format_exception_report(self, job_config: dict):
         """(任务2, 已重构) 为每个产品生成报告段落（支持多条异常合并）。"""
@@ -392,41 +409,47 @@ class ExceptionProcessor:
 
         month_str = datetime.date.today().strftime('M%m')
         
-        for model, model_data in self.processed_results.items():
-            # --- 核心修改开始：优先使用列表数据 ---
+        for model, model_data in self.processed_results.items():                        
             records_list = model_data.get('daily_records_list')
-            
+             
             # 如果没有列表（可能是旧逻辑或某种异常），尝试回退到单条 raw_data 放入列表
             if not records_list and model_data.get('raw_data'):
                 records_list = [model_data.get('raw_data')]
             
             if records_list:
                 formatted_paragraphs = [] # 用于存储该产品所有格式化好的异常段落
+                formatted_titles = []  # 用于存储该产品所有格式化好的title
                 
                 for i, raw_data in enumerate(records_list):
                     data_for_title = raw_data.copy()
                     
-                    # 格式化细节1: 去掉单引号
+                    # 去掉单引号
                     if 'exception_name' in data_for_title:
                         data_for_title['exception_name'] = str(data_for_title['exception_name']).replace("'", "")
-
-                    # 格式化细节3: 统一序号 (如果是多条异常，您可能希望序号不同？目前统一用【异常】)
+                    
+                    # 统一序号 (目前统一用【异常】)
                     title_format_data = {'index': "【异常】", 'month_str': month_str, **data_for_title}
                     
                     title_part = Utils.format_string(title_template, title_format_data)
                     details_part = Utils.format_string(details_template, raw_data)
                     
+                    # 存储title
+                    clean_title = title_part.strip()
+                    if clean_title.startswith("【异常】"):
+                        clean_title = clean_title[4:].strip()  # 去掉"【异常】"前缀并再次清理空格
+                    formatted_titles.append(clean_title)
+
                     # 单个异常的完整段落
                     single_paragraph = f"{title_part.strip()}\n{details_part.strip()}"
                     formatted_paragraphs.append(single_paragraph)
                 
-                # 拼接：将所有异常段落用换行符连接
-                # 这样 report_paragraph 依然是一个字符串，可以直接被后续的正则替换使用
+                # 拼接：将所有异常段落用换行符连接。这样 report_paragraph 依然是一个字符串，可以直接被后续的正则替换使用
                 full_report_paragraph = "\n".join(formatted_paragraphs)
                 
                 self.processed_results[model]['report_paragraph'] = full_report_paragraph
+                self.processed_results[model]['formatted_titles'] = formatted_titles
                 logging.info(f"   --> 产品 '{model}' 已生成包含 {len(formatted_paragraphs)} 条异常的合并报告段落。")
-            # --- 修改结束 ---
+                logging.info(f"   --> 产品 '{model}' 已生成包含 {len(formatted_titles)} 条异常的新增异常。")
     
     def _execute_merge_daily_into_previous(self, job_config: dict):
         """(任务4) 将当日异常根据厂别，合并到前一日的异常记录模块中。"""
