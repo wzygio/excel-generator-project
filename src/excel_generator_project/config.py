@@ -13,11 +13,6 @@ except NameError:
     SRC_ROOT = PROJECT_ROOT / "src"
     logging.warning(f"__file__ 未定义，假定项目根目录为: {PROJECT_ROOT}")
 
-# --- 将 SRC_ROOT 添加到 sys.path (保持不变) ---
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-    logging.debug(f"将 SRC_ROOT 添加到 sys.path: {SRC_ROOT}")
-
 CONFIG_FILE = PROJECT_ROOT / "config" / "config.yaml"
 CONFIG: Dict[str, Any] = {}
 

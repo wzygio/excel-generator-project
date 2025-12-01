@@ -686,20 +686,31 @@ class Utils:
                 return None
 
         try:
-            # 1. 根据当前日期构建子目录路径
             today = datetime.date.today()
-            
-            subdir_name = subdir_pattern.format(year=today.year, month=today.month)
-            search_path = Path(base_path_str) / subdir_name
+            # 创建两个可能的月份：当前月份和上个月份
+            possible_months = [
+                (today.year, today.month),  # 当前月份
+                ((today.year - 1) if today.month == 1 else today.year,  # 处理跨年情况
+                 12 if today.month == 1 else today.month - 1)  # 上个月份
+            ]
 
-            if not search_path.is_dir():
-                logging.warning(f"    动态构建的搜索目录不存在: '{search_path}'")
-                return None
+            # 依次尝试每个可能的月份
+            for year, month in possible_months:
+                subdir_name = subdir_pattern.format(year=year, month=month)
+                search_path = Path(base_path_str) / subdir_name
 
-            # 2. 复用通用的 find_latest_valid_file 工具函数来查找最终文件
-            # (假设此函数已存在于 Utils 中)
-            latest_file = Utils.find_latest_valid_file(str(search_path), file_pattern)
-            return latest_file
+                if search_path.is_dir():
+                    latest_file = Utils.find_latest_valid_file(str(search_path), file_pattern)
+                    if latest_file:
+                        logging.info(f"    在 {year}年{month}月 的目录中找到文件: {latest_file.name}")
+                        return latest_file
+                    else:
+                        logging.info(f"    {year}年{month}月 的目录存在，但未找到匹配的文件")
+                else:
+                    logging.info(f"    目录不存在: {search_path}")
+
+            logging.warning("    在当前月份和上个月份的目录中都未找到匹配的文件")
+            return None
             
         except Exception as e:
             logging.error(f"    在动态查找文件时发生错误: {e}", exc_info=True)

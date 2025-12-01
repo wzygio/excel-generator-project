@@ -1,10 +1,21 @@
 # ui/streamlit_app.py
-import sys, os
+import sys
+import os
 from pathlib import Path
+
+# --- 🛡️ [标准样板代码] 入口路径修正 ---
+current_file = Path(__file__).resolve()
+src_root = current_file.parent.parent.parent # 这里的层级要数对
+
+if str(src_root) not in sys.path:
+    sys.path.insert(0, str(src_root))
+# ------------------------------------
+
 import streamlit as st
 import time, logging, shutil
 import tempfile
 
+# --- [1] 全局资源初始化 (只在这里写一次) ---
 from excel_generator_project.config import (
     TEMPLATE_PATH,
     TEMP_PATH,
@@ -14,10 +25,12 @@ from excel_generator_project.config import (
     CONTENT_GENERATOR_SCRIPT_PATH,
     STYLE_GENERATOR_SCRIPT_PATH
 )
-
-from excel_generator_project.utils.utils import Utils
 from excel_generator_project.app.setup import AppSetup
-AppSetup.initialize_app()
+
+@st.cache_resource
+def init_global_resources():
+    AppSetup.initialize_app()
+init_global_resources()
 
 PYTHON_EXECUTABLE = sys.executable
 

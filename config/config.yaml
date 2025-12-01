@@ -196,7 +196,7 @@ data_processing_jobs:
 
     # 第二步：动态定位需要读取的文件
     file_locator:
-      base_path: '//10.71.4.18/合肥维信诺公共盘/23专项/大数据专项/04 良率预估/2025年'
+      base_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\04 良率预估\2025年'
       directory_rule:
         prefix: 'W'
       name_contains: '良率预测'
