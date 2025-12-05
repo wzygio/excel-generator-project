@@ -103,7 +103,7 @@ exception_processing_jobs:
   # 任务1：提取原始数据
   - job_type: 'extract_daily_exception'
     source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\02 良率异常闭环管理'
-    source_file: 'CT良率异常波动管理表.xlsx'
+    source_file: 'CT良率异常波动管理表'
     sheet_name: 'CT异常波动调查'
     # pandas只能通过读取表头来确定列数
     date_column: '通报日期'
