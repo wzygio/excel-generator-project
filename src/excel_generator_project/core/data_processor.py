@@ -419,44 +419,59 @@ class DataProcessor:
             logging.error(f"    处理任务 'extract_monthly_yield_estimate' 时发生意外错误: {e}", exc_info=True)
 
     def __find_latest_file(self, locator_config: dict) -> Path | None:
-        """(已更新) 根据配置在目录中查找最新的匹配文件，包含二级动态目录查找。"""
+        """
+        (修复Bug版) 根据配置在目录中查找最新的匹配文件。
+        不再依赖当前时间计算周数，而是直接扫描目录下存在的最大周数文件夹，避免跨年ISO周问题。
+        """
         base_path = Path(locator_config.get("base_path", ""))
         name_contains = locator_config.get("name_contains", "")
-        dir_rule = locator_config.get("directory_rule", {}) # 获取二级目录规则
+        dir_rule = locator_config.get("directory_rule", {}) 
 
         if not base_path.is_dir():
             logging.error(f"    基础路径不存在或不是一个目录: {base_path}")
             return None
 
-        search_path = base_path # 默认的搜索路径是基础路径
-        
-        # --- 第一阶段：查找最新子目录 (从本周开始向前查找) ---
+        # --- 第一阶段：查找最新子目录 (扫描并排序模式) ---
         if dir_rule:
             prefix = dir_rule.get("prefix")
             if prefix:
-                # 获取当前周数
-                current_week = datetime.datetime.now().isocalendar()[1]
-                search_paths = []
-                
-                # 从本周开始，向前最多查找5周
-                for week_offset in range(6):  # range(6)包含0-5，共6周
-                    target_week = current_week - week_offset
-                    if target_week < 0:  # 如果周数变为负数，跳过
-                        continue
-                        
-                    dir_name = f"{prefix}{target_week}"
-                    dir_path = base_path / dir_name
+                try:
+                    # 1. 获取所有子目录
+                    all_subdirs = [p for p in base_path.iterdir() if p.is_dir()]
                     
-                    if dir_path.is_dir():
-                        search_paths.append(dir_path)
-                        logging.info(f"    找到目录: {dir_name}")
-                        # 找到目录后立即尝试查找文件
+                    # 2. 筛选以 prefix (例如'W') 开头的目录，并尝试解析后面的数字
+                    valid_week_dirs = []
+                    for p in all_subdirs:
+                        if p.name.startswith(prefix):
+                            try:
+                                # 提取 W 后面的数字 (例如 W51 -> 51)
+                                week_num = int(p.name[len(prefix):])
+                                valid_week_dirs.append((week_num, p))
+                            except ValueError:
+                                # 忽略那些符合前缀但后面不是纯数字的文件夹 (如 W_Backup)
+                                continue
+                    
+                    # 3. 按周数倒序排列 (从大到小: 51, 50, 49...)
+                    valid_week_dirs.sort(key=lambda x: x[0], reverse=True)
+
+                    if not valid_week_dirs:
+                        logging.warning(f"    在 '{base_path.name}' 下未找到任何格式为 '{prefix}+数字' 的子目录。")
+                        return None
+
+                    # 4. 遍历最近的几个文件夹 (例如最近5个)，尝试查找文件
+                    # 这样如果W51里没文件，它会自动去W50找
+                    for week_num, dir_path in valid_week_dirs[:5]:
+                        logging.info(f"    正在检查目录: {dir_path.name}")
                         found_file = self.__search_file_in_directory(dir_path, name_contains)
                         if found_file:
+                            logging.info(f"    --> 锁定目标文件: {found_file.name}")
                             return found_file
-                
-                if not search_paths:
-                    logging.warning(f"    未能在 '{base_path}' 下找到任何以 '{prefix}' 开头的子目录。")
+                            
+                    logging.warning(f"    在最近的 {len(valid_week_dirs[:5])} 个周文件夹中均未找到包含 '{name_contains}' 的文件。")
+                    return None
+
+                except Exception as e:
+                    logging.error(f"    扫描子目录时发生错误: {e}")
                     return None
 
         # --- 第二阶段：在基础路径直接查找（如果没有二级目录规则） ---

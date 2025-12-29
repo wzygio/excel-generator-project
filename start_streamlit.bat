@@ -14,7 +14,6 @@ D:
 cd "D:\wzy\Python\excel-generator-project"
 set PYTHONPATH=%cd%\src;%PYTHONPATH%
 
-
 REM ========================================================
 REM 2. 激活虚拟环境
 REM ========================================================
@@ -23,12 +22,8 @@ IF EXIST "excel-generator-project\Scripts\activate.bat" (
 )
 
 REM ========================================================
-REM 3. 启动 Streamlit (使用 pythonw)
+REM 3. 启动 Streamlit (使用 python)
 REM ========================================================
 ECHO [INFO] Starting new instance...
-start "" pythonw -m streamlit run src\excel_generator_project\app\app.py --server.port 8502 --server.headless true
+python -m streamlit run src\excel_generator_project\app\app.py --server.port 8502
 
-REM ========================================================
-REM 4. 退出
-REM ========================================================
-exit

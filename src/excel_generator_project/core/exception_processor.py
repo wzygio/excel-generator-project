@@ -270,7 +270,7 @@ class ExceptionProcessor:
         time_filter = pd.Series(True, index=df.index)
         
         # 根据时间确定筛选规则
-        if now.hour <12:
+        if now.hour <9:
             # 9点前：提取昨日数据
             target_date = today - datetime.timedelta(days=1)
             date_filter = (datetime_series.dt.date == target_date)
