@@ -452,7 +452,9 @@ class ExceptionProcessor:
                 logging.info(f"   --> 产品 '{model}' 已生成包含 {len(formatted_titles)} 条异常的新增异常。")
     
     def _execute_merge_daily_into_previous(self, job_config: dict):
-        """(任务4) 将当日异常根据厂别，合并到前一日的异常记录模块中。"""
+        """(任务4) 将当日异常根据厂别，合并到前一日的异常记录模块中。
+        重构后支持同一产品下不同厂别的异常分别插入到对应模块。
+        """
         logging.info("  开始执行'合并当日异常'任务...")
         routing_rules = job_config.get('factory_routing_rules', {})
         insertion_pattern = job_config.get('insertion_pattern')
@@ -462,39 +464,73 @@ class ExceptionProcessor:
             return
         
         for model, model_data in self.processed_results.items():
-            # 1. 获取该型号所需的所有数据
-            raw_data = model_data.get('raw_data', {})
-            factory = raw_data.get('factory', 'UNKNOWN')
-            
-            report_paragraph = model_data.get('report_paragraph')
+            # 1. 获取该型号的所有异常记录
+            records_list = model_data.get('daily_records_list')
             previous_exceptions = model_data.get('previous_exceptions')
 
-            if not report_paragraph or not previous_exceptions:
-                logging.info(f"    产品 '{model}'没有当日异常。")
+            if not records_list or not previous_exceptions:
+                logging.info(f"    产品 '{model}' 没有当日异常或无历史记录。")
                 continue
 
-            # 2. 根据厂别进行路由
-            target_module_key = routing_rules.get(factory)
-            if not target_module_key:
-                logging.warning(f"    产品 '{model}' 的厂别 '{factory}' 没有匹配的路由规则，跳过合并。")
-                continue
-            
-            # 3. 获取待修改的文本模块
-            target_text = previous_exceptions.get(target_module_key)
-            if target_text is None:
-                logging.warning(f"    产品 '{model}' 在旧有记录中未找到目标模块 '{target_module_key}'，跳过合并。")
-                continue
+            # 2. 按厂别分组收集异常记录
+            factory_records = {}
+            for record in records_list:
+                factory = record.get('factory', 'UNKNOWN')
+                if factory not in factory_records:
+                    factory_records[factory] = []
+                factory_records[factory].append(record)
 
-            # 4. 执行安全的插入操作
-            logging.info(f"    正在将产品 '{model}' 的异常报告插入到 '{target_module_key}'...")
-            def replacer(match_obj):
-                # match_obj.group(1) 是捕获的 "1、当日异常\n"
-                return f"{match_obj.group(1)}{report_paragraph}\n"
-            
-            # count=1 确保只替换第一个匹配项
-            modified_text = re.sub(insertion_pattern, replacer, target_text, count=1)
+            # 3. 为每个厂别的异常分别执行插入操作
+            for factory, records in factory_records.items():
+                # 根据厂别路由到对应模块
+                target_module_key = routing_rules.get(factory)
+                if not target_module_key:
+                    logging.warning(f"    产品 '{model}' 的厂别 '{factory}' 没有匹配的路由规则，跳过合并。")
+                    continue
+                
+                # 获取目标模块文本
+                target_text = previous_exceptions.get(target_module_key)
+                if target_text is None:
+                    logging.warning(f"    产品 '{model}' 在旧有记录中未找到目标模块 '{target_module_key}'，跳过合并。")
+                    continue
 
-            # 5. 将修改后的文本写回 self.processed_results
-            self.processed_results[model]['previous_exceptions'][target_module_key] = modified_text
+                # 4. 为该厂别的所有异常生成合并报告段落
+                formatted_paragraphs = []
+                for record in records:
+                    # 使用格式化后的异常段落
+                    if 'report_paragraph' in model_data and model_data['report_paragraph']:
+                        # 如果已有合并段落，需要从其中提取当前厂别的段落
+                        # 这里简化处理，直接使用单条记录格式化
+                        title_template = self.templates.get('exception_report_title')
+                        details_template = self.templates.get('exception_report_details')
+                        
+                        month_str = datetime.date.today().strftime('M%m')
+                        data_for_title = record.copy()
+                        if 'exception_name' in data_for_title:
+                            data_for_title['exception_name'] = str(data_for_title['exception_name']).replace("'", "")
+                        title_format_data = {'index': "【异常】", 'month_str': month_str, **data_for_title}
+                        
+                        title_part = Utils.format_string(title_template, title_format_data)
+                        details_part = Utils.format_string(details_template, record)
+                        
+                        single_paragraph = f"{title_part.strip()}\n{details_part.strip()}"
+                        formatted_paragraphs.append(single_paragraph)
+                
+                if not formatted_paragraphs:
+                    logging.warning(f"    产品 '{model}' 的厂别 '{factory}' 没有可格式化的异常记录。")
+                    continue
+
+                # 5. 将该厂别的所有异常合并为一个段落
+                factory_report_paragraph = "\n".join(formatted_paragraphs)
+                
+                # 6. 执行安全的插入操作
+                logging.info(f"    正在将产品 '{model}' 的厂别 '{factory}' 的 {len(formatted_paragraphs)} 条异常报告插入到 '{target_module_key}'...")
+                def replacer(match_obj):
+                    return f"{match_obj.group(1)}{factory_report_paragraph}\n"
+                
+                # 执行替换并更新结果
+                modified_text = re.sub(insertion_pattern, replacer, target_text, count=1)
+                self.processed_results[model]['previous_exceptions'][target_module_key] = modified_text
+
 
             

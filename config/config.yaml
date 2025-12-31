@@ -109,7 +109,7 @@ exception_processing_jobs:
     date_column: '通报日期'
     product_model_column: '产品'
     title_column: '异常通报' 
-    details_column: '工艺整file_locator合&工艺 回复的改善及挽救进展' 
+    details_column: '工艺整合&工艺 回复的改善及挽救进展' 
     factory_column: '责任厂别'
 
     # 新增：用于解析报告标题所需数据的正则表达式
