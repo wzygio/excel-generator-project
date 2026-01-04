@@ -234,8 +234,6 @@ class DataProcessor:
         logging.info(" 开始执行“提取提拉良率目标”多步骤任务...")
 
         # 从总任务配置中获取第一步的专属配置
-        step2_config = job_config.get("row_locator", {})
-        step3_config = job_config.get("column_locator", {})
         
         try:
             # 调用私有辅助方法来执行第一步的具体逻辑
@@ -244,21 +242,21 @@ class DataProcessor:
             
              # --- 准备第二、三步所需的工作表 ---
             # 根据 step2 的配置加载工作簿和工作表
-            s2_full_path = Utils.get_safe_source_path(step2_config)
-            if not s2_full_path or not s2_full_path.is_file():
+            full_path = Utils.get_safe_source_path(job_config)
+            if not full_path or not full_path.is_file():
                 logging.error(f"    未能获取有效的源文件路径，任务中止。")
                 return
 
-            s2_sheet_name = step2_config.get("sheet_name")
-            source_wb = openpyxl.load_workbook(s2_full_path, read_only=True, data_only=True)
-            source_ws = source_wb[s2_sheet_name]
+            sheet_name = job_config.get("sheet_name", "Sheet1")
+            source_wb = openpyxl.load_workbook(full_path, read_only=True, data_only=True)
+            source_ws = source_wb[sheet_name]
 
              # --- 第二步: 为每个产品型号查找其所在的行 ---
-            model_to_row_map = self.__tila_step2_find_model_rows(step2_config, product_models, source_ws)
+            model_to_row_map = self.__tila_step2_find_model_rows(job_config.get("row_locator", {}), product_models, source_ws)
             logging.info(f" 第二步完成：已为 {len(model_to_row_map)} 个型号定位到行。")
 
             # --- 第三步: 查找当前月份所在的列 (只执行一次) ---
-            target_column = self.__tila_step3_find_month_column(step3_config, source_ws)
+            target_column = self.__tila_step3_find_month_column(job_config.get("column_locator", {}), source_ws)
             if not target_column:
                 logging.error(" 第三步失败：未能在指定行找到当前月份列，任务中止。")
                 return
@@ -421,61 +419,76 @@ class DataProcessor:
     def __find_latest_file(self, locator_config: dict) -> Path | None:
         """
         (修复Bug版) 根据配置在目录中查找最新的匹配文件。
+        自动识别当前年份，优先查找当前年份，找不到则查找上一年份。
         不再依赖当前时间计算周数，而是直接扫描目录下存在的最大周数文件夹，避免跨年ISO周问题。
         """
-        base_path = Path(locator_config.get("base_path", ""))
+        # 自动获取当前年份
+        current_year = datetime.date.today().year
+        
+        # 处理base_path中的年份占位符
+        base_path_template = locator_config.get("base_path", "")
         name_contains = locator_config.get("name_contains", "")
         dir_rule = locator_config.get("directory_rule", {}) 
 
-        if not base_path.is_dir():
-            logging.error(f"    基础路径不存在或不是一个目录: {base_path}")
+        # 尝试查找文件，支持年份回退
+        try:
+            for year_offset in [0, -1]:  # 优先当前年份，然后上一年份
+            
+                # 格式化路径中的年份
+                base_path_str = base_path_template.format(year=current_year + year_offset)
+                base_path = Path(base_path_str)
+                
+                if not base_path.is_dir():
+                    logging.warning(f"    路径不存在或不是一个目录: {base_path}")
+                    continue
+                
+                logging.info(f"    正在尝试查找年份 {current_year + year_offset} 的数据...")
+                
+                # --- 第一阶段：查找最新子目录 (扫描并排序模式) ---
+                if dir_rule:
+                    prefix = dir_rule.get("prefix")
+                    if prefix:
+                        # 1. 获取所有子目录
+                        all_subdirs = [p for p in base_path.iterdir() if p.is_dir()]
+                        
+                        # 2. 筛选以 prefix (例如'W') 开头的目录，并尝试解析后面的数字
+                        valid_week_dirs = []
+                        for p in all_subdirs:
+                            if p.name.startswith(prefix):
+                                try:
+                                    # 提取 W 后面的数字 (例如 W51 -> 51)
+                                    week_num = int(p.name[len(prefix):])
+                                    valid_week_dirs.append((week_num, p))
+                                except ValueError:
+                                    # 忽略那些符合前缀但后面不是纯数字的文件夹 (如 W_Backup)
+                                    continue
+                        
+                        # 3. 按周数倒序排列 (从大到小: 51, 50, 49...)
+                        valid_week_dirs.sort(key=lambda x: x[0], reverse=True)
+
+                        if not valid_week_dirs:
+                            logging.warning(f"    在 '{base_path.name}' 下未找到任何格式为 '{prefix}+数字' 的子目录。")
+                            continue
+
+                        # 4. 遍历最近的几个文件夹 (例如最近5个)，尝试查找文件
+                        for week_num, dir_path in valid_week_dirs[:5]:
+                            logging.info(f"    正在检查目录: {dir_path.name}")
+                            found_file = self.__search_file_in_directory(dir_path, name_contains)
+                            if found_file:
+                                logging.info(f"    --> 锁定目标文件: {found_file.name}")
+                                return found_file
+                                
+                        logging.warning(f"    在最近的 {len(valid_week_dirs[:5])} 个周文件夹中均未找到包含 '{name_contains}' 的文件。")
+                        continue
+
+                # --- 第二阶段：在基础路径直接查找（如果没有二级目录规则） ---
+                found_file = self.__search_file_in_directory(base_path, name_contains)
+                if found_file:
+                    return found_file
+                    
+        except Exception as e:
+            logging.error(f"    在当前年份 {current_year} 和上一年份 {current_year - 1} 中均未找到目标文件。")
             return None
-
-        # --- 第一阶段：查找最新子目录 (扫描并排序模式) ---
-        if dir_rule:
-            prefix = dir_rule.get("prefix")
-            if prefix:
-                try:
-                    # 1. 获取所有子目录
-                    all_subdirs = [p for p in base_path.iterdir() if p.is_dir()]
-                    
-                    # 2. 筛选以 prefix (例如'W') 开头的目录，并尝试解析后面的数字
-                    valid_week_dirs = []
-                    for p in all_subdirs:
-                        if p.name.startswith(prefix):
-                            try:
-                                # 提取 W 后面的数字 (例如 W51 -> 51)
-                                week_num = int(p.name[len(prefix):])
-                                valid_week_dirs.append((week_num, p))
-                            except ValueError:
-                                # 忽略那些符合前缀但后面不是纯数字的文件夹 (如 W_Backup)
-                                continue
-                    
-                    # 3. 按周数倒序排列 (从大到小: 51, 50, 49...)
-                    valid_week_dirs.sort(key=lambda x: x[0], reverse=True)
-
-                    if not valid_week_dirs:
-                        logging.warning(f"    在 '{base_path.name}' 下未找到任何格式为 '{prefix}+数字' 的子目录。")
-                        return None
-
-                    # 4. 遍历最近的几个文件夹 (例如最近5个)，尝试查找文件
-                    # 这样如果W51里没文件，它会自动去W50找
-                    for week_num, dir_path in valid_week_dirs[:5]:
-                        logging.info(f"    正在检查目录: {dir_path.name}")
-                        found_file = self.__search_file_in_directory(dir_path, name_contains)
-                        if found_file:
-                            logging.info(f"    --> 锁定目标文件: {found_file.name}")
-                            return found_file
-                            
-                    logging.warning(f"    在最近的 {len(valid_week_dirs[:5])} 个周文件夹中均未找到包含 '{name_contains}' 的文件。")
-                    return None
-
-                except Exception as e:
-                    logging.error(f"    扫描子目录时发生错误: {e}")
-                    return None
-
-        # --- 第二阶段：在基础路径直接查找（如果没有二级目录规则） ---
-        return self.__search_file_in_directory(base_path, name_contains)
 
 
     def __search_file_in_directory(self, directory: Path, name_contains: str) -> Path | None:

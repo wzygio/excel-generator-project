@@ -175,19 +175,15 @@ data_processing_jobs:
   
   - job_type: 'extract_tila_target'
     description: '分步提取提拉良率目标（tila_target）'
+    source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
+    source_file: '提拉目标'
+    sheet_name: '屏体良率预测' # 假设是同一个工作表
     
     # 第二步配置：根据第一步的每个产品型号，查找其所在的行
-    row_locator:
-      # 在哪个文件和工作表中查找产品型号
-      source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
-      source_file: '25年营收预测0514版提拉目标'
-      sheet_name: '屏体良率预测' # 假设是同一个工作表
+    row_locator:  
       search_column: 'A' # 在哪一列中搜索产品型号
     
     column_locator:
-      # 在哪个文件和工作表中查找月份（通常与第二步一致）
-      source_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\01 屏体良率日报-公司早会'
-      source_file: '25年营收预测0514版提拉目标'
       search_row: 3 # 在哪一行中搜索月份
       month_format: '{month}月' # 月份的格式。代码运行时会自动将 {month} 替换为当前的月份数字
 
@@ -196,7 +192,7 @@ data_processing_jobs:
 
     # 第二步：动态定位需要读取的文件
     file_locator:
-      base_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\04 良率预估\2025年'
+      base_path: '\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\04 良率预估\{year}年'
       directory_rule:
         prefix: 'W'
       name_contains: '良率预测'
