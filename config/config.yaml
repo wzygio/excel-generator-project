@@ -15,7 +15,6 @@ paths:
   content_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/content_generator.py'  # 内容生成脚本路径
   style_generator_script_path: 'D:/wzy/Python/excel-generator-project/src/excel_generator_project/style_generator.py'  # 样式生成脚本路径
 
-
 # --- 2. 样式定义 (Style Definitions) ---
 style_definitions:
   # 第一部分任务所需的样式 (保持不变)

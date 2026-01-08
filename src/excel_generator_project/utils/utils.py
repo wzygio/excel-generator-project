@@ -174,6 +174,8 @@ class Utils:
         if not initial_target_path.is_file():
             logging.info(f"   精确匹配的文件不存在，尝试模糊匹配...")
             source_dir = Path(source_directory)
+            
+            # 模糊匹配：只检查文件名中是否包含指定的file_name
             found_files = [f for f in source_dir.iterdir() 
                         if f.is_file() and file_name in f.name]
             
@@ -183,8 +185,9 @@ class Utils:
                 logging.info(f"   找到包含 '{file_name}' 的最新文件: {latest_file.name}")
                 initial_target_path = latest_file
             else:
-                logging.warning(f"   未能找到包含 '{file_name}' 的任何文件。")
+                logging.warning(f"   未能找到包含 '{file_name}' 的文件。")
                 return None
+
 
         # 在复制前，自动解析并净化路径
         final_path_to_copy = Utils.resolve_lock_file(initial_target_path)
@@ -198,6 +201,54 @@ class Utils:
         
         return Utils.get_local_copy(final_path_to_copy, local_cache_dir)
 
+    @staticmethod
+    def get_safe_source_path_year(job_config: dict, 
+                            path_key: str = "source_path",
+                            file_key: str = "source_file") -> Optional[Path]:
+        """
+        (已重构) 增加了对Excel锁定文件的自动处理和文件名模糊匹配。
+        """
+        source_directory = job_config.get(path_key)
+        file_name = job_config.get(file_key)
+        if not source_directory or not file_name:
+            logging.error(f"   任务配置中缺少必要的目录路径键 '{path_key}'。")
+            return None
+
+        # 1. 首先尝试精确匹配
+        initial_target_path = Path(source_directory) / file_name
+        
+        # 2. 如果精确匹配的文件不存在，尝试模糊匹配
+        if not initial_target_path.is_file():
+            logging.info(f"   精确匹配的文件不存在，尝试模糊匹配...")
+            source_dir = Path(source_directory)
+            # 获取当前年份的后两位
+            current_year_suffix = str(datetime.date.today().year)[-2:]
+            
+            found_files = [f for f in source_dir.iterdir() 
+                        if f.is_file() and file_name in f.name and current_year_suffix in f.name]
+            
+            if found_files:
+                # 选择最新的文件
+                latest_file = max(found_files, key=lambda f: f.stat().st_mtime)
+                logging.info(f"   找到包含 '{file_name}' 和年份后缀 '{current_year_suffix}' 的最新文件: {latest_file.name}")
+                initial_target_path = latest_file
+            else:
+                logging.warning(f"   未能找到同时包含 '{file_name}' 和年份后缀 '{current_year_suffix}' 的文件。")
+                return None
+
+
+        # 在复制前，自动解析并净化路径
+        final_path_to_copy = Utils.resolve_lock_file(initial_target_path)
+        if not final_path_to_copy.is_file():
+            logging.error(f"   最终确定的源文件不存在或不是一个文件: '{final_path_to_copy}'")
+            return None
+            
+        # 复制净化后的、最终确定的文件
+        local_cache_dir = PROJECT_ROOT / RESOURCES_DIR
+        local_cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        return Utils.get_local_copy(final_path_to_copy, local_cache_dir)
+    
     @staticmethod
     def resolve_lock_file(source_path: Path) -> Path:
         """

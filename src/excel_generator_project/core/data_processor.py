@@ -242,7 +242,7 @@ class DataProcessor:
             
              # --- 准备第二、三步所需的工作表 ---
             # 根据 step2 的配置加载工作簿和工作表
-            full_path = Utils.get_safe_source_path(job_config)
+            full_path = Utils.get_safe_source_path_year(job_config)
             if not full_path or not full_path.is_file():
                 logging.error(f"    未能获取有效的源文件路径，任务中止。")
                 return
