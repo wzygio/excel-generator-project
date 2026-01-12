@@ -54,8 +54,5 @@ TEMPLATE_PATH = RESOURCES_DIR / Path(PATHS.get("template_file", ""))
 TEMP_PATH = OUTPUT_DIR / Path(PATHS.get("temp_file", ""))
 OUTPUT_PATH = OUTPUT_DIR / Path(PATHS.get("output_file", ""))
 
-DOWNLOADER_SCRIPT_PATH = Path(PATHS.get("downloader_script_path", ""))
-DOWNLOADER_PYTHON_EXECUTABLE = Path(PATHS.get("downloader_python_executable", ""))
-
 CONTENT_GENERATOR_SCRIPT_PATH = Path(PATHS.get("content_generator_script_path", ""))
 STYLE_GENERATOR_SCRIPT_PATH = Path(PATHS.get("style_generator_script_path", ""))

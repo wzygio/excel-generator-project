@@ -20,8 +20,6 @@ from excel_generator_project.config import (
     TEMPLATE_PATH,
     TEMP_PATH,
     PROJECT_ROOT,
-    DOWNLOADER_SCRIPT_PATH,
-    DOWNLOADER_PYTHON_EXECUTABLE,
     CONTENT_GENERATOR_SCRIPT_PATH,
     STYLE_GENERATOR_SCRIPT_PATH
 )
@@ -64,37 +62,6 @@ with st.sidebar:
     
     st.divider()
 
-        # --- 新增：下载数据按钮 ---
-    st.header("🔄 数据准备")
-    if st.button("📥 下载最新数据文件", use_container_width=True, key="download_data_btn"):
-        with st.spinner("正在运行下载脚本..."):
-            
-            # 检查配置是否有效
-            if not DOWNLOADER_SCRIPT_PATH.exists() or not DOWNLOADER_PYTHON_EXECUTABLE.exists():
-                st.error("下载脚本或其Python解释器路径配置错误，请检查 config.py。")
-            else:
-                # 调用 run_subprocess，传入下载脚本的解释器和路径
-                result = AppSetup.run_subprocess(
-                    script_path=str(DOWNLOADER_SCRIPT_PATH),
-                    python_executable=str(DOWNLOADER_PYTHON_EXECUTABLE)
-                    # 下载脚本可能不需要 TEMPLATE_PATH 和 OUTPUT_PATH
-                )
-                st.session_state.download_result = result
-        st.rerun() # 刷新以显示结果
-
-    # 显示下载结果 (如果执行过)
-    download_res = st.session_state.get('download_result')
-    if download_res:
-        if download_res.returncode == 0:
-            st.success("✅ 数据文件下载成功！")
-        else:
-            st.error("❌ 数据文件下载失败。")
-        # 提供一个折叠的日志查看器
-        with st.expander("查看下载日志", expanded=False):
-             st.code(download_res.stdout or download_res.stderr, language="text")
-    # --- 下载数据按钮结束 ---
-
-    st.divider()
 
     if st.button("🔄 Rerun", use_container_width=True):
         # 遍历并删除会话状态中的所有键，实现彻底重置

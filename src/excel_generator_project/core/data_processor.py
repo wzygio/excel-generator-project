@@ -338,7 +338,7 @@ class DataProcessor:
             # --- 步骤1: 动态定位源文件 ---
             file_locator_config = job_config.get("file_locator", {})
             initial_target_path = self.__find_latest_file(file_locator_config)
-            if not initial_target_path: # 如果找不到文件，则返回None
+            if not initial_target_path: 
                 logging.error("    未能找到源文件，任务中止。")
                 return
             
@@ -357,7 +357,7 @@ class DataProcessor:
             header_row = locator_config.get("header_row", 1)
 
             # --- 步骤3: 定位所有需要的列 ---
-            # 3.1 定位“产品型号”所在的列 (即第2个'Item'列)
+            # 3.1 定位“产品型号”所在的列
             model_col_config = locator_config.get("row_locator", {})
             model_col = self.__find_column_by_header(source_ws, model_col_config, header_row)
             
@@ -375,35 +375,37 @@ class DataProcessor:
             logging.info(f"    所有关键列定位成功: 型号列={model_col}, 排产良率列={prod_yield_col}, 当月预估列={month_yield_col}")
 
             # --- 步骤4: 遍历产品型号，查找行并提取数据 ---
-            # 从之前任务中获取产品型号列表
             product_models = self.product_models
             if not product_models:
                 logging.warning("    产品型号列表为空，无法进行数据提取。")
                 return
 
-            # 为了效率，先遍历一次，构建 {型号: 行号} 的映射
-            model_to_row_map = {}
-            for row_idx in range(header_row + 1, source_ws.max_row + 1):
-                cell_value = source_ws[f"{model_col}{row_idx}"].value
-                if isinstance(cell_value, str):
-                    # 检查哪个型号被包含在这个单元格里
-                    for model in product_models:
-                        if model in cell_value:
-                            model_to_row_map[model] = row_idx
-                            break # 假设一个单元格只对应一个型号
+            # --- 核心修改：使用优化后的逻辑构建映射 ---
+            if model_col is not None:
+                model_to_row_map = self.__map_models_to_rows(source_ws, model_col, header_row, product_models)
+            
+            # 打印调试信息，确认 C516 是否被正确找到
+            if 'C516' not in model_to_row_map:
+                logging.warning("    [调试] 依然未找到 C516 的行映射，请检查Excel中该单元格的内容是否标准。")
+            elif 'C51' in model_to_row_map and model_to_row_map['C51'] == model_to_row_map['C516']:
+                logging.error("    [调试] 严重错误：C51 和 C516 映射到了同一行！")
 
             # 根据产品型号列表的顺序，整理并提取最终数据
             production_yield_list = []
             monthly_yield_list = []
+            
             for model in product_models:
                 if model in model_to_row_map:
                     target_row = model_to_row_map[model]
                     prod_value = source_ws[f"{prod_yield_col}{target_row}"].value
                     month_value = source_ws[f"{month_yield_col}{target_row}"].value
-                    production_yield_list.append(f"{prod_value:.1%}")
-                    monthly_yield_list.append(f"{month_value:.1%}")
+                    
+                    prod_str = f"{prod_value:.1%}" if isinstance(prod_value, (int, float)) else "/"
+                    month_str = f"{month_value:.1%}" if isinstance(month_value, (int, float)) else "/"
+                    
+                    production_yield_list.append(prod_str)
+                    monthly_yield_list.append(month_str)
                 else:
-                    # 如果找不到，用None占位以保证列表顺序和长度一致
                     production_yield_list.append("/")
                     monthly_yield_list.append("/")
                     logging.warning(f"      在 {model_col} 列中未找到型号 '{model}' 对应的行。")
@@ -416,6 +418,9 @@ class DataProcessor:
         except Exception as e:
             logging.error(f"    处理任务 'extract_monthly_yield_estimate' 时发生意外错误: {e}", exc_info=True)
 
+
+
+        return model_to_row_map
     def __find_latest_file(self, locator_config: dict) -> Path | None:
         """
         (修复Bug版) 根据配置在目录中查找最新的匹配文件。
@@ -545,6 +550,56 @@ class DataProcessor:
             if cell.value and isinstance(cell.value, str) and search_text in cell.value:
                 return cell.column_letter
         return None
+    
+    def __map_models_to_rows(self, worksheet, model_col: str, header_row: int, product_models: list) -> dict:
+        """
+        (修复版) 建立 {产品型号: 行号} 的映射。
+        策略：
+        1. 优先使用【严格精确匹配】(cell == model)，彻底解决 C51 匹配到 C451 的问题。
+        2. 仅在确实需要时，使用【单词边界正则】作为兜底（确保匹配到的 C51 左右没有数字或字母）。
+        """
+        model_to_row_map = {}
+        
+        # 1. 准备数据结构
+        # 使用 Set 进行 O(1) 的精确查找，同时去除配置中的首尾空格
+        models_set = set(str(m).strip() for m in product_models)
+        
+        logging.info(f"    正在构建型号-行号映射 (策略: 严格精确匹配)...")
+
+        # 2. 遍历 Excel 行
+        for row_idx in range(header_row + 1, worksheet.max_row + 1):
+            cell_value = worksheet[f"{model_col}{row_idx}"].value
+            
+            if isinstance(cell_value, str):
+                cell_text = cell_value.strip() # 去除单元格内容的首尾空格
+                if not cell_text:
+                    continue
+
+                # --- 策略 A: 严格精确匹配 (解决 C51 vs C451 问题的关键) ---
+                # 只有当单元格内容完全等于 "C51" 时才算匹配
+                if cell_text in models_set:
+                    model_to_row_map[cell_text] = row_idx
+                    continue 
+
+                # --- 策略 B: 智能边界匹配 (可选兜底) ---
+                # 如果您的表格 N 列非常干净（如图所示），上面的策略 A 已经足够且最安全。
+                # 但为了防止像 "Product: C51" 这样的情况漏掉，我们可以加一个带边界检查的逻辑。
+                # 它可以防止 "C451" (C左边有数字) 或 "C516" (1右边有数字) 被匹配。
+                
+                # 注意：如果您的N列确实只有型号，建议注释掉下面这段 策略B 的代码，只保留 策略A
+                """
+                for model in product_models:
+                    model_str = str(model).strip()
+                    # 使用正则检查单词边界：确保找到的 model 前后不是字母或数字
+                    # \b 在处理中文时可能不准，所以用 lookbehind/lookahead 模拟
+                    # 意思：前面不能是字母数字，后面也不能是字母数字
+                    pattern = r'(?<![a-zA-Z0-9])' + re.escape(model_str) + r'(?![a-zA-Z0-9])'
+                    if re.search(pattern, cell_text):
+                        model_to_row_map[model_str] = row_idx
+                        break
+                """
+
+        return model_to_row_map
     
     def _execute_extract_risk_items_job(self, job_config: dict):
         """
