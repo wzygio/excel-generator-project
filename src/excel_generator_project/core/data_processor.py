@@ -662,7 +662,10 @@ class DataProcessor:
 
             # --- 5. 步骤4: 合并释放计划 (更新的覆盖基线) ---
             final_plan_map = baseline_plan_map.copy()
-            final_plan_map.update(update_plan_map)
+            # 只有当汇总表里的计划不为空时，才执行覆盖
+            for key, new_plan in update_plan_map.items():
+                if new_plan and str(new_plan).strip():
+                    final_plan_map[key] = new_plan
             logging.info(f"      -> 步骤4完成：已合并释放计划，共 {len(final_plan_map)} 条。")
 
             # --- 6. 步骤5: 组装最终的报告字符串 ---
@@ -755,13 +758,14 @@ class DataProcessor:
                                 text_block = block_match.group(1).strip()
                                 # 解析 (名称, 计划) 元组
                                 matches = re.findall(parser_pattern, text_block) # type: ignore
+                                logging.info(f"        [解析条目数量] {len(matches)} 个")
                                 for risk_name_raw, plan_str_raw in matches:
                                     risk_name = risk_name_raw.strip()
                                     plan_str = plan_str_raw.strip()
                                     if risk_name and plan_str:
                                         baseline_plan_map[(model, risk_name)] = plan_str
-                        
                         found = True
+                        logging.info(f" [基线匹配成功] {model} - {risk_name}: {plan_str}")
                         break # 找到了这个model，继续找下一个
                 
                 if not found:
