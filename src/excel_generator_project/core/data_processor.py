@@ -603,8 +603,8 @@ class DataProcessor:
     
     def _execute_extract_risk_items_job(self, job_config: dict):
         """
-        (已重构) 1.提取模板中的风险品 2.获取基线释放计划 
-        3.获取更新释放计划 4.合并并生成最终报告字符串。
+        (已重构 - 暂时移除基线逻辑) 
+        1.提取模板中的风险品 2.获取更新释放计划 3.合并并生成最终报告字符串。
         """
         logging.info("    开始执行“提取风险品信息”任务...")
         
@@ -618,7 +618,6 @@ class DataProcessor:
         
         try:
             # --- 2. 步骤1: 从(新)日报模板中提取“风险品”文本块和(名称, 良率)元组 ---
-            # (这部分逻辑与我们上一版中的步骤1和步骤2一致)
             source_path = Utils.get_safe_source_path(reader_cfg)
             wb = openpyxl.load_workbook(str(source_path), read_only=True, data_only=True)
             ws = wb[reader_cfg.get("sheet_name")]
@@ -650,23 +649,24 @@ class DataProcessor:
             wb.close()
             logging.info("      -> 步骤1完成：已从新模板中解析出风险品名称和良率。")
 
-            # --- 3. 步骤2: 从“旧日报”中获取“基线”释放计划 ---
-            baseline_cfg = plan_finder_cfg.get("old_release_plan_finder", {})
-            baseline_plan_map = self.__risk_items_build_baseline_plan_lookup(baseline_cfg)
-            logging.info(f"      -> 步骤2完成：已获取 {len(baseline_plan_map)} 条“基线”释放计划。")
+            # --- 3. 步骤2: (暂时去掉) 从“旧日报”中获取“基线”释放计划 ---
+            # baseline_cfg = plan_finder_cfg.get("old_release_plan_finder", {})
+            # baseline_plan_map = self.__risk_items_build_baseline_plan_lookup(baseline_cfg)
+            baseline_plan_map = {} # 暂时置为空字典
+            logging.info("      -> 步骤2跳过：当前已禁用从旧日报提取基线数据。")
 
             # --- 4. 步骤3: 从“风险品汇总表”中获取“更新”释放计划 ---
             update_cfg = plan_finder_cfg.get("new_release_plan_finder", {})
             update_plan_map = self.__risk_items_build_update_plan_lookup(update_cfg)
-            logging.info(f"      -> 步骤3完成：已获取 {len(update_plan_map)} 条“更新”释放计划。")
+            logging.info(f"      -> 步骤3完成：已从汇总表获取 {len(update_plan_map)} 条“更新”释放计划。")
 
-            # --- 5. 步骤4: 合并释放计划 (更新的覆盖基线) ---
+            # --- 5. 步骤4: 合并释放计划 (当前仅包含汇总表内容) ---
             final_plan_map = baseline_plan_map.copy()
             # 只有当汇总表里的计划不为空时，才执行覆盖
             for key, new_plan in update_plan_map.items():
                 if new_plan and str(new_plan).strip():
                     final_plan_map[key] = new_plan
-            logging.info(f"      -> 步骤4完成：已合并释放计划，共 {len(final_plan_map)} 条。")
+            logging.info(f"      -> 步骤4完成：已合并释放计划，共 {len(final_plan_map)} 条有效计划。")
 
             # --- 6. 步骤5: 组装最终的报告字符串 ---
             final_report_strings = {}
@@ -697,6 +697,7 @@ class DataProcessor:
         finally:
             if 'wb' in locals() and wb:
                 wb.close()
+
     
     
     def __risk_items_build_baseline_plan_lookup(self, config: dict) -> dict:
