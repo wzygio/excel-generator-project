@@ -1,0 +1,79 @@
+# ============================================================
+# global.yaml: 全局配置文件
+# ============================================================
+# 本文件是配置链的基础层，定义所有模块共享的全局设置。
+# 覆盖优先级: 默认值 < global.yaml < products/*.yaml < .env
+# ============================================================
+
+app_name: "良率日报生成系统"
+version: "0.1.0"
+debug: false
+
+# ---- 路径配置 ----
+paths:
+  base_dir: "."                     # 项目根目录
+  resources_dir: "resources"        # 源表和模板存放目录
+  temp_dir: "data/temp"             # 临时文件目录
+  log_dir: "logs"                   # 日志文件目录
+  output_dir: "output"              # 输出文件目录
+  template_file: "V3屏体良率日报-A版.xlsx"  # 日报模板文件名
+  temp_file: "temp_output.xlsx"     # 临时输出文件名
+  output_file: "V3屏体良率日报-output.xlsx"  # 最终输出文件名
+
+# ---- 大模型配置 ----
+llm:
+  provider: "deepseek"              # 默认供应商: deepseek / gemini
+  deepseek:
+    base_url: "https://api.deepseek.com"
+    model_name: "deepseek-chat"
+    timeout: 60
+    max_retries: 3
+  gemini:
+    model_name: "gemini-2.0-flash"
+    timeout: 60
+    max_retries: 3
+
+# ---- 日志配置 ----
+logging:
+  level: "INFO"
+  domain_rotation: "midnight"
+  max_days: 30
+
+# ---- 报告生成配置 ----
+report:
+  sections:
+    - gap_analysis        # 当日Gap解释
+    - daily_exception     # 当日异常
+    - known_exception     # 已知异常
+
+  gap_analysis:
+    top_n: 3                           # Top N Gap
+    target_field: "target_defect_rate"
+    actual_field: "actual_defect_rate"
+    group_field: "group_name"
+
+  batch_analysis:
+    min_yield_rate: 30.0               # 最低产出率 % 阈值
+    comparison_batches: 3              # 对比的历史批次数量
+
+  trend_analysis:
+    consecutive_days: 3
+    consecutive_weeks: 3
+
+# ---- 源表文件名校验规则 ----
+source_files:
+  daily_yield:
+    description: "V3良率及不良率By月周天汇总报表"
+    pattern: "V3良率及不良率By月周天*"
+  batch_yield:
+    description: "V3良率及不良率By批次汇总报表"
+    pattern: "V3良率及不良率By批次*"
+  ct_exception:
+    description: "CT异常管理表"
+    pattern: "CT良率异常波动管理表*"
+  target_decomposition:
+    description: "良率目标拆解表"
+    pattern: "*良率目标拆解*"
+  gap_template:
+    description: "日良率Gap分析模板"
+    pattern: "*Gap分析模板*"

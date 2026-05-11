@@ -1,0 +1,56 @@
+[project]
+name = "yield-report-generator"
+version = "0.1.0"
+description = "自动生成良率日报的系统 - 基于LLM的智能分析引擎"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.28.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+    "openai>=1.0.0",          # DeepSeek 兼容 OpenAI SDK
+    "google-genai>=1.0.0",    # Gemini SDK
+    "pyarrow>=10.0.0",
+    "tenacity>=8.0.0",        # 重试机制
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+]
+
+[tool.uv]
+dev-dependencies = ["yield-report-generator[dev]"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/yield_report", "app"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pyright]
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
