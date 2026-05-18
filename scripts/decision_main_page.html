@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>V3生产管理平台</title>
+    <link rel="preload" href="/webroot/decision/resources?path=/com/fr/web/ui/font/iconfont.woff" as="font" type="font/woff" crossorigin>
+    <!--css文件-->
+    
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/web/ui/fineui.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/web/ui/materials.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/web/resources/dist/bundle.min.css&type=plain&parser=dynamic"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/web/core/css/leaflet.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/cloud/front/plugin.min.css&type=plain&parser=dynamic"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/management/export/web/resources/export.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/sync/tab/plugin.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/download/info/tab/plugin.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/operation/client/web/css/plugin.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/report/system/check/web/css/plugin.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/ins/web/css/inspection.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=com/fr/plugin/recommendation/web/css/plugin.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/decision/web/resources/dist/decision.report.min.css&type=plain&parser=plain"/>
+<link rel="stylesheet" type="text/css" href="/webroot/decision/file?path=/com/fr/web/resources/dist/connection.min.css&type=plain&parser=dynamic"/>
+
+</head>
+<body>
+<div id="wrapper"></div>
+
+<script type="text/javascript">
+    window.Dec = window.Dec || {};
+    window.Dec.injection = window.Dec.injection || {};
+</script>
+
+<script type="text/javascript">
+    Dec.fineServletURL = "/webroot/decision";
+
+    Dec.system = JSON.parse('{\"cluster\":true,\"runtimeVersion\":8.0,\"functions\":[{\"functionID\":\"17\",\"functionName\":\"Fine-Core_LIC_Support_WorkBook\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"19\",\"functionName\":\"Fine-Core_LIC_Support_Multi_Env\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"0\",\"functionName\":\"Fine-Core_LIC_Support_Source_Relation\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"14\",\"functionName\":\"Fine-Core_LIC_Support_Parameter_Interface\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"11\",\"functionName\":\"Fine-Core_LIC_Support_Privilege\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"10\",\"functionName\":\"Fine-Core_LIC_Support_Online_Write\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"2\",\"functionName\":\"Fine-Core_LIC_Support_Advanced_Formula\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"5\",\"functionName\":\"Fine-Core_LIC_Support_Dynamic_Chart\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"6\",\"functionName\":\"Fine-Core_LIC_Support_Schedule\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"18\",\"functionName\":\"Fine-Core_LIC_Support_Remote_Design\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"25\",\"functionName\":\"Fine-Core_Poly\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"26\",\"functionName\":\"Fine-Core_Chart_Advanced_Interaction\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"28\",\"functionName\":\"Fine-Core_M_Data_Analysis\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"30\",\"functionName\":\"Fine-Core_Mobile_show\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"31\",\"functionName\":\"Fine-Core_Excel_Import\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"32\",\"functionName\":\"Fine-Core_FS_BI\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"34\",\"functionName\":\"Fine-Core_Mobile_BI\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"48\",\"functionName\":\"Fine-Core_Static_Chart\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"35\",\"functionName\":\"Fine-Core_LIC_Form\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"36\",\"functionName\":\"Fine-Core_Data_Upload\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"38\",\"functionName\":\"Fine-Core_Re_Multi_Privilege\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"42\",\"functionName\":\"Fine-Core_Func_Print_Export\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"43\",\"functionName\":\"Fine-Core_Func_AlphaFine\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"44\",\"functionName\":\"Fine_Core_Func_AI\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"45\",\"functionName\":\"Fine-Core_Func_SMS\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"46\",\"functionName\":\"Fine-Core_Func_Multi_Login\",\"support\":true,\"subItems\":\"\"},{\"functionID\":\"47\",\"functionName\":\"Fine-Core_Func_Extended_Chart\",\"support\":true,\"subItems\":\"\"}],\"authConfig\":{\"gradeAuth\":true,\"editReportAuth\":true,\"dataConnectAuth\":false,\"postAuth\":false,\"scheduleAuth\":false},\"frontSM4Key\":\"d8c7a3e1f13548bdfd86b9d310c16100\",\"styleConfig\":{\"platformTitle\":\"V3生产管理平台\",\"headerType\":2,\"logoImgId\":\"MapCache1594260734900_791\",\"logoImgName\":\"VISIONOX.png\",\"headBgMode\":0,\"headBgImgId\":\"\",\"headBgImgName\":\"\",\"headBgColor\":\"\",\"colorScheme\":1,\"customColors\":[\"#ffffff\",\"#4b7efe\",\"#2c3d59\",\"#f2f4f7\",\"#ffffff\",\"#3d4d66\",\"#1a1a1a\"]},\"themeId\":\"\",\"jsEngine\":{\"decision\":\"j2v8\"},\"syncUserStrategy\":1,\"webSocket\":{\"webSocketContextName\":\"\/socket.io\",\"webSocketProtocol\":\"plain\",\"webSocketNameSpace\":\"\/system\",\"webSocketPort\":[38889]},\"syncDataSet\":true,\"manualAuthentication\":\"ldap\",\"transmissionEncryption\":2,\"loginTimeout\":5400000,\"emailAvailable\":true,\"httpOnly\":false,\"authentication\":\"ldap\",\"hyperlink\":{},\"frontSeed\":\"FGljWYEQgXJGEhTP\",\"timeZone\":28800000,\"weekBegins\":0,\"versionInfo\":[{\"data\":null,\"classInfo\":null,\"id\":\"Wq4dz0Iw\",\"nameSpace\":null,\"nameLocaleKey\":\"Fine-Core_Module_Name\",\"version\":\"10.0\",\"minorVersion\":\"10.0.18\",\"jarTime\":\"Build#persist-2021.08.26.16.07.30.372\",\"level\":\"10\",\"name\":\"core\"},{\"data\":null,\"classInfo\":null,\"id\":\"llLjgrSd\",\"nameSpace\":null,\"nameLocaleKey\":\"Fine-Datasource_Module_Name\",\"version\":\"10.0\",\"minorVersion\":\"10.0.18\",\"jarTime\":\"Build#persist-2021.08.26.16.08.07.988\",\"level\":\"\",\"name\":\"datasource\"},{\"data\":null,\"classInfo\":null,\"id\":\"tQ3ySKp3\",\"nameSpace\":null,\"nameLocaleKey\":\"Fine-Dec_Module_Name\",\"version\":\"10.0\",\"minorVersion\":\"10.0.18\",\"jarTime\":\"Build#persist-2021.08.26.16.13.59.992\",\"level\":\"10\",\"name\":\"decision\"},{\"data\":null,\"classInfo\":null,\"id\":\"8TmpTfCx\",\"nameSpace\":null,\"nameLocaleKey\":\"Fine-Engine_Report_Module_Name\",\"version\":\"10.0\",\"minorVersion\":\"10.0.18\",\"jarTime\":\"Build#persist-2021.08.26.17.28.49.519\",\"level\":\"10\",\"name\":\"report\"}],\"webSocketTokenInHeader\":false,\"smsAvailable\":false,\"adminUser\":[\"admin\"],\"loginInfoRemind\":false,\"passwordEncryption\":4,\"subThemeConfig\":{},\"themeConfig\":[],\"syncAuthentication\":\"ldap\",\"cookiePath\":\"\/\"}');
+    Dec.personal = JSON.parse('{\"creationType\":1,\"realName\":\"王梓尧\",\"userExtraProps\":[\"user_product_type.platform\",\"user_product_type.mobile\"],\"displayName\":\"王梓尧(V0141351)\",\"userId\":\"0b0fd2f1-10f2-4711-b4e3-5d647bab0219\",\"modules\":[],\"username\":\"V0141351\",\"homepage\":{\"pcURL\":\"Common\/HomePage01.frm\",\"homePageType\":0,\"padURL\":\"\",\"mobileURL\":\"\"}}');
+
+</script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/web/socketio/dist/socket.io.js&type=plain&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/web/ui/fineui.min.js&type=plain&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com.fr.decision.web.i18n.I18nTextGenerator&time=1779086500615&type=class&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com.fr.decision.web.constant.ConstantGenerator&type=class&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/web/ui/materials.min.js&type=plain&parser=plain"></script>
+
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/web/resources/dist/bundle.min.js&type=plain&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/plugin/decision/background/sso/web/sso.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.decision.background.sso"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/cloud/front/plugin.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.cloud.analytics.v10"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/cloud/front/fine.solid.js&type=plain&parser=plain&pluginId=com.fr.plugin.cloud.analytics.v10"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/performance/base/resources/js/performance_plugin_component.js&type=plain&parser=plain&pluginId=com.fr.plugin.performance.optimization.v10"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/management/export/web/resources/export.js&type=plain&parser=plain&pluginId=com.fr.plugin.management.export"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/sync/tab/plugin.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.log.sync"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/download/info/tab/plugin.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.download.log"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/operation/client/web/js/plugin.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.operation"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/report/system/check/web/js/plugin.min.js&type=plain&parser=plain&pluginId=com.fr.plugin.report.system.check"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/ins/web/js/inspection.js&type=plain&parser=plain&pluginId=com.fr.plugin.ins"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=com/fr/plugin/recommendation/web/js/plugin.js&type=plain&parser=plain&pluginId=com.fr.plugin.recommendation"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/decision/web/resources/dist/decision.report.min.js&type=plain&parser=plain"></script>
+<script type="text/javascript" src="/webroot/decision/file?path=/com/fr/web/resources/dist/connection.min.js&type=plain&parser=plain"></script>
+
+<script>
+    Dec.start({
+        theme: {
+            name: "custom"
+        }
+    });
+</script>
+</body>
+
+</html>

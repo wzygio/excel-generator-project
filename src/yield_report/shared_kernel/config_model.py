@@ -22,8 +22,6 @@ config_model.py: Pydantic V2 配置模型定义
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -88,11 +86,11 @@ class ProductConfig(BaseModel):
 
     name: str = Field(..., description="产品名称/型号")
     description: str = Field(default="", description="产品描述")
-    llm_prompt_overrides: Optional[dict[str, str]] = Field(
+    llm_prompt_overrides: dict[str, str] | None = Field(
         default=None,
         description="针对该产品的 LLM Prompt 覆盖",
     )
-    rules: Optional[dict] = Field(default=None, description="产品特定的业务规则")
+    rules: dict | None = Field(default=None, description="产品特定的业务规则")
 
 
 class GapAnalysisConfig(BaseModel):

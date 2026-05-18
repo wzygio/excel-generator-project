@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from dotenv import load_dotenv
 from tenacity import (
@@ -73,9 +73,9 @@ class LLMManager:
         因此天然支持多线程场景，无需额外的锁机制。
     """
 
-    _instance: Optional["LLMManager"] = None
+    _instance: LLMManager | None = None
 
-    def __new__(cls, *args, **kwargs) -> "LLMManager":
+    def __new__(cls, *args, **kwargs) -> LLMManager:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -157,8 +157,8 @@ class LLMManager:
     def chat(
         self,
         provider: str = "deepseek",
-        messages: Optional[list[dict[str, str]]] = None,
-        system_prompt: Optional[str] = None,
+        messages: list[dict[str, str]] | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs,
@@ -201,7 +201,7 @@ class LLMManager:
     def _call_deepseek(
         self,
         messages: list[dict[str, str]],
-        system_prompt: Optional[str],
+        system_prompt: str | None,
         temperature: float,
         max_tokens: int,
         retry_decorator,
@@ -272,8 +272,8 @@ class LLMManager:
     def chat_stream(
         self,
         provider: str = "deepseek",
-        messages: Optional[list[dict[str, str]]] = None,
-        system_prompt: Optional[str] = None,
+        messages: list[dict[str, str]] | None = None,
+        system_prompt: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         **kwargs,

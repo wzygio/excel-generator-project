@@ -2,10 +2,9 @@
 app/main.py: Streamlit 前端入口
 
 本模块是良率日报生成系统的用户界面，提供:
-1. 文件上传区: 支持上传 5 份源表数据
-2. 分析控制区: 触发 Gap 分析、异常分析、趋势分析
-3. 结果预览区: 展示分析结果摘要
-4. 报告下载区: 下载生成的 Excel 报告
+1. 报表下载区: 通过"一键自动下载"或自然语言查询获取源表文件
+2. 数据上传与分析区: 支持上传 5 份源表数据并触发分析
+3. 报告下载区: 下载生成的 Excel 报告
 
 界面布局:
     ┌──────────────────────────────────────────┐
@@ -13,13 +12,17 @@ app/main.py: Streamlit 前端入口
     ├──────────────────────────────────────────┤
     │  侧边栏: 环境状态 + 配置信息              │
     │  ┌────────────────────────────────────┐   │
-    │  │  Tab1: 数据上传与分析              │   │
+    │  │  Tab1: 报表下载                    │   │
+    │  │  ├── 一键自动下载按钮              │   │
+    │  │  ├── 自然语言查询输入              │   │
+    │  │  └── 文件列表                      │   │
+    │  ├────────────────────────────────────┤   │
+    │  │  Tab2: 数据上传与分析              │   │
     │  │  ├── 文件上传区 (5份源表)          │   │
     │  │  ├── 分析控制按钮                  │   │
     │  │  └── 结果预览                      │   │
     │  ├────────────────────────────────────┤   │
-    │  │  Tab2: 报告下载                    │   │
-    │  │  └── 下载生成的 Excel 文件         │   │
+    │  │  Tab3: 报告下载                    │   │
     │  └────────────────────────────────────┘   │
     └──────────────────────────────────────────┘
 
@@ -33,6 +36,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -44,6 +48,10 @@ from app.utils.app_setup import (
     print_startup_banner,
 )
 from app.utils.reloader import unload_all_controlled_modules
+from yield_report.yield_report.application.orchestrator import (
+    DataAcquisitionOrchestrator,
+)
+from yield_report.yield_report.core.query_parser import ReportType
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +68,20 @@ st.set_page_config(
 # ============================================================
 # 应用初始化 (只在首次运行时执行)
 # ============================================================
+
+
 @st.cache_resource
 def init_app():
     """初始化应用（缓存，仅执行一次）。"""
     config = initialize_app()
     print_startup_banner(config)
     return config
+
+
+@st.cache_resource
+def init_orchestrator() -> DataAcquisitionOrchestrator:
+    """初始化数据获取编排器（缓存，仅执行一次）。"""
+    return DataAcquisitionOrchestrator()
 
 
 try:
@@ -91,6 +107,13 @@ if "analysis_results" not in st.session_state:
 
 if "report_ready" not in st.session_state:
     st.session_state.report_ready = False
+
+# ---- 报表下载相关状态 ----
+if "query_history" not in st.session_state:
+    st.session_state.query_history: list[dict] = []
+
+if "last_query_result" not in st.session_state:
+    st.session_state.last_query_result = None
 
 # ============================================================
 # 侧边栏
@@ -134,14 +157,193 @@ with st.sidebar:
 # 主界面
 # ============================================================
 st.title("📊 良率日报生成系统")
-st.caption("上传源表数据，系统将通过 LLM 自动分析并生成标准化的 Excel 日报。")
+st.caption("支持一键自动下载或自然语言查询获取源表数据，通过 LLM 自动分析并生成标准化的 Excel 日报。")
 
-tab1, tab2 = st.tabs(["📤 数据上传与分析", "📥 报告下载"])
+tab1, tab2, tab3 = st.tabs(
+    ["📥 报表下载", "📤 数据上传与分析", "📥 报告下载"]
+)
 
 # ============================================================
-# Tab 1: 数据上传与分析
+# Tab 1: 报表下载 (默认 Tab，支持一键下载 + 自然语言查询)
 # ============================================================
 with tab1:
+    st.markdown("### 📥 报表下载")
+    st.caption(
+        "一键获取所有源表文件，或通过自然语言描述您需要的报表，系统将自动从 FineReport 或本地文件系统获取对应数据。"
+    )
+
+    # ========== 一键自动下载区 ==========
+    st.markdown("#### ⚡ 快捷操作")
+
+    col_auto, col_info = st.columns([2, 3])
+
+    with col_auto:
+        auto_download = st.button(
+            "📥 一键下载所有报表",
+            type="primary",
+            use_container_width=True,
+            help="自动下载全部 5 份源表文件：V3良率报表(月周天+批次)、CT异常管理表、良率目标拆解表、Gap分析模板",
+        )
+
+    with col_info:
+        st.info(
+            "点击后将自动从 FineReport 及本地文件系统获取当天所需的全部 5 份源表文件。"
+        )
+
+    # 执行一键下载
+    if auto_download:
+        orchestrator = init_orchestrator()
+        with st.spinner("正在一键下载所有报表..."):
+            try:
+                result = orchestrator.process_user_query("下载今天所有需要的报表")
+                st.session_state.last_query_result = result
+                st.session_state.query_history.append({
+                    "query": "一键下载所有报表",
+                    "result": result,
+                })
+                if result.success:
+                    st.success("✅ 一键下载完成！")
+                else:
+                    st.warning("⚠️ 部分文件下载失败，详情见下方结果。")
+            except Exception as e:
+                st.error(f"❌ 下载过程中发生错误: {e}")
+                logger.exception("一键下载失败")
+
+    st.divider()
+
+    # ========== 自然语言查询区 ==========
+    st.markdown("#### 💬 自然语言查询")
+    st.caption("如果快捷操作不满足需求，可以输入更具体的查询条件。")
+
+    # 示例提示
+    with st.expander("💡 查询示例（点击展开）", expanded=False):
+        st.markdown("""
+        您可以尝试以下查询语句：
+
+        | 查询目的 | 示例语句 |
+        |----------|----------|
+        | 下载月周天报表 | "帮我下载今天的V3良率报表" |
+        | 下载批次报表 | "下载最近三个月的批次良率数据" |
+        | 下载批次报表含型号 | "下载指定产品型号的批次良率数据" |
+        | 获取本地文件 | "帮我获取CT异常管理表" |
+        | 获取所有文件 | "帮我下载今天所有需要的报表" |
+        | 指定日期 | "下载2026年5月10日的良率报表" |
+        """)
+
+    # 对话输入区
+    col_input, col_btn = st.columns([5, 1])
+
+    with col_input:
+        user_query = st.text_input(
+            "自然语言查询",
+            placeholder="例如: 帮我下载今天的V3良率报表",
+            label_visibility="collapsed",
+        )
+
+    with col_btn:
+        submitted = st.button("🚀 执行查询", type="secondary", use_container_width=True)
+
+    # 执行查询
+    if submitted and user_query:
+        with st.chat_message("user"):
+            st.markdown(user_query)
+
+        try:
+            orchestrator = init_orchestrator()
+            with st.spinner("正在解析查询并获取数据..."):
+                result = orchestrator.process_user_query(user_query)
+
+            st.session_state.last_query_result = result
+            st.session_state.query_history.append({
+                "query": user_query,
+                "result": result,
+            })
+
+        except Exception as e:
+            st.error(f"❌ 处理查询时发生错误: {e}")
+            logger.exception("自然语言查询处理失败")
+
+    elif submitted and not user_query:
+        st.warning("请输入查询语句。")
+
+    # ========== 结果显示区 ==========
+    last_result = st.session_state.get("last_query_result")
+    if last_result:
+        st.divider()
+        st.markdown("#### 📋 查询解析结果")
+
+        # 显示解析参数
+        req = last_result.parsed_request
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"**报表类型**: {req.report_type.value if req.report_type else '全部'}")
+            st.markdown(f"**开始日期**: {req.start_date or '自动'}")
+        with col2:
+            st.markdown(f"**结束日期**: {req.end_date or '自动'}")
+            st.markdown(
+                f"**产品型号**: "
+                f"{', '.join(req.product_models) if req.product_models else '全部'}"
+            )
+
+        if req.user_intent:
+            st.info(f"📝 意图识别: {req.user_intent}")
+
+        if req.uncertainty_notes:
+            st.warning(f"⚠️ 不确定信息: {req.uncertainty_notes}")
+
+        # 显示执行结果
+        st.divider()
+        st.markdown(f"#### 📁 执行结果: {last_result.summary}")
+
+        for res in last_result.results:
+            if res.success:
+                st.success(
+                    f"✅ **{res.file_description}** → `{res.file_path}`"
+                )
+            else:
+                st.error(
+                    f"❌ **{res.file_description}** → {res.error_message}"
+                )
+
+        # 显示 resources/ 目录文件列表
+        st.divider()
+        st.markdown("#### 📂 resources/ 目录当前文件")
+
+        resources_dir = Path(APP_CONFIG.paths.resources_dir)
+        if resources_dir.exists():
+            files = [
+                f for f in resources_dir.iterdir()
+                if f.is_file() and f.suffix in (".xlsx", ".xls", ".csv")
+            ]
+            if files:
+                for f in sorted(files, key=lambda x: x.stat().st_mtime, reverse=True):
+                    mtime = f.stat().st_mtime
+                    mtime_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                    st.text(f"📄 {f.name}  ({f.stat().st_size / 1024:.1f} KB, {mtime_str})")
+            else:
+                st.info("resources/ 目录下暂无 Excel 文件。")
+        else:
+            st.info("resources/ 目录不存在。")
+
+    # ---- 查询历史 ----
+    if st.session_state.query_history:
+        st.divider()
+        st.markdown("#### 📜 查询历史")
+
+        for i, entry in enumerate(reversed(st.session_state.query_history[-5:])):
+            with st.container():
+                col_q, col_r = st.columns([1, 3])
+                with col_q:
+                    st.caption(f"#{len(st.session_state.query_history) - i}")
+                with col_r:
+                    status = "✅" if entry["result"].success else "❌"
+                    st.markdown(f"{status} {entry['query']}")
+                st.divider()
+
+# ============================================================
+# Tab 2: 数据上传与分析
+# ============================================================
+with tab2:
     st.markdown("### 第一步：上传源表数据")
     st.caption("请上传以下 5 份源表文件（均为 .xlsx 格式）")
 
@@ -267,9 +469,9 @@ with tab1:
             st.json(st.session_state.analysis_results)
 
 # ============================================================
-# Tab 2: 报告下载
+# Tab 3: 报告下载
 # ============================================================
-with tab2:
+with tab3:
     st.markdown("### 生成报告下载")
 
     if not st.session_state.report_ready:

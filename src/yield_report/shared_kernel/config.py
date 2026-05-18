@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -50,7 +49,7 @@ def _load_yaml_file(file_path: Path) -> dict:
     """安全加载单个 YAML 文件，返回字典。"""
     if not file_path.exists():
         return {}
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
     return data if isinstance(data, dict) else {}
 
@@ -105,15 +104,15 @@ class ConfigLoader:
         5. 通过 Pydantic V2 校验并返回 AppConfig 实例
     """
 
-    _instance: Optional["ConfigLoader"] = None
-    _config: Optional[AppConfig] = None
+    _instance: ConfigLoader | None = None
+    _config: AppConfig | None = None
 
-    def __new__(cls, *args, **kwargs) -> "ConfigLoader":
+    def __new__(cls, *args, **kwargs) -> ConfigLoader:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, config_dir: Optional[Path] = None) -> None:
+    def __init__(self, config_dir: Path | None = None) -> None:
         """初始化时仅首次有效，后续调用忽略。"""
         # 始终更新 config_dir，以支持测试中的不同临时目录
         if config_dir is not None:
@@ -130,7 +129,7 @@ class ConfigLoader:
 
     def load(
         self,
-        global_yaml: Optional[str | Path] = None,
+        global_yaml: str | Path | None = None,
     ) -> AppConfig:
         """
         执行完整的配置加载链路。

@@ -1,0 +1,89 @@
+# ============================================================
+# 🧭 AGENTS.md — 总路由 (Progressive Disclosure)
+# ============================================================
+# 本文件是 Roo Code 的导航入口，定义项目的文档映射、红线纪律和快速命令。
+# 遵循 OpenAI AGENTS.md 约定，实现渐进式信息披露。
+
+## 1. 文档映射表 (Progressive Disclosure)
+
+| 文档（约定路径） | 用途 | 何时阅读 |
+|------------------|------|----------|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 系统架构蓝图（技术栈、DDD结构、数据流、缓存、容灾） | 首次进入项目 / 需要理解整体架构时 |
+| [`docs/design/shared_kernel.md`](docs/design/shared_kernel.md) | Shared Kernel 设计（配置、LLM、日志） | 需要修改配置体系或 LLM 调用逻辑时 |
+| [`docs/design/yield_report_domain.md`](docs/design/yield_report_domain.md) | 良率报告领域设计（Gap分析、异常分析、趋势分析） | 需要修改良率分析逻辑时 |
+| [`docs/design/development_framework.md`](docs/design/development_framework.md) | 开发框架约定（EPCC Flow、TDD纪律、红线） | 开始编码前 / 需要了解开发规范时 |
+| [`docs/design/business_boundary.md`](docs/design/business_boundary.md) | 业务边界（IN Scope / OUT of Scope） | 需要新增功能 / 判断需求范围时 |
+| [`skills/README.md`](skills/README.md) | 技能库索引（专项解决方案） | 遇到已知技术问题时 |
+| [`docs/prompt/`](docs/prompt/) | AI Prompt 模板（开发时使用） | 需要 AI 辅助生成代码或文档时 |
+
+## 2. 全局红线纪律
+
+以下红线为硬性约束，任何代码修改不得违反：
+
+| 编号 | 红线 | 说明 |
+|------|------|------|
+| R01 | **禁止修改 `global.yaml` 结构** | 配置结构由 Pydantic V2 [`AppConfig`](src/yield_report/shared_kernel/config_model.py:133) 校验，如需新增配置项必须先在 model 中定义 |
+| R02 | **Shared Kernel 使用单例模式** | [`ConfigLoader`](src/yield_report/shared_kernel/config.py:96) 和 [`LLMManager`](src/yield_report/shared_kernel/infrastructure/llm_handler.py:64) 均为单例，禁止重新实例化 |
+| R03 | **Core 层严禁直接依赖 Infrastructure** | Core 层通过接口依赖倒置，禁止直接 import openpyxl、pandas 等 IO 库 |
+| R04 | **测试必须 100% PASS 才能提交** | 运行 `uv run pytest tests/ -v --tb=short` |
+| R05 | **LLM 调用必须使用 LLMManager** | 禁止直接实例化 OpenAI/gemini 客户端，统一通过 [`llm_manager.chat()`](src/yield_report/shared_kernel/infrastructure/llm_handler.py:157) 调用 |
+| R06 | **新增依赖必须经过评估** | 禁止随意添加第三方库，必须在 [`pyproject.toml`](pyproject.toml) 中声明并说明用途 |
+| R07 | **类型标注强制** | 所有函数/方法必须包含完整类型标注，使用 `from __future__ import annotations` |
+| R08 | **禁止修改 `.roorules` 自身结构** | 本文件的文档映射表和红线纪律结构固定，仅允许更新内容 |
+
+## 3. 快速命令
+
+```bash
+# ---- 开发环境 ----
+# 启动 Streamlit UI
+uv run streamlit run app/main.py --server.port 8502
+
+# 或通过批处理文件启动
+start_streamlit.bat
+
+# ---- 测试命令 ----
+# 运行全部测试
+uv run pytest tests/ -v --tb=short
+
+# 运行单元测试
+uv run pytest tests/unit/ -v --tb=short
+
+# 运行集成测试
+uv run pytest tests/integration/ -v --tb=short
+
+# 测试带覆盖率
+uv run pytest tests/ -v --tb=short --cov=src
+
+# ---- 代码质量 ----
+# 类型检查
+uv run pyright
+
+# Lint 检查
+uv run ruff check .
+
+# 格式化
+uv run ruff format .
+
+# ---- 依赖管理 ----
+# 安装项目依赖
+uv sync
+
+# 添加新依赖
+uv add <package-name>
+
+# 添加开发依赖
+uv add --dev <package-name>
+```
+
+## 4. 项目元信息
+
+| 属性 | 值 |
+|------|-----|
+| 项目名称 | yield-report-generator |
+| Python版本 | ≥ 3.11 |
+| 包管理器 | uv |
+| 构建工具 | Hatchling |
+| 架构风格 | DDD (Domain-Driven Design) |
+| 测试框架 | Pytest |
+| Lint | Ruff |
+| 类型检查 | Pyright |
