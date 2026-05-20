@@ -25,5 +25,4 @@ REM ========================================================
 REM 3. 启动 Streamlit (使用 python)
 REM ========================================================
 ECHO [INFO] Starting new instance...
-uv run streamlit run src\excel_generator_project\app\app.py --server.port 8502
-
+uv run streamlit run app\main.py --server.port 8502

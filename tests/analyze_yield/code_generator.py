@@ -144,18 +144,369 @@ def _build_markdown_table(df: pd.DataFrame, max_data_rows: int = 5) -> str:
     return "\n".join(lines)
 
 
+# =====================================================================
+# 加密文件支持
+# =====================================================================
+
+# 标准 xlsx ZIP 文件头
+_PK_ZIP_HEADER = b"PK\x03\x04"
+# 企业加密软件加密后的文件头特征（全零开头）
+_ENCRYPTED_MAGIC_PREFIX = b"\x00\x00\x00\x00"
+
+
+def _is_encrypted(file_path: Path) -> bool:
+    """通过文件头魔数检测文件是否被企业加密软件加密。
+
+    加密文件头不是 PK 开头，而是加密软件的魔数（全零或其他）。
+    """
+    with open(file_path, "rb") as f:
+        magic = f.read(4)
+    return magic != _PK_ZIP_HEADER
+
+
+def _detect_sheet_name_via_com(file_path: Path, target_hint: str | None = None) -> str:
+    """通过 COM 读取第一个可用 sheet 的名称（用于加密文件）。
+
+    Args:
+        file_path: Excel 文件路径
+        target_hint: 可选的目标 sheet 名称提示
+
+    Returns:
+        第一个非隐藏 sheet 的名称，或 target_hint，或 "Sheet1"
+    """
+    if target_hint:
+        return target_hint
+    try:
+        import win32com.client  # type: ignore[import-untyped]
+
+        excel = win32com.client.Dispatch("Excel.Application")
+        excel.Visible = False
+        excel.DisplayAlerts = False
+        wb = excel.Workbooks.Open(str(file_path))
+        name = str(wb.Sheets(1).Name)
+        wb.Close(SaveChanges=False)
+        excel.Quit()
+        return name
+    except Exception:
+        return "CT"  # 默认回退
+
+
+def _extract_schema_via_com(file_path: Path, sheet_name: str, nrows: int = 20) -> str:
+    """通过 COM 从加密 Excel 中读取数据并提取 schema（动态回退方案）。
+
+    当静态 Schema 不存在时使用此方案。
+    注意：COM 方式速度较慢（需启动 Excel 进程），仅作回退。
+
+    Args:
+        file_path: Excel 文件路径
+        sheet_name: 目标 sheet 名称
+        nrows: 读取行数
+
+    Returns:
+        Markdown 格式的 Schema 描述
+    """
+    try:
+        import win32com.client  # type: ignore[import-untyped]
+
+        excel = win32com.client.Dispatch("Excel.Application")
+        excel.Visible = False
+        excel.DisplayAlerts = False
+        wb = excel.Workbooks.Open(str(file_path))
+        ws = wb.Sheets(sheet_name)
+
+        max_row = ws.UsedRange.Rows.Count
+        max_col = ws.UsedRange.Columns.Count
+        read_rows = min(nrows, max_row)
+
+        # 读取数据到二维列表
+        data: list[list] = []
+        for row_idx in range(1, read_rows + 1):
+            row_data: list = []
+            for col_idx in range(1, max_col + 1):
+                val = ws.Cells(row_idx, col_idx).Value
+                row_data.append(val)
+            data.append(row_data)
+
+        wb.Close(SaveChanges=False)
+        excel.Quit()
+
+        # 转换为 DataFrame
+        df = pd.DataFrame(data)
+
+        # 删除全空列
+        df = df.dropna(axis=1, how="all")
+
+        # 后续复用现有逻辑
+        title_mask = df.apply(_is_merged_title_row, axis=1)
+        non_title_indices = df.index[~title_mask]
+        if len(non_title_indices) == 0:
+            non_title_indices = df.index
+        working_df = df.loc[non_title_indices].reset_index(drop=True)
+
+        header_depth = _detect_header_depth(working_df)
+        if header_depth > 1:
+            flat_columns = _flatten_multi_header(working_df, header_depth)
+        else:
+            flat_columns = [
+                str(v) if pd.notna(v) else f"列{i}"
+                for i, v in enumerate(working_df.iloc[0])
+            ]
+
+        data_df = working_df.iloc[header_depth:].reset_index(drop=True)
+        data_df.columns = flat_columns
+
+        for col in data_df.columns:
+            try:
+                data_df[col] = pd.to_numeric(data_df[col])
+            except (ValueError, TypeError):
+                pass
+
+        md_lines: list[str] = []
+        md_lines.append(f"【数据表元数据 - COM 动态提取 (Sheet: {sheet_name})】")
+        md_lines.append(f"- 有效列数: {len(data_df.columns)}")
+        md_lines.append(f"- 有效数据行数（抽样）: {len(data_df)}")
+        md_lines.append("- 数据来源: 通过 COM Excel.Application 从加密文件动态读取")
+        md_lines.append("")
+        md_lines.append("【字段与数据抽样】")
+        md_lines.append("| 列名 | 数据类型 | 典型有效值示例 |")
+        md_lines.append("| --- | --- | --- |")
+        for col in data_df.columns:
+            series = data_df[col].dropna()
+            dtype_name = str(series.dtype) if len(series) > 0 else "unknown"
+            samples = ", ".join(str(v) for v in list(series.head(3))) if len(series) > 0 else ""
+            md_lines.append(f"| {col} | {dtype_name} | {samples} |")
+        md_lines.append("")
+        md_lines.append(f"【前 {min(5, len(data_df))} 行纯净数据快照】")
+        md_lines.append(_build_markdown_table(data_df, max_data_rows=5))
+
+        return "\n".join(md_lines)
+
+    except ImportError:
+        logger.warning("pywin32 未安装，无法通过 COM 读取加密文件")
+        return _build_encrypted_hint(file_path)
+
+
+def _build_encrypted_hint(file_path: Path) -> str:
+    """当无法读取加密文件时，返回一个提示性的 Schema 描述。"""
+    return (
+        f"【加密文件提示】\n"
+        f"- 文件: {file_path.name}\n"
+        f"- 状态: 企业加密软件保护，无法自动读取\n"
+        f"- 建议: 在 Excel 中手动打开后查看结构，或在代码中通过 COM 方式读取\n"
+    )
+
+
+# =====================================================================
+# 静态 Schema 注册表（用于加密文件的 LLM Prompt 注入）
+# =====================================================================
+
+from dataclasses import dataclass, field
+
+
+@dataclass
+class ColumnInfo:
+    """单列信息。"""
+    col_index: int
+    display_name: str          # 表头显示名称
+    semantic: str              # 实际语义描述
+    dtype: str                 # Pandas dtype 名称
+    description: str           # 详细说明
+    is_empty: bool = False     # 是否为始终为空的列
+
+
+@dataclass
+class RowCategory:
+    """行分类标签定义。"""
+    label: str                 # Col 3 中的标签值
+    semantic: str              # 语义描述
+    value_range: str = ""      # 数值范围描述
+    example: str = ""          # 示例值
+
+
+@dataclass
+class SchemaInfo:
+    """静态 Schema 信息，用于加密文件的 LLM Prompt 注入。"""
+    sheet_name: str
+    description: str
+    total_rows: int
+    total_cols: int
+    header_row: int
+    data_start_row: int
+    columns: list[ColumnInfo]
+    categories: list[RowCategory] = field(default_factory=list)
+    sample_rows: list[list] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+
+
+# CT 页静态 Schema（人工校验，高保真）
+_CT_SCHEMA = SchemaInfo(
+    sheet_name="CT",
+    description="CT 良率及不良率 By 月/周/天 汇总报表",
+    total_rows=1532,
+    total_cols=15,
+    header_row=3,
+    data_start_row=4,
+    columns=[
+        ColumnInfo(0, "(空)", "空列", "object",
+                   "始终为空列，读取时应删除", is_empty=True),
+        ColumnInfo(1, "ProductCode", "产品型号", "str",
+                   "纵向合并单元格，如 'C472'，标识产品型号"),
+        ColumnInfo(2, "Operation", "制程站别", "str",
+                   "纵向合并单元格，如 'CT'，标识制程站别"),
+        ColumnInfo(3, "Factory", "指标分类标签", "str",
+                   "**行级分类键**，决定该行数据的语义类型（见分类标签字典）"),
+        ColumnInfo(4, "DefectGroup", "不良群组", "str",
+                   "部分行有值，部分为空"),
+        ColumnInfo(5, "(表头显示'项目/日期')", "不良Code", "str",
+                   "⚠️ **重要修正**：表头为'项目/日期'，实际数据为不良代码（Defect Code）"),
+        ColumnInfo(6, "M05", "月度汇总", "float64",
+                   "5月份汇总值"),
+        ColumnInfo(7, "W20", "周度汇总", "float64",
+                   "第20周汇总值"),
+        ColumnInfo(8, "5/4", "日数据", "float64",
+                   "5月4日数据"),
+        ColumnInfo(9, "5/5", "日数据", "float64",
+                   "5月5日数据"),
+        ColumnInfo(10, "5/6", "日数据", "float64",
+                    "5月6日数据"),
+        ColumnInfo(11, "5/7", "日数据", "float64",
+                    "5月7日数据"),
+        ColumnInfo(12, "5/8", "日数据", "float64",
+                    "5月8日数据"),
+        ColumnInfo(13, "5/9", "日数据", "float64",
+                    "5月9日数据"),
+        ColumnInfo(14, "5/10", "日数据", "float64",
+                    "5月10日数据"),
+    ],
+    categories=[
+        RowCategory("CT投入量", "CT站别投入数量", "≥ 0 整数", "86225.0"),
+        RowCategory("CT良率", "CT站综合良率", "[0, 1]", "0.9343"),
+        RowCategory("CT_A良率", "CT站 A 品良率", "[0, 1]", "0.8823"),
+        RowCategory("31000_T良率占比", "31000_T 良率占比", "[0, 1]", "0.0"),
+        RowCategory("CT投入量_MVI不良占比", "CT投入量的 MVI 不良占比", "[0, 1]", "0.206"),
+        RowCategory("CLA2_G品占比", "CLA2 G品占比", "[0, 1]", "0.0"),
+        RowCategory("CLA2投入量", "CLA2投入数量", "≥ 0 整数", "0.0"),
+    ],
+    sample_rows=[
+        ["C472", "CT", "CT投入量", "", "", "86225.0", "1719.0", "14120.0", "20297.0",
+         "19350.0", "16569.0", "6770.0", "4429.0", "1719.0"],
+        ["C472", "CT", "CT良率", "", "", "0.9343", "0.7784", "0.9527", "0.9306",
+         "0.9608", "0.9607", "0.8861", "0.8313", "0.7784"],
+        ["C472", "CT", "CT_A良率", "", "", "0.8823", "0.7784", "0.9388", "0.8824",
+         "0.8771", "0.8978", "0.8861", "0.6853", "0.7784"],
+        ["C472", "CT", "31000_T良率占比", "", "", "0.0", "0.0", "0.0", "0.0",
+         "0.0", "0.0", "0.0", "0.0", "0.0"],
+        ["C472", "CT", "CT投入量_MVI不良占比", "", "", "0.2063", "0.9971", "0.0171",
+         "0.0541", "0.1774", "0.2388", "0.4889", "0.9106", "0.9971"],
+    ],
+    notes=[
+        "Col 5（不良Code）表头显示为'项目/日期'，实际为不良代码，这是关键修正",
+        "Col 1（ProductCode）和 Col 2（Operation）存在纵向合并单元格",
+        "Col 3（Factory）是行级分类标签，决定该行数据语义",
+        "时间列层级：月(M05) → 周(W20) → 逐日(5/4~5/10)",
+        "投入量类数据 COM 返回 float（如 86225.0），实际为整数",
+    ],
+)
+
+# Schema 注册表：sheet_name -> SchemaInfo
+_STATIC_SCHEMAS: dict[str, SchemaInfo] = {
+    "CT": _CT_SCHEMA,
+}
+
+
+def _static_schema_to_markdown(info: SchemaInfo) -> str:
+    """将 SchemaInfo 转换为高保真 Markdown 描述。
+
+    Args:
+        info: 静态 Schema 信息
+
+    Returns:
+        格式化的 Markdown 文本，可直接注入 LLM Prompt
+    """
+    lines: list[str] = []
+    lines.append(f"【数据表元数据与高保真 Schema 结构 - 静态注入】")
+    lines.append(f"- Sheet: {info.sheet_name}")
+    lines.append(f"- 描述: {info.description}")
+    lines.append(f"- 总行数: {info.total_rows}")
+    lines.append(f"- 总列数: {info.total_cols}")
+    lines.append(f"- 表头行: Row {info.header_row}")
+    lines.append(f"- 数据起始行: Row {info.data_start_row}")
+    lines.append(f"- 数据来源: 人工校验的静态 Schema（文件受企业加密保护）")
+    lines.append("")
+    lines.append("【字段定义（已人工修正）】")
+    lines.append("| 列索引 | 表头显示 | 实际语义 | 数据类型 | 说明 |")
+    lines.append("| --- | --- | --- | --- | --- |")
+    for col in info.columns:
+        flag = " [修正]" if "重要修正" in col.description else ""
+        empty_flag = " [空列]" if col.is_empty else ""
+        lines.append(
+            f"| Col {col.col_index} | {col.display_name} | {col.semantic}{flag}{empty_flag} "
+            f"| {col.dtype} | {col.description} |"
+        )
+    lines.append("")
+
+    if info.categories:
+        lines.append("【行分类标签字典（Col 3 = Factory）】")
+        lines.append("| 标签值 | 语义 | 数值范围 | 示例 |")
+        lines.append("| --- | --- | --- | --- |")
+        for cat in info.categories:
+            lines.append(f"| {cat.label} | {cat.semantic} | {cat.value_range} | {cat.example} |")
+        lines.append("")
+
+    if info.sample_rows:
+        # 确定列数
+        n_cols = len(info.sample_rows[0])
+        lines.append("【数据样例（前 5 行）】")
+        # Build header
+        col_headers = ["ProductCode", "Operation", "Factory(标签)", "DefectGroup",
+                       "不良Code"] + [f"Col {i}" for i in range(6, 6 + n_cols - 5)]
+        actual_headers = col_headers[:n_cols]
+        lines.append("| " + " | ".join(actual_headers) + " |")
+        lines.append("| " + " | ".join(["---"] * n_cols) + " |")
+        for row in info.sample_rows:
+            display_row = [str(v)[:20] if v else "" for v in row]
+            lines.append("| " + " | ".join(display_row) + " |")
+        lines.append("")
+
+    if info.notes:
+        lines.append("【重要说明】")
+        for note in info.notes:
+            lines.append(f"- {note}")
+        lines.append("")
+
+    lines.append("【结构特征总结】")
+    lines.append("- 二维交叉表：行 = (ProductCode × Operation × 指标分类), 列 = 时间(月→周→天)")
+    lines.append("- Col 1 (ProductCode) 和 Col 2 (Operation) 存在纵向合并单元格，需 ffill 修复")
+    lines.append("- Col 3 (Factory) 是行级分类键，决定该行数据语义类型")
+    lines.append("- Col 5（不良Code）表头误导，实际数据为不良代码字符串")
+    lines.append("- 时间列粒度：Col 6=月度, Col 7=周度, Col 8~14=逐日")
+
+    return "\n".join(lines)
+
+
+def _get_static_schema(sheet_name: str) -> str | None:
+    """按 sheet 名称查找静态 Schema，返回 Markdown 格式描述。
+
+    如果找不到对应 sheet 的静态 Schema，返回 None。
+    """
+    info = _STATIC_SCHEMAS.get(sheet_name)
+    if info is None:
+        return None
+    return _static_schema_to_markdown(info)
+
+
 def extract_schema(file_path: Path, nrows: int = 20) -> str:
     """从 Excel 文件提取高保真 Schema 结构描述。
 
     处理流程:
-    1. 读取前 N 行（默认 20），header=None 保留原始行结构
-    2. 前向填充修复合并单元格塌陷产生的 NaN
-    3. 智能检测多级表头并扁平化
+    1. 检测文件是否被企业加密软件加密（文件头魔数检查）
+    2. 加密文件 → 优先查静态 Schema 注册表，回退 COM 动态读取
+    3. 非加密文件 → pandas 读取 + 多级表头检测 + 前向填充修复
     4. 输出结构化 Markdown Schema 描述
 
     Args:
         file_path: Excel 文件路径
-        nrows: 读取的数据行数（包含表头）
+        nrows: 读取的数据行数（包含表头，仅 pandas 模式有效）
 
     Returns:
         结构化的 Markdown Schema 描述文本
@@ -165,6 +516,19 @@ def extract_schema(file_path: Path, nrows: int = 20) -> str:
     """
     if not file_path.exists():
         raise FileNotFoundError(f"文件不存在: {file_path}")
+
+    # Step 0: 检测加密文件
+    if _is_encrypted(file_path):
+        logger.info(f"检测到加密文件: {file_path.name}，尝试静态 Schema 注入")
+        # 尝试通过文件名推断 sheet 名称
+        sheet_name = _detect_sheet_name_via_com(file_path)
+        static = _get_static_schema(sheet_name)
+        if static:
+            logger.info(f"静态 Schema 命中: {sheet_name}")
+            return static
+        # 静态 Schema 未命中，回退 COM 动态读取
+        logger.warning(f"静态 Schema 未找到 ({sheet_name})，回退 COM 动态提取")
+        return _extract_schema_via_com(file_path, sheet_name, nrows)
 
     # Step 1: 原始读取（header=None 避免 pandas 自动解析表头）
     df = pd.read_excel(file_path, nrows=nrows, header=None)
