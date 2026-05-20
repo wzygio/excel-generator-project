@@ -38,7 +38,7 @@ class TestExtractSchema:
         result = extract_schema(file_path)
         # 表头 + 最多 5 行 → 应该有 6 行文本
         lines = result.strip().split("\n")
-        assert len(lines) <= 6
+        assert len(lines) == 6
 
     def test_extract_schema_file_not_found_raises(self, tmp_path: Path):
         """文件不存在时抛出 FileNotFoundError。"""

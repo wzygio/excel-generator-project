@@ -27,4 +27,4 @@ def extract_schema(file_path: Path, nrows: int = 5) -> str:
         raise FileNotFoundError(f"文件不存在: {file_path}")
 
     df = pd.read_excel(file_path, nrows=nrows)
-    return df.to_string()
+    return df.to_string(index=False)
