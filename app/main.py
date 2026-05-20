@@ -534,7 +534,6 @@ with tab3:
 # Tab 4: 智能查询
 # ============================================================
 with tab4:
-    from pathlib import Path
     from tests.analyze_yield.code_generator import CodeGenerator, extract_schema
     from tests.analyze_yield.code_executor import CodeExecutor
 
@@ -553,21 +552,25 @@ with tab4:
             key=lambda f: f.stat().st_mtime,
             reverse=True,
         )
-        file_options = {f.name: f for f in available_files}
-        selected_filename = st.selectbox(
-            "选择要查询的 Excel 文件",
-            options=list(file_options.keys()),
-            help="列出 docs/project_files/ 下的所有 Excel 文件",
-        )
-        selected_file = file_options[selected_filename]
+        if not available_files:
+            st.warning("docs/project_files/ 中没有 Excel 文件。")
+            selected_file = None
+        else:
+            file_options = {f.name: f for f in available_files}
+            selected_filename = st.selectbox(
+                "选择要查询的 Excel 文件",
+                options=list(file_options.keys()),
+                help="列出 docs/project_files/ 下的所有 Excel 文件",
+            )
+            selected_file = file_options[selected_filename]
 
-        # 显示 Schema 预览
-        with st.expander("📋 文件 Schema 预览", expanded=False):
-            try:
-                schema = extract_schema(selected_file)
-                st.code(schema, language="text")
-            except Exception as e:
-                st.warning(f"无法读取文件 schema: {e}")
+            # 显示 Schema 预览
+            with st.expander("📋 文件 Schema 预览", expanded=False):
+                try:
+                    schema = extract_schema(selected_file)
+                    st.code(schema, language="text")
+                except Exception as e:
+                    st.warning(f"无法读取文件 schema: {e}")
     else:
         st.warning("docs/project_files/ 目录不存在。")
         selected_file = None
