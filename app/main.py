@@ -38,6 +38,7 @@ import logging
 import os
 from datetime import date, datetime
 from pathlib import Path
+import json
 from typing import Optional
 
 import streamlit as st
@@ -115,6 +116,28 @@ if "query_history" not in st.session_state:
 if "last_query_result" not in st.session_state:
     st.session_state.last_query_result = None
 
+QUERY_HISTORY_FILE = Path("docs/query_history.json")
+
+def _load_query_history() -> list[dict]:
+    """从磁盘加载查询历史。"""
+    if QUERY_HISTORY_FILE.exists():
+        try:
+            return json.loads(QUERY_HISTORY_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return []
+    return []
+
+def _save_query_history(history: list[dict]) -> None:
+    """保存查询历史到磁盘。"""
+    QUERY_HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    QUERY_HISTORY_FILE.write_text(
+        json.dumps(history, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+if "smart_query_history" not in st.session_state:
+    st.session_state.smart_query_history = _load_query_history()
+
 # ============================================================
 # 侧边栏
 # ============================================================
@@ -159,8 +182,8 @@ with st.sidebar:
 st.title("📊 良率日报生成系统")
 st.caption("支持一键自动下载或自然语言查询获取源表数据，通过 LLM 自动分析并生成标准化的 Excel 日报。")
 
-tab1, tab2, tab3 = st.tabs(
-    ["📥 报表下载", "📤 数据上传与分析", "📥 报告下载"]
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["📥 报表下载", "📤 数据上传与分析", "📥 报告下载", "💬 智能查询"]
 )
 
 # ============================================================
@@ -506,6 +529,167 @@ with tab3:
     | **【当日异常】** | 当日新发现的异常（Top3 Code 高亮） |
     | **【已知异常】** | 影响当日良率的已有异常记录 |
     """)
+
+# ============================================================
+# Tab 4: 智能查询
+# ============================================================
+with tab4:
+    from pathlib import Path
+    from tests.analyze_yield.code_generator import CodeGenerator, extract_schema
+    from tests.analyze_yield.code_executor import CodeExecutor
+
+    st.markdown("### 💬 智能查询")
+    st.caption(
+        "输入自然语言查询需求，Claude 自动生成 pandas 代码对 Excel 文件进行分析。"
+    )
+
+    # ---- 文件选择区 ----
+    st.markdown("#### 📂 选择数据文件")
+    project_files_dir = Path("docs/project_files")
+    if project_files_dir.exists():
+        available_files = sorted(
+            [f for f in project_files_dir.iterdir()
+             if f.is_file() and f.suffix in (".xlsx", ".xls")],
+            key=lambda f: f.stat().st_mtime,
+            reverse=True,
+        )
+        file_options = {f.name: f for f in available_files}
+        selected_filename = st.selectbox(
+            "选择要查询的 Excel 文件",
+            options=list(file_options.keys()),
+            help="列出 docs/project_files/ 下的所有 Excel 文件",
+        )
+        selected_file = file_options[selected_filename]
+
+        # 显示 Schema 预览
+        with st.expander("📋 文件 Schema 预览", expanded=False):
+            try:
+                schema = extract_schema(selected_file)
+                st.code(schema, language="text")
+            except Exception as e:
+                st.warning(f"无法读取文件 schema: {e}")
+    else:
+        st.warning("docs/project_files/ 目录不存在。")
+        selected_file = None
+
+    # ---- 查询输入区 ----
+    st.markdown("#### ✏️ 输入查询需求")
+
+    with st.expander("💡 查询示例（点击展开）", expanded=False):
+        st.markdown("""
+        | 查询目的 | 示例语句 |
+        |----------|----------|
+        | 基本统计 | "统计良率的平均值、最大值和最小值" |
+        | 筛选查询 | "搜出5月良率低于95%的数据" |
+        | 分组聚合 | "按产品型号分组，计算各型号平均良率" |
+        | 趋势分析 | "按日期排序，展示良率变化趋势" |
+        """)
+
+    # 代码预览 toggle
+    preview_only = st.toggle(
+        "🔍 仅生成代码，不执行",
+        value=False,
+        help="开启后只展示 Claude 生成的 pandas 代码，不会在本地执行。"
+    )
+
+    col_input, col_btn = st.columns([5, 1])
+    with col_input:
+        user_demand = st.text_input(
+            "自然语言查询",
+            placeholder="例如: 统计5月各型号良率的平均值和标准差",
+            label_visibility="collapsed",
+            key="smart_query_input",
+        )
+    with col_btn:
+        btn_label = "🧠 生成代码" if preview_only else "🚀 执行查询"
+        execute_btn = st.button(btn_label, type="primary", use_container_width=True)
+
+    # ---- 执行查询 ----
+    if execute_btn and user_demand and selected_file:
+        with st.chat_message("user"):
+            st.markdown(user_demand)
+
+        try:
+            # Step 1: 提取 schema
+            with st.spinner("正在分析文件结构..."):
+                schema = extract_schema(selected_file)
+                abs_path = str(selected_file.resolve())
+
+            # Step 2: Claude CLI 生成代码
+            with st.spinner("Claude 正在生成分析代码..."):
+                generator = CodeGenerator(claude_bin="claude")
+                generated_code = generator.generate_code(schema, user_demand, abs_path)
+
+            # Step 3: 显示生成的代码（始终展示）
+            with st.expander("🔍 查看生成的代码", expanded=True):
+                st.code(generated_code, language="python")
+
+            if preview_only:
+                st.info("代码预览模式 — 未执行。如需执行，请关闭上方 toggle 后重新点击按钮。")
+                # 仅预览也记录历史
+                st.session_state.smart_query_history.append({
+                    "query": user_demand,
+                    "file": selected_file.name,
+                    "success": True,
+                    "preview_only": True,
+                    "code": generated_code,
+                })
+                _save_query_history(st.session_state.smart_query_history)
+            else:
+                # Step 4: 执行代码
+                with st.spinner("正在执行分析..."):
+                    executor = CodeExecutor()
+                    result = executor.execute(generated_code)
+
+                # Step 5: 显示结果
+                st.divider()
+                st.markdown("#### 📊 查询结果")
+
+                if result.success:
+                    if result.dataframes:
+                        for i, df in enumerate(result.dataframes):
+                            st.dataframe(df, use_container_width=True)
+                    else:
+                        st.code(result.stdout, language="text")
+                else:
+                    st.error(f"代码执行失败:\n```\n{result.error_message}\n```")
+                    if result.stdout:
+                        st.markdown("**部分输出:**")
+                        st.code(result.stdout, language="text")
+
+                # 记录查询历史并持久化
+                st.session_state.smart_query_history.append({
+                    "query": user_demand,
+                    "file": selected_file.name,
+                    "success": result.success,
+                    "preview_only": False,
+                    "error": result.error_message if not result.success else "",
+                })
+                _save_query_history(st.session_state.smart_query_history)
+
+        except RuntimeError as e:
+            st.error(f"Claude 代码生成失败: {e}")
+        except Exception as e:
+            st.error(f"查询执行失败: {e}")
+
+    elif execute_btn and not user_demand:
+        st.warning("请输入查询语句。")
+    elif execute_btn and not selected_file:
+        st.warning("请选择要查询的文件。")
+
+    # ---- 查询历史 ----
+    if st.session_state.smart_query_history:
+        st.divider()
+        st.markdown("#### 📜 查询历史")
+        for i, entry in enumerate(reversed(st.session_state.smart_query_history[-10:])):
+            with st.container():
+                if entry.get("preview_only"):
+                    status = "🔍"
+                else:
+                    status = "✅" if entry["success"] else "❌"
+                st.markdown(
+                    f"{status} **{entry['file']}** — {entry['query']}"
+                )
 
 # ============================================================
 # 页脚
