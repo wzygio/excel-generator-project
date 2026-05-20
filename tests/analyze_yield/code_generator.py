@@ -57,6 +57,29 @@ def _is_header_row(row: pd.Series) -> bool:
     return data_like_count < len(non_null) * 0.5
 
 
+def _is_merged_title_row(row: pd.Series, threshold: float = 0.7) -> bool:
+    """判断一行是否为合并单元格产生的标题/元数据行。
+
+    特征：ffill 后该行的绝大多数列包含相同文本（如报告标题）。
+
+    Args:
+        row: DataFrame 的一行
+        threshold: 判定为标题行的最低重复比例
+
+    Returns:
+        True 如果该行应被排除（标题/元数据），不应参与表头或数据
+    """
+    non_null = row.dropna()
+    if len(non_null) == 0:
+        return True
+    # 统计出现最多的值的占比
+    value_counts = non_null.value_counts()
+    if len(value_counts) == 0:
+        return True
+    top_ratio = value_counts.iloc[0] / len(non_null)
+    return top_ratio >= threshold
+
+
 def _detect_header_depth(df: pd.DataFrame, max_scan: int = 5) -> int:
     """检测多级表头深度。
 
@@ -146,20 +169,31 @@ def extract_schema(file_path: Path, nrows: int = 20) -> str:
     # Step 1: 原始读取（header=None 避免 pandas 自动解析表头）
     df = pd.read_excel(file_path, nrows=nrows, header=None)
 
+    # Step 1.5: 删除全空列
+    df = df.dropna(axis=1, how="all")
+
     # Step 2: 双向前向填充 — 修复合并单元格塌陷产生的 NaN
     df = df.ffill(axis=0).ffill(axis=1)
 
-    # Step 3: 检测多级表头深度
-    header_depth = _detect_header_depth(df)
+    # Step 2.5: 排除合并标题行（ffill 后大多数列内容相同的行）
+    title_mask = df.apply(_is_merged_title_row, axis=1)
+    non_title_indices = df.index[~title_mask]
+    if len(non_title_indices) == 0:
+        # 所有行都是标题行，退化为原始处理
+        non_title_indices = df.index
+    working_df = df.loc[non_title_indices].reset_index(drop=True)
+
+    # Step 3: 检测多级表头深度（基于排除了标题行的工作副本）
+    header_depth = _detect_header_depth(working_df)
 
     # Step 4: 扁平化表头 + 截取数据区
     if header_depth > 1:
-        flat_columns = _flatten_multi_header(df, header_depth)
+        flat_columns = _flatten_multi_header(working_df, header_depth)
     else:
         flat_columns = [str(v) if pd.notna(v) else f"列{i}"
-                        for i, v in enumerate(df.iloc[0])]
+                        for i, v in enumerate(working_df.iloc[0])]
 
-    data_df = df.iloc[header_depth:].reset_index(drop=True)
+    data_df = working_df.iloc[header_depth:].reset_index(drop=True)
     data_df.columns = flat_columns
 
     # 尝试将各列转换为数值类型以获得更准确的 dtype（Pandas 3.x compatible）
@@ -178,7 +212,7 @@ def extract_schema(file_path: Path, nrows: int = 20) -> str:
             continue
         dtype_name = str(series.dtype) if hasattr(series, "dtype") else "object"
         # 如果是 object 但可以转数字，标注为 mixed
-        samples = ", ".join(str(v) for v in series.head(3).tolist())
+        samples = ", ".join(str(v) for v in list(series.head(3)))
         dtype_info.append({"col": col, "dtype": dtype_name, "samples": samples})
 
     # Step 6: 构建结构化 Markdown 输出
