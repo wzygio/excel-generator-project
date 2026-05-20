@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -10,15 +11,131 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def extract_schema(file_path: Path, nrows: int = 5) -> str:
-    """从 Excel 文件提取前 N 行的 schema 信息。
+def _looks_like_data(value) -> bool:
+    """判断一个值是否更可能为数据而非表头名。
+
+    返回 True 如果值看起来像:
+    - 数字（int/float）
+    - 日期字符串 (YYYY-MM-DD / YYYY/MM/DD)
+    - 纯数字字符串 (如 "001", "2026")
+    - 其他明显的非表头模式
+    """
+    if isinstance(value, (int, float)):
+        return True
+    if not isinstance(value, str):
+        return False
+    # 尝试转数字
+    try:
+        float(value)
+        return True
+    except ValueError:
+        pass
+    # 日期格式检测
+    import re
+    if re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", value):
+        return True
+    # 纯数字字符串 (如产品编号 "001")
+    if re.match(r"^\d+(\.\d+)?$", value):
+        return True
+    # 百分比字符串 (如 "95.0%")
+    if re.match(r"^\d+(\.\d+)?%$", value):
+        return True
+    return False
+
+
+def _is_header_row(row: pd.Series) -> bool:
+    """判断一行是否为表头行（非数据文本占多数）。
+
+    逻辑：如果一行中大部分非空值都不像典型数据（数字/日期等），
+    则该行很可能是一个描述性的表头行。
+    """
+    non_null = row.dropna()
+    if len(non_null) == 0:
+        return False
+    data_like_count = sum(1 for v in non_null if _looks_like_data(v))
+    # 如果像数据的值不足一半，则认为是表头行
+    return data_like_count < len(non_null) * 0.5
+
+
+def _detect_header_depth(df: pd.DataFrame, max_scan: int = 5) -> int:
+    """检测多级表头深度。
+
+    从第 0 行开始向下扫描，直到某行不再符合表头特征。
+    至少保留 1 行作为列名。
+
+    Returns:
+        表头行数（至少 1）
+    """
+    depth = 0
+    for i in range(min(max_scan, len(df))):
+        if _is_header_row(df.iloc[i]):
+            depth += 1
+        else:
+            break
+    return max(depth, 1)
+
+
+def _flatten_multi_header(df: pd.DataFrame, header_rows: int) -> list[str]:
+    """将多级表头扁平化为单级列名。
+
+    对每一列，从上到下拼接各级表头文本（跳过 NaN/空字符串），
+    用 '|' 分隔不同层级。
+
+    Args:
+        df: 包含表头行的 DataFrame（header=None 读取的）
+        header_rows: 表头占用的行数
+
+    Returns:
+        扁平化后的列名列表
+    """
+    header_df = df.iloc[:header_rows]
+    columns: list[str] = []
+    for col_idx in range(len(df.columns)):
+        parts: list[str] = []
+        for row_idx in range(len(header_df)):
+            val = header_df.iloc[row_idx, col_idx]
+            if pd.notna(val) and str(val).strip():
+                parts.append(str(val).strip())
+        columns.append(" | ".join(parts) if parts else f"列{col_idx}")
+    return columns
+
+
+def _build_markdown_table(df: pd.DataFrame, max_data_rows: int = 5) -> str:
+    """将 DataFrame 的前 N 行数据构建为 Markdown 表格。
+
+    手动构建 pipe table，避免依赖 tabulate 包。
+    """
+    cols = list(df.columns)
+    data_rows = df.head(max_data_rows)
+
+    lines: list[str] = []
+    # 表头
+    lines.append("| " + " | ".join(str(c) for c in cols) + " |")
+    # 分隔行
+    lines.append("| " + " | ".join("---" for _ in cols) + " |")
+    # 数据行
+    for _, row in data_rows.iterrows():
+        cells = [str(v) if pd.notna(v) else "" for v in row]
+        lines.append("| " + " | ".join(cells) + " |")
+
+    return "\n".join(lines)
+
+
+def extract_schema(file_path: Path, nrows: int = 20) -> str:
+    """从 Excel 文件提取高保真 Schema 结构描述。
+
+    处理流程:
+    1. 读取前 N 行（默认 20），header=None 保留原始行结构
+    2. 前向填充修复合并单元格塌陷产生的 NaN
+    3. 智能检测多级表头并扁平化
+    4. 输出结构化 Markdown Schema 描述
 
     Args:
         file_path: Excel 文件路径
-        nrows: 展示的数据行数
+        nrows: 读取的数据行数（包含表头）
 
     Returns:
-        表头和数据抽样的字符串表示
+        结构化的 Markdown Schema 描述文本
 
     Raises:
         FileNotFoundError: 文件不存在
@@ -26,11 +143,62 @@ def extract_schema(file_path: Path, nrows: int = 5) -> str:
     if not file_path.exists():
         raise FileNotFoundError(f"文件不存在: {file_path}")
 
-    df = pd.read_excel(file_path, nrows=nrows)
-    return df.to_string(index=False)
+    # Step 1: 原始读取（header=None 避免 pandas 自动解析表头）
+    df = pd.read_excel(file_path, nrows=nrows, header=None)
 
+    # Step 2: 双向前向填充 — 修复合并单元格塌陷产生的 NaN
+    df = df.ffill(axis=0).ffill(axis=1)
 
-import subprocess
+    # Step 3: 检测多级表头深度
+    header_depth = _detect_header_depth(df)
+
+    # Step 4: 扁平化表头 + 截取数据区
+    if header_depth > 1:
+        flat_columns = _flatten_multi_header(df, header_depth)
+    else:
+        flat_columns = [str(v) if pd.notna(v) else f"列{i}"
+                        for i, v in enumerate(df.iloc[0])]
+
+    data_df = df.iloc[header_depth:].reset_index(drop=True)
+    data_df.columns = flat_columns
+
+    # 尝试将各列转换为数值类型以获得更准确的 dtype（Pandas 3.x compatible）
+    for col in data_df.columns:
+        try:
+            data_df[col] = pd.to_numeric(data_df[col])
+        except (ValueError, TypeError):
+            pass  # 非数值列保持原样
+
+    # Step 5: 推断各列 dtype 和典型值
+    dtype_info: list[dict] = []
+    for col in data_df.columns:
+        series = data_df[col].dropna()
+        if len(series) == 0:
+            dtype_info.append({"col": col, "dtype": "unknown", "samples": ""})
+            continue
+        dtype_name = str(series.dtype) if hasattr(series, "dtype") else "object"
+        # 如果是 object 但可以转数字，标注为 mixed
+        samples = ", ".join(str(v) for v in series.head(3).tolist())
+        dtype_info.append({"col": col, "dtype": dtype_name, "samples": samples})
+
+    # Step 6: 构建结构化 Markdown 输出
+    md_lines: list[str] = []
+    md_lines.append("【数据表元数据与高保真 Schema 结构】")
+    md_lines.append(f"- 有效列数: {len(data_df.columns)}")
+    md_lines.append(f"- 有效数据行数（抽样）: {len(data_df)}")
+    md_lines.append("- 结构清洗说明: 已通过前向填充算法自动修复合并单元格产生的 NaN 塌陷。")
+    md_lines.append("")
+    md_lines.append("【字段与数据抽样 (已对齐修复)】")
+    md_lines.append("| 列名 | 数据类型 | 典型有效值示例 |")
+    md_lines.append("| --- | --- | --- |")
+    for info in dtype_info:
+        md_lines.append(f"| {info['col']} | {info['dtype']} | {info['samples']} |")
+    md_lines.append("")
+    md_lines.append(f"【前 {min(5, len(data_df))} 行纯净数据快照】")
+    md_lines.append(_build_markdown_table(data_df, max_data_rows=5))
+
+    return "\n".join(md_lines)
+
 
 CLAUDE_SYSTEM_PROMPT = """你是一个精密的自动化数据分析助手。
 
