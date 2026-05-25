@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from tests.analyze_yield.code_executor import CodeExecutor, ExecutionResult
+from yield_report.infrastructure.code_executor import CodeExecutor, ExecutionResult
 
 
 class TestExecutionResult:

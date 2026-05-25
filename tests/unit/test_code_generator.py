@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tests.analyze_yield.code_generator import (
+from yield_report.infrastructure.code_generator import (
     CodeGenerator,
     build_prompt,
     extract_schema,
@@ -281,7 +281,7 @@ class TestGenerateCode:
             )
 
         monkeypatch.setattr(
-            "tests.analyze_yield.code_generator.subprocess.run",
+            "yield_report.infrastructure.code_generator.subprocess.run",
             mock_run,
         )
 
@@ -301,7 +301,7 @@ class TestGenerateCode:
             )
 
         monkeypatch.setattr(
-            "tests.analyze_yield.code_generator.subprocess.run",
+            "yield_report.infrastructure.code_generator.subprocess.run",
             mock_run,
         )
 
@@ -317,7 +317,7 @@ class TestGenerateCode:
             )
 
         monkeypatch.setattr(
-            "tests.analyze_yield.code_generator.subprocess.run",
+            "yield_report.infrastructure.code_generator.subprocess.run",
             mock_run,
         )
 
@@ -332,7 +332,7 @@ class TestGenerateCode:
             )
 
         monkeypatch.setattr(
-            "tests.analyze_yield.code_generator.subprocess.run",
+            "yield_report.infrastructure.code_generator.subprocess.run",
             mock_run,
         )
 

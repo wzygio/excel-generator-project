@@ -20,6 +20,7 @@ dependencies = [
     "pywin32>=311",
     "playwright>=1.59.0",
     "xlsxwriter>=3.2.9",
+    "fr-web-automation",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +56,10 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP"]
 ignore = ["E501"]
+
+
+[tool.uv.sources]
+fr-web-automation = { path = "D:/wzy/Python/packages/web_automation", editable = true }
 
 [build-system]
 requires = ["hatchling"]
