@@ -1,4 +1,4 @@
-"""
+﻿"""
 test_config_loader.py: ConfigLoader 单元测试
 
 测试目标:
@@ -16,13 +16,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-from yield_report.shared_kernel.config import (
+from shared_kernel.config import (
     ConfigLoader,
     _deep_merge,
     _load_yaml_file,
     config,
 )
-from yield_report.shared_kernel.config_model import (
+from shared_kernel.config_model import (
     AppConfig,
     LlmConfig,
     PathsConfig,

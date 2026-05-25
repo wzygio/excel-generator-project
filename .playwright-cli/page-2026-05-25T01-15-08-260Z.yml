@@ -1,0 +1,2401 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - iframe [active] [ref=e357]:
+        - generic [ref=f4e1]:
+          - generic [ref=f4e2]:
+            - generic [ref=f4e7]:
+              - table [ref=f4e9]:
+                - rowgroup [ref=f4e10]:
+                  - row "产品型号：" [ref=f4e11]:
+                    - cell "产品型号：" [ref=f4e12]:
+                      - generic [ref=f4e13]: 产品型号：
+              - generic [ref=f4e15]:
+                - generic [ref=f4e138]: M678
+                - textbox [ref=f4e679]
+              - table [ref=f4e20]:
+                - rowgroup [ref=f4e21]:
+                  - row "工单类型：" [ref=f4e22]:
+                    - cell "工单类型：" [ref=f4e23]:
+                      - generic [ref=f4e24]: 工单类型：
+              - generic [ref=f4e26]:
+                - generic [ref=f4e28]: P(量产品)
+                - textbox [ref=f4e29]
+              - table [ref=f4e33]:
+                - rowgroup [ref=f4e34]:
+                  - row "结束日期：" [ref=f4e35]:
+                    - cell "结束日期：" [ref=f4e36]:
+                      - generic [ref=f4e37]: 结束日期：
+              - textbox [ref=f4e40]: 2026-05-25
+              - emphasis [ref=f4e46]:
+                - button "查询" [active] [ref=f4e47]
+              - table [ref=f4e49]:
+                - rowgroup [ref=f4e50]:
+                  - row "产品规格：" [ref=f4e51]:
+                    - cell "产品规格：" [ref=f4e52]:
+                      - generic [ref=f4e53]: 产品规格：
+              - textbox [ref=f4e56]
+              - table [ref=f4e60]:
+                - rowgroup [ref=f4e61]:
+                  - row "查看周期：" [ref=f4e62]:
+                    - cell "查看周期：" [ref=f4e63]:
+                      - generic [ref=f4e64]: 查看周期：
+              - textbox [ref=f4e66]: "2"
+              - table [ref=f4e68]:
+                - rowgroup [ref=f4e69]:
+                  - row "月" [ref=f4e70]:
+                    - cell "月" [ref=f4e71]:
+                      - generic [ref=f4e72]: 月
+              - textbox [ref=f4e74]: "3"
+              - table [ref=f4e76]:
+                - rowgroup [ref=f4e77]:
+                  - row "周" [ref=f4e78]:
+                    - cell "周" [ref=f4e79]:
+                      - generic [ref=f4e80]: 周
+              - textbox [ref=f4e82]: "7"
+              - table [ref=f4e84]:
+                - rowgroup [ref=f4e85]:
+                  - row "天" [ref=f4e86]:
+                    - cell "天" [ref=f4e87]:
+                      - generic [ref=f4e88]: 天
+            - generic [ref=f4e139]:
+              - generic [ref=f4e680]:
+                - table [ref=f4e681]:
+                  - rowgroup [ref=f4e682]:
+                    - row "MVI良率及不良率By月周天汇总报表V1.0 报表说明 ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e683]:
+                      - cell:
+                        - generic:
+                          - table:
+                            - rowgroup:
+                              - row
+                      - cell "MVI良率及不良率By月周天汇总报表V1.0 报表说明 ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e684]:
+                        - table [ref=f4e686]:
+                          - rowgroup [ref=f4e705]:
+                            - row "MVI良率及不良率By月周天汇总报表V1.0" [ref=f4e706]:
+                              - cell [ref=f4e707]
+                              - cell "MVI良率及不良率By月周天汇总报表V1.0" [ref=f4e708]:
+                                - generic [ref=f4e709]: MVI良率及不良率By月周天汇总报表V1.0
+                            - row "报表说明" [ref=f4e710]:
+                              - cell [ref=f4e711]
+                              - cell [ref=f4e712]
+                              - cell [ref=f4e713]
+                              - cell [ref=f4e714]
+                              - cell [ref=f4e715]
+                              - cell "报表说明" [ref=f4e716]:
+                                - generic [ref=f4e718] [cursor=pointer]: 报表说明
+                            - row "ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e719]:
+                              - cell [ref=f4e720]
+                              - cell "ProductCode 产品型号" [ref=f4e721]:
+                                - generic [ref=f4e722]:
+                                  - text: ProductCode
+                                  - text: 产品型号
+                              - cell "Operation 站点" [ref=f4e723]:
+                                - generic [ref=f4e724]:
+                                  - text: Operation
+                                  - text: 站点
+                              - cell "DefectGroup 不良分组" [ref=f4e725]:
+                                - generic [ref=f4e726]:
+                                  - text: DefectGroup
+                                  - text: 不良分组
+                              - cell [ref=f4e727]:
+                                - img [ref=f4e729]
+                              - cell "M04" [ref=f4e730]:
+                                - generic [ref=f4e731]: M04
+                              - cell "M05" [ref=f4e732]:
+                                - generic [ref=f4e733]: M05
+                              - cell "W20" [ref=f4e734]:
+                                - generic [ref=f4e735]: W20
+                              - cell "W21" [ref=f4e736]:
+                                - generic [ref=f4e737]: W21
+                              - cell "W22" [ref=f4e738]:
+                                - generic [ref=f4e739]: W22
+                              - cell "5/19" [ref=f4e740]:
+                                - generic [ref=f4e741]: 5/19
+                              - cell "5/20" [ref=f4e742]:
+                                - generic [ref=f4e743]: 5/20
+                              - cell "5/21" [ref=f4e744]:
+                                - generic [ref=f4e745]: 5/21
+                              - cell "5/22" [ref=f4e746]:
+                                - generic [ref=f4e747]: 5/22
+                              - cell "5/23" [ref=f4e748]:
+                                - generic [ref=f4e749]: 5/23
+                              - cell "5/24" [ref=f4e750]:
+                                - generic [ref=f4e751]: 5/24
+                              - cell "5/25" [ref=f4e752]:
+                                - generic [ref=f4e753]: 5/25
+                    - row [ref=f4e754]:
+                      - cell:
+                        - generic:
+                          - table:
+                            - rowgroup
+                      - cell [ref=f4e755]:
+                        - table [ref=f4e757]:
+                          - rowgroup [ref=f4e776]:
+                            - row "M678 MVI MVI产出数 6584 16504 0 5548 8048 0 0 0 2929 2619 7429 619" [ref=f4e777]:
+                              - cell [ref=f4e778]
+                              - cell "M678" [ref=f4e779]:
+                                - generic [ref=f4e780]: M678
+                              - cell "MVI" [ref=f4e781]:
+                                - generic [ref=f4e782]: MVI
+                              - cell "MVI产出数" [ref=f4e783]:
+                                - generic [ref=f4e784]: MVI产出数
+                              - cell "6584" [ref=f4e785]:
+                                - generic [ref=f4e787] [cursor=pointer]: "6584"
+                              - cell "16504" [ref=f4e788]:
+                                - generic [ref=f4e790] [cursor=pointer]: "16504"
+                              - cell "0" [ref=f4e791]:
+                                - generic [ref=f4e793] [cursor=pointer]: "0"
+                              - cell "5548" [ref=f4e794]:
+                                - generic [ref=f4e796] [cursor=pointer]: "5548"
+                              - cell "8048" [ref=f4e797]:
+                                - generic [ref=f4e799] [cursor=pointer]: "8048"
+                              - cell "0" [ref=f4e800]:
+                                - generic [ref=f4e802] [cursor=pointer]: "0"
+                              - cell "0" [ref=f4e803]:
+                                - generic [ref=f4e805] [cursor=pointer]: "0"
+                              - cell "0" [ref=f4e806]:
+                                - generic [ref=f4e808] [cursor=pointer]: "0"
+                              - cell "2929" [ref=f4e809]:
+                                - generic [ref=f4e811] [cursor=pointer]: "2929"
+                              - cell "2619" [ref=f4e812]:
+                                - generic [ref=f4e814] [cursor=pointer]: "2619"
+                              - cell "7429" [ref=f4e815]:
+                                - generic [ref=f4e817] [cursor=pointer]: "7429"
+                              - cell "619" [ref=f4e818]:
+                                - generic [ref=f4e820] [cursor=pointer]: "619"
+                            - row "MVI良率 89.82% 69.99% 0.00% 84.96% 52.48% 0.00% 0.00% 0.00% 95.08% 73.64% 49.07% 93.38%" [ref=f4e821]:
+                              - cell [ref=f4e822]
+                              - cell "MVI良率" [ref=f4e823]:
+                                - generic [ref=f4e824]: MVI良率
+                              - cell "89.82%" [ref=f4e825]:
+                                - generic [ref=f4e826]: 89.82%
+                              - cell "69.99%" [ref=f4e827]:
+                                - generic [ref=f4e828]: 69.99%
+                              - cell "0.00%" [ref=f4e829]:
+                                - generic [ref=f4e830]: 0.00%
+                              - cell "84.96%" [ref=f4e831]:
+                                - generic [ref=f4e832]: 84.96%
+                              - cell "52.48%" [ref=f4e833]:
+                                - generic [ref=f4e834]: 52.48%
+                              - cell "0.00%" [ref=f4e835]:
+                                - generic [ref=f4e836]: 0.00%
+                              - cell "0.00%" [ref=f4e837]:
+                                - generic [ref=f4e838]: 0.00%
+                              - cell "0.00%" [ref=f4e839]:
+                                - generic [ref=f4e840]: 0.00%
+                              - cell "95.08%" [ref=f4e841]:
+                                - generic [ref=f4e842]: 95.08%
+                              - cell "73.64%" [ref=f4e843]:
+                                - generic [ref=f4e844]: 73.64%
+                              - cell "49.07%" [ref=f4e845]:
+                                - generic [ref=f4e846]: 49.07%
+                              - cell "93.38%" [ref=f4e847]:
+                                - generic [ref=f4e848]: 93.38%
+                            - row "MVI_A品率 78.86% 19.42% 0.00% 4.62% 15.72% 0.00% 0.00% 0.00% 0.00% 9.78% 17.03% 0.00%" [ref=f4e849]:
+                              - cell [ref=f4e850]
+                              - cell "MVI_A品率" [ref=f4e851]:
+                                - generic [ref=f4e852]: MVI_A品率
+                              - cell "78.86%" [ref=f4e853]:
+                                - generic [ref=f4e854]: 78.86%
+                              - cell "19.42%" [ref=f4e855]:
+                                - generic [ref=f4e856]: 19.42%
+                              - cell "0.00%" [ref=f4e857]:
+                                - generic [ref=f4e858]: 0.00%
+                              - cell "4.62%" [ref=f4e859]:
+                                - generic [ref=f4e860]: 4.62%
+                              - cell "15.72%" [ref=f4e861]:
+                                - generic [ref=f4e862]: 15.72%
+                              - cell "0.00%" [ref=f4e863]:
+                                - generic [ref=f4e864]: 0.00%
+                              - cell "0.00%" [ref=f4e865]:
+                                - generic [ref=f4e866]: 0.00%
+                              - cell "0.00%" [ref=f4e867]:
+                                - generic [ref=f4e868]: 0.00%
+                              - cell "0.00%" [ref=f4e869]:
+                                - generic [ref=f4e870]: 0.00%
+                              - cell "9.78%" [ref=f4e871]:
+                                - generic [ref=f4e872]: 9.78%
+                              - cell "17.03%" [ref=f4e873]:
+                                - generic [ref=f4e874]: 17.03%
+                              - cell "0.00%" [ref=f4e875]:
+                                - generic [ref=f4e876]: 0.00%
+                            - row "MVI产出数_CRP占比 85.27% 12.23% 0.00% 0.00% 4.61% 0.00% 0.00% 0.00% 0.00% 0.00% 4.99% 0.00%" [ref=f4e877]:
+                              - cell [ref=f4e878]
+                              - cell "MVI产出数_CRP占比" [ref=f4e879]:
+                                - generic [ref=f4e880]: MVI产出数_CRP占比
+                              - cell "85.27%" [ref=f4e881]:
+                                - generic [ref=f4e882]: 85.27%
+                              - cell "12.23%" [ref=f4e883]:
+                                - generic [ref=f4e884]: 12.23%
+                              - cell "0.00%" [ref=f4e885]:
+                                - generic [ref=f4e886]: 0.00%
+                              - cell "0.00%" [ref=f4e887]:
+                                - generic [ref=f4e888]: 0.00%
+                              - cell "4.61%" [ref=f4e889]:
+                                - generic [ref=f4e890]: 4.61%
+                              - cell "0.00%" [ref=f4e891]:
+                                - generic [ref=f4e892]: 0.00%
+                              - cell "0.00%" [ref=f4e893]:
+                                - generic [ref=f4e894]: 0.00%
+                              - cell "0.00%" [ref=f4e895]:
+                                - generic [ref=f4e896]: 0.00%
+                              - cell "0.00%" [ref=f4e897]:
+                                - generic [ref=f4e898]: 0.00%
+                              - cell "0.00%" [ref=f4e899]:
+                                - generic [ref=f4e900]: 0.00%
+                              - cell "4.99%" [ref=f4e901]:
+                                - generic [ref=f4e902]: 4.99%
+                              - cell "0.00%" [ref=f4e903]:
+                                - generic [ref=f4e904]: 0.00%
+                            - row "MVI良率_CRP 89.79% 87.41% 0.00% 0.00% 85.98% 0.00% 0.00% 0.00% 0.00% 0.00% 85.98% 0.00%" [ref=f4e905]:
+                              - cell [ref=f4e906]
+                              - cell "MVI良率_CRP" [ref=f4e907]:
+                                - generic [ref=f4e908]: MVI良率_CRP
+                              - cell "89.79%" [ref=f4e909]:
+                                - generic [ref=f4e910]: 89.79%
+                              - cell "87.41%" [ref=f4e911]:
+                                - generic [ref=f4e912]: 87.41%
+                              - cell "0.00%" [ref=f4e913]:
+                                - generic [ref=f4e914]: 0.00%
+                              - cell "0.00%" [ref=f4e915]:
+                                - generic [ref=f4e916]: 0.00%
+                              - cell "85.98%" [ref=f4e917]:
+                                - generic [ref=f4e918]: 85.98%
+                              - cell "0.00%" [ref=f4e919]:
+                                - generic [ref=f4e920]: 0.00%
+                              - cell "0.00%" [ref=f4e921]:
+                                - generic [ref=f4e922]: 0.00%
+                              - cell "0.00%" [ref=f4e923]:
+                                - generic [ref=f4e924]: 0.00%
+                              - cell "0.00%" [ref=f4e925]:
+                                - generic [ref=f4e926]: 0.00%
+                              - cell "0.00%" [ref=f4e927]:
+                                - generic [ref=f4e928]: 0.00%
+                              - cell "85.98%" [ref=f4e929]:
+                                - generic [ref=f4e930]: 85.98%
+                              - cell "0.00%" [ref=f4e931]:
+                                - generic [ref=f4e932]: 0.00%
+                            - row "MVI良率_非CRP 95.75% 53.03% 0.00% 43.91% 51.44% 0.00% 0.00% 0.00% 0.00% 43.91% 51.44% 0.00%" [ref=f4e933]:
+                              - cell [ref=f4e934]
+                              - cell "MVI良率_非CRP" [ref=f4e935]:
+                                - generic [ref=f4e936]: MVI良率_非CRP
+                              - cell "95.75%" [ref=f4e937]:
+                                - generic [ref=f4e938]: 95.75%
+                              - cell "53.03%" [ref=f4e939]:
+                                - generic [ref=f4e940]: 53.03%
+                              - cell "0.00%" [ref=f4e941]:
+                                - generic [ref=f4e942]: 0.00%
+                              - cell "43.91%" [ref=f4e943]:
+                                - generic [ref=f4e944]: 43.91%
+                              - cell "51.44%" [ref=f4e945]:
+                                - generic [ref=f4e946]: 51.44%
+                              - cell "0.00%" [ref=f4e947]:
+                                - generic [ref=f4e948]: 0.00%
+                              - cell "0.00%" [ref=f4e949]:
+                                - generic [ref=f4e950]: 0.00%
+                              - cell "0.00%" [ref=f4e951]:
+                                - generic [ref=f4e952]: 0.00%
+                              - cell "0.00%" [ref=f4e953]:
+                                - generic [ref=f4e954]: 0.00%
+                              - cell "43.91%" [ref=f4e955]:
+                                - generic [ref=f4e956]: 43.91%
+                              - cell "51.44%" [ref=f4e957]:
+                                - generic [ref=f4e958]: 51.44%
+                              - cell "0.00%" [ref=f4e959]:
+                                - generic [ref=f4e960]: 0.00%
+                            - row "CRP2产出数 4715 937 0 0 0 0 0 0 0 0 0 0" [ref=f4e961]:
+                              - cell [ref=f4e962]
+                              - cell "CRP2产出数" [ref=f4e963]:
+                                - generic [ref=f4e964]: CRP2产出数
+                              - cell "4715" [ref=f4e965]:
+                                - generic [ref=f4e966]: "4715"
+                              - cell "937" [ref=f4e967]:
+                                - generic [ref=f4e968]: "937"
+                              - cell "0" [ref=f4e969]:
+                                - generic [ref=f4e970]: "0"
+                              - cell "0" [ref=f4e971]:
+                                - generic [ref=f4e972]: "0"
+                              - cell "0" [ref=f4e973]:
+                                - generic [ref=f4e974]: "0"
+                              - cell "0" [ref=f4e975]:
+                                - generic [ref=f4e976]: "0"
+                              - cell "0" [ref=f4e977]:
+                                - generic [ref=f4e978]: "0"
+                              - cell "0" [ref=f4e979]:
+                                - generic [ref=f4e980]: "0"
+                              - cell "0" [ref=f4e981]:
+                                - generic [ref=f4e982]: "0"
+                              - cell "0" [ref=f4e983]:
+                                - generic [ref=f4e984]: "0"
+                              - cell "0" [ref=f4e985]:
+                                - generic [ref=f4e986]: "0"
+                              - cell "0" [ref=f4e987]:
+                                - generic [ref=f4e988]: "0"
+                            - row "CRP2良率 100.00% 100.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e989]:
+                              - cell [ref=f4e990]
+                              - cell "CRP2良率" [ref=f4e991]:
+                                - generic [ref=f4e992]: CRP2良率
+                              - cell "100.00%" [ref=f4e993]:
+                                - generic [ref=f4e994]: 100.00%
+                              - cell "100.00%" [ref=f4e995]:
+                                - generic [ref=f4e996]: 100.00%
+                              - cell "0.00%" [ref=f4e997]:
+                                - generic [ref=f4e998]: 0.00%
+                              - cell "0.00%" [ref=f4e999]:
+                                - generic [ref=f4e1000]: 0.00%
+                              - cell "0.00%" [ref=f4e1001]:
+                                - generic [ref=f4e1002]: 0.00%
+                              - cell "0.00%" [ref=f4e1003]:
+                                - generic [ref=f4e1004]: 0.00%
+                              - cell "0.00%" [ref=f4e1005]:
+                                - generic [ref=f4e1006]: 0.00%
+                              - cell "0.00%" [ref=f4e1007]:
+                                - generic [ref=f4e1008]: 0.00%
+                              - cell "0.00%" [ref=f4e1009]:
+                                - generic [ref=f4e1010]: 0.00%
+                              - cell "0.00%" [ref=f4e1011]:
+                                - generic [ref=f4e1012]: 0.00%
+                              - cell "0.00%" [ref=f4e1013]:
+                                - generic [ref=f4e1014]: 0.00%
+                              - cell "0.00%" [ref=f4e1015]:
+                                - generic [ref=f4e1016]: 0.00%
+                            - row "MVI_P品率 1.37% 1.49% 0.00% 2.95% 1.04% 0.00% 0.00% 0.00% 0.00% 2.95% 1.04% 0.00%" [ref=f4e1017]:
+                              - cell [ref=f4e1018]
+                              - cell "MVI_P品率" [ref=f4e1019]:
+                                - generic [ref=f4e1020]: MVI_P品率
+                              - cell "1.37%" [ref=f4e1021]:
+                                - generic [ref=f4e1023] [cursor=pointer]: 1.37%
+                              - cell "1.49%" [ref=f4e1024]:
+                                - generic [ref=f4e1026] [cursor=pointer]: 1.49%
+                              - cell "0.00%" [ref=f4e1027]:
+                                - generic [ref=f4e1029] [cursor=pointer]: 0.00%
+                              - cell "2.95%" [ref=f4e1030]:
+                                - generic [ref=f4e1032] [cursor=pointer]: 2.95%
+                              - cell "1.04%" [ref=f4e1033]:
+                                - generic [ref=f4e1035] [cursor=pointer]: 1.04%
+                              - cell "0.00%" [ref=f4e1036]:
+                                - generic [ref=f4e1038] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1039]:
+                                - generic [ref=f4e1041] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1042]:
+                                - generic [ref=f4e1044] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1045]:
+                                - generic [ref=f4e1047] [cursor=pointer]: 0.00%
+                              - cell "2.95%" [ref=f4e1048]:
+                                - generic [ref=f4e1050] [cursor=pointer]: 2.95%
+                              - cell "1.04%" [ref=f4e1051]:
+                                - generic [ref=f4e1053] [cursor=pointer]: 1.04%
+                              - cell "0.00%" [ref=f4e1054]:
+                                - generic [ref=f4e1056] [cursor=pointer]: 0.00%
+                            - row "MVI_T品产出数 84 641 0 75 348 0 0 0 0 75 348 0" [ref=f4e1057]:
+                              - cell [ref=f4e1058]
+                              - cell "MVI_T品产出数" [ref=f4e1059]:
+                                - generic [ref=f4e1060]: MVI_T品产出数
+                              - cell "84" [ref=f4e1061]:
+                                - generic [ref=f4e1062]: "84"
+                              - cell "641" [ref=f4e1063]:
+                                - generic [ref=f4e1064]: "641"
+                              - cell "0" [ref=f4e1065]:
+                                - generic [ref=f4e1066]: "0"
+                              - cell "75" [ref=f4e1067]:
+                                - generic [ref=f4e1068]: "75"
+                              - cell "348" [ref=f4e1069]:
+                                - generic [ref=f4e1070]: "348"
+                              - cell "0" [ref=f4e1071]:
+                                - generic [ref=f4e1072]: "0"
+                              - cell "0" [ref=f4e1073]:
+                                - generic [ref=f4e1074]: "0"
+                              - cell "0" [ref=f4e1075]:
+                                - generic [ref=f4e1076]: "0"
+                              - cell "0" [ref=f4e1077]:
+                                - generic [ref=f4e1078]: "0"
+                              - cell "75" [ref=f4e1079]:
+                                - generic [ref=f4e1080]: "75"
+                              - cell "348" [ref=f4e1081]:
+                                - generic [ref=f4e1082]: "348"
+                              - cell "0" [ref=f4e1083]:
+                                - generic [ref=f4e1084]: "0"
+                            - row "MVI_T品率 1.49% 12.29% 0.00% 11.40% 13.60% 0.00% 0.00% 0.00% 0.00% 11.40% 13.60% 0.00%" [ref=f4e1085]:
+                              - cell [ref=f4e1086]
+                              - cell "MVI_T品率" [ref=f4e1087]:
+                                - generic [ref=f4e1088]: MVI_T品率
+                              - cell "1.49%" [ref=f4e1089]:
+                                - generic [ref=f4e1091] [cursor=pointer]: 1.49%
+                              - cell "12.29%" [ref=f4e1092]:
+                                - generic [ref=f4e1094] [cursor=pointer]: 12.29%
+                              - cell "0.00%" [ref=f4e1095]:
+                                - generic [ref=f4e1097] [cursor=pointer]: 0.00%
+                              - cell "11.40%" [ref=f4e1098]:
+                                - generic [ref=f4e1100] [cursor=pointer]: 11.40%
+                              - cell "13.60%" [ref=f4e1101]:
+                                - generic [ref=f4e1103] [cursor=pointer]: 13.60%
+                              - cell "0.00%" [ref=f4e1104]:
+                                - generic [ref=f4e1106] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1107]:
+                                - generic [ref=f4e1109] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1110]:
+                                - generic [ref=f4e1112] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1113]:
+                                - generic [ref=f4e1115] [cursor=pointer]: 0.00%
+                              - cell "11.40%" [ref=f4e1116]:
+                                - generic [ref=f4e1118] [cursor=pointer]: 11.40%
+                              - cell "13.60%" [ref=f4e1119]:
+                                - generic [ref=f4e1121] [cursor=pointer]: 13.60%
+                              - cell "0.00%" [ref=f4e1122]:
+                                - generic [ref=f4e1124] [cursor=pointer]: 0.00%
+                            - row "AVI2产出数 324 176 0 0 0 0 0 0 0 0 0 0" [ref=f4e1125]:
+                              - cell [ref=f4e1126]
+                              - cell "AVI2产出数" [ref=f4e1127]:
+                                - generic [ref=f4e1128]: AVI2产出数
+                              - cell "324" [ref=f4e1129]:
+                                - generic [ref=f4e1130]: "324"
+                              - cell "176" [ref=f4e1131]:
+                                - generic [ref=f4e1132]: "176"
+                              - cell "0" [ref=f4e1133]:
+                                - generic [ref=f4e1134]: "0"
+                              - cell "0" [ref=f4e1135]:
+                                - generic [ref=f4e1136]: "0"
+                              - cell "0" [ref=f4e1137]:
+                                - generic [ref=f4e1138]: "0"
+                              - cell "0" [ref=f4e1139]:
+                                - generic [ref=f4e1140]: "0"
+                              - cell "0" [ref=f4e1141]:
+                                - generic [ref=f4e1142]: "0"
+                              - cell "0" [ref=f4e1143]:
+                                - generic [ref=f4e1144]: "0"
+                              - cell "0" [ref=f4e1145]:
+                                - generic [ref=f4e1146]: "0"
+                              - cell "0" [ref=f4e1147]:
+                                - generic [ref=f4e1148]: "0"
+                              - cell "0" [ref=f4e1149]:
+                                - generic [ref=f4e1150]: "0"
+                              - cell "0" [ref=f4e1151]:
+                                - generic [ref=f4e1152]: "0"
+                            - row "AVI2良率 96.91% 100.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1153]:
+                              - cell [ref=f4e1154]
+                              - cell "AVI2良率" [ref=f4e1155]:
+                                - generic [ref=f4e1156]: AVI2良率
+                              - cell "96.91%" [ref=f4e1157]:
+                                - generic [ref=f4e1158]: 96.91%
+                              - cell "100.00%" [ref=f4e1159]:
+                                - generic [ref=f4e1160]: 100.00%
+                              - cell "0.00%" [ref=f4e1161]:
+                                - generic [ref=f4e1162]: 0.00%
+                              - cell "0.00%" [ref=f4e1163]:
+                                - generic [ref=f4e1164]: 0.00%
+                              - cell "0.00%" [ref=f4e1165]:
+                                - generic [ref=f4e1166]: 0.00%
+                              - cell "0.00%" [ref=f4e1167]:
+                                - generic [ref=f4e1168]: 0.00%
+                              - cell "0.00%" [ref=f4e1169]:
+                                - generic [ref=f4e1170]: 0.00%
+                              - cell "0.00%" [ref=f4e1171]:
+                                - generic [ref=f4e1172]: 0.00%
+                              - cell "0.00%" [ref=f4e1173]:
+                                - generic [ref=f4e1174]: 0.00%
+                              - cell "0.00%" [ref=f4e1175]:
+                                - generic [ref=f4e1176]: 0.00%
+                              - cell "0.00%" [ref=f4e1177]:
+                                - generic [ref=f4e1178]: 0.00%
+                              - cell "0.00%" [ref=f4e1179]:
+                                - generic [ref=f4e1180]: 0.00%
+                            - row "AVI2_G品率 64.51% 92.61% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1181]:
+                              - cell [ref=f4e1182]
+                              - cell "AVI2_G品率" [ref=f4e1183]:
+                                - generic [ref=f4e1184]: AVI2_G品率
+                              - cell "64.51%" [ref=f4e1185]:
+                                - generic [ref=f4e1187] [cursor=pointer]: 64.51%
+                              - cell "92.61%" [ref=f4e1188]:
+                                - generic [ref=f4e1190] [cursor=pointer]: 92.61%
+                              - cell "0.00%" [ref=f4e1191]:
+                                - generic [ref=f4e1193] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1194]:
+                                - generic [ref=f4e1196] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1197]:
+                                - generic [ref=f4e1199] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1200]:
+                                - generic [ref=f4e1202] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1203]:
+                                - generic [ref=f4e1205] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1206]:
+                                - generic [ref=f4e1208] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1209]:
+                                - generic [ref=f4e1211] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1212]:
+                                - generic [ref=f4e1214] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1215]:
+                                - generic [ref=f4e1217] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1218]:
+                                - generic [ref=f4e1220] [cursor=pointer]: 0.00%
+                            - row "AVI2_R品率 32.41% 7.39% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1221]:
+                              - cell [ref=f4e1222]
+                              - cell "AVI2_R品率" [ref=f4e1223]:
+                                - generic [ref=f4e1224]: AVI2_R品率
+                              - cell "32.41%" [ref=f4e1225]:
+                                - generic [ref=f4e1227] [cursor=pointer]: 32.41%
+                              - cell "7.39%" [ref=f4e1228]:
+                                - generic [ref=f4e1230] [cursor=pointer]: 7.39%
+                              - cell "0.00%" [ref=f4e1231]:
+                                - generic [ref=f4e1233] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1234]:
+                                - generic [ref=f4e1236] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1237]:
+                                - generic [ref=f4e1239] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1240]:
+                                - generic [ref=f4e1242] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1243]:
+                                - generic [ref=f4e1245] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1246]:
+                                - generic [ref=f4e1248] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1249]:
+                                - generic [ref=f4e1251] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1252]:
+                                - generic [ref=f4e1254] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1255]:
+                                - generic [ref=f4e1257] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1258]:
+                                - generic [ref=f4e1260] [cursor=pointer]: 0.00%
+                            - row "AVI5产出数 0 0 0 0 0 0 0 0 0 0 0 0" [ref=f4e1261]:
+                              - cell [ref=f4e1262]
+                              - cell "AVI5产出数" [ref=f4e1263]:
+                                - generic [ref=f4e1264]: AVI5产出数
+                              - cell "0" [ref=f4e1265]:
+                                - generic [ref=f4e1266]: "0"
+                              - cell "0" [ref=f4e1267]:
+                                - generic [ref=f4e1268]: "0"
+                              - cell "0" [ref=f4e1269]:
+                                - generic [ref=f4e1270]: "0"
+                              - cell "0" [ref=f4e1271]:
+                                - generic [ref=f4e1272]: "0"
+                              - cell "0" [ref=f4e1273]:
+                                - generic [ref=f4e1274]: "0"
+                              - cell "0" [ref=f4e1275]:
+                                - generic [ref=f4e1276]: "0"
+                              - cell "0" [ref=f4e1277]:
+                                - generic [ref=f4e1278]: "0"
+                              - cell "0" [ref=f4e1279]:
+                                - generic [ref=f4e1280]: "0"
+                              - cell "0" [ref=f4e1281]:
+                                - generic [ref=f4e1282]: "0"
+                              - cell "0" [ref=f4e1283]:
+                                - generic [ref=f4e1284]: "0"
+                              - cell "0" [ref=f4e1285]:
+                                - generic [ref=f4e1286]: "0"
+                              - cell "0" [ref=f4e1287]:
+                                - generic [ref=f4e1288]: "0"
+                            - row "AVI5良率 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1289]:
+                              - cell [ref=f4e1290]
+                              - cell "AVI5良率" [ref=f4e1291]:
+                                - generic [ref=f4e1292]: AVI5良率
+                              - cell "0.00%" [ref=f4e1293]:
+                                - generic [ref=f4e1294]: 0.00%
+                              - cell "0.00%" [ref=f4e1295]:
+                                - generic [ref=f4e1296]: 0.00%
+                              - cell "0.00%" [ref=f4e1297]:
+                                - generic [ref=f4e1298]: 0.00%
+                              - cell "0.00%" [ref=f4e1299]:
+                                - generic [ref=f4e1300]: 0.00%
+                              - cell "0.00%" [ref=f4e1301]:
+                                - generic [ref=f4e1302]: 0.00%
+                              - cell "0.00%" [ref=f4e1303]:
+                                - generic [ref=f4e1304]: 0.00%
+                              - cell "0.00%" [ref=f4e1305]:
+                                - generic [ref=f4e1306]: 0.00%
+                              - cell "0.00%" [ref=f4e1307]:
+                                - generic [ref=f4e1308]: 0.00%
+                              - cell "0.00%" [ref=f4e1309]:
+                                - generic [ref=f4e1310]: 0.00%
+                              - cell "0.00%" [ref=f4e1311]:
+                                - generic [ref=f4e1312]: 0.00%
+                              - cell "0.00%" [ref=f4e1313]:
+                                - generic [ref=f4e1314]: 0.00%
+                              - cell "0.00%" [ref=f4e1315]:
+                                - generic [ref=f4e1316]: 0.00%
+                            - row "Array_AD 0.47% 0.58% 0.00% 0.70% 0.55% 0.00% 0.00% 0.00% 0.72% 0.69% 0.58% 0.16%" [ref=f4e1317]:
+                              - cell [ref=f4e1318]
+                              - cell "Array_AD" [ref=f4e1319]:
+                                - generic [ref=f4e1321] [cursor=pointer]: Array_AD
+                              - cell "0.47%" [ref=f4e1322]:
+                                - generic [ref=f4e1324] [cursor=pointer]: 0.47%
+                              - cell "0.58%" [ref=f4e1325]:
+                                - generic [ref=f4e1327] [cursor=pointer]: 0.58%
+                              - cell "0.00%" [ref=f4e1328]:
+                                - generic [ref=f4e1330] [cursor=pointer]: 0.00%
+                              - cell "0.70%" [ref=f4e1331]:
+                                - generic [ref=f4e1333] [cursor=pointer]: 0.70%
+                              - cell "0.55%" [ref=f4e1334]:
+                                - generic [ref=f4e1336] [cursor=pointer]: 0.55%
+                              - cell "0.00%" [ref=f4e1337]:
+                                - generic [ref=f4e1339] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1340]:
+                                - generic [ref=f4e1342] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1343]:
+                                - generic [ref=f4e1345] [cursor=pointer]: 0.00%
+                              - cell "0.72%" [ref=f4e1346]:
+                                - generic [ref=f4e1348] [cursor=pointer]: 0.72%
+                              - cell "0.69%" [ref=f4e1349]:
+                                - generic [ref=f4e1351] [cursor=pointer]: 0.69%
+                              - cell "0.58%" [ref=f4e1352]:
+                                - generic [ref=f4e1354] [cursor=pointer]: 0.58%
+                              - cell "0.16%" [ref=f4e1355]:
+                                - generic [ref=f4e1357] [cursor=pointer]: 0.16%
+                            - row "Array_Line 1.58% 1.88% 0.00% 3.12% 1.48% 0.00% 0.00% 0.00% 2.90% 3.36% 1.47% 1.62%" [ref=f4e1358]:
+                              - cell [ref=f4e1359]
+                              - cell "Array_Line" [ref=f4e1360]:
+                                - generic [ref=f4e1362] [cursor=pointer]: Array_Line
+                              - cell "1.58%" [ref=f4e1363]:
+                                - generic [ref=f4e1365] [cursor=pointer]: 1.58%
+                              - cell "1.88%" [ref=f4e1366]:
+                                - generic [ref=f4e1368] [cursor=pointer]: 1.88%
+                              - cell "0.00%" [ref=f4e1369]:
+                                - generic [ref=f4e1371] [cursor=pointer]: 0.00%
+                              - cell "3.12%" [ref=f4e1372]:
+                                - generic [ref=f4e1374] [cursor=pointer]: 3.12%
+                              - cell "1.48%" [ref=f4e1375]:
+                                - generic [ref=f4e1377] [cursor=pointer]: 1.48%
+                              - cell "0.00%" [ref=f4e1378]:
+                                - generic [ref=f4e1380] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1381]:
+                                - generic [ref=f4e1383] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1384]:
+                                - generic [ref=f4e1386] [cursor=pointer]: 0.00%
+                              - cell "2.90%" [ref=f4e1387]:
+                                - generic [ref=f4e1389] [cursor=pointer]: 2.90%
+                              - cell "3.36%" [ref=f4e1390]:
+                                - generic [ref=f4e1392] [cursor=pointer]: 3.36%
+                              - cell "1.47%" [ref=f4e1393]:
+                                - generic [ref=f4e1395] [cursor=pointer]: 1.47%
+                              - cell "1.62%" [ref=f4e1396]:
+                                - generic [ref=f4e1398] [cursor=pointer]: 1.62%
+                            - row "Array_Mura 2.31% 0.65% 0.00% 0.41% 0.73% 0.00% 0.00% 0.00% 0.34% 0.50% 0.74% 0.65%" [ref=f4e1399]:
+                              - cell [ref=f4e1400]
+                              - cell "Array_Mura" [ref=f4e1401]:
+                                - generic [ref=f4e1403] [cursor=pointer]: Array_Mura
+                              - cell "2.31%" [ref=f4e1404]:
+                                - generic [ref=f4e1406] [cursor=pointer]: 2.31%
+                              - cell "0.65%" [ref=f4e1407]:
+                                - generic [ref=f4e1409] [cursor=pointer]: 0.65%
+                              - cell "0.00%" [ref=f4e1410]:
+                                - generic [ref=f4e1412] [cursor=pointer]: 0.00%
+                              - cell "0.41%" [ref=f4e1413]:
+                                - generic [ref=f4e1415] [cursor=pointer]: 0.41%
+                              - cell "0.73%" [ref=f4e1416]:
+                                - generic [ref=f4e1418] [cursor=pointer]: 0.73%
+                              - cell "0.00%" [ref=f4e1419]:
+                                - generic [ref=f4e1421] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1422]:
+                                - generic [ref=f4e1424] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1425]:
+                                - generic [ref=f4e1427] [cursor=pointer]: 0.00%
+                              - cell "0.34%" [ref=f4e1428]:
+                                - generic [ref=f4e1430] [cursor=pointer]: 0.34%
+                              - cell "0.50%" [ref=f4e1431]:
+                                - generic [ref=f4e1433] [cursor=pointer]: 0.50%
+                              - cell "0.74%" [ref=f4e1434]:
+                                - generic [ref=f4e1436] [cursor=pointer]: 0.74%
+                              - cell "0.65%" [ref=f4e1437]:
+                                - generic [ref=f4e1439] [cursor=pointer]: 0.65%
+                            - row "Array_Pixel 5.42% 22.62% 0.00% 6.96% 39.04% 0.00% 0.00% 0.00% 0.03% 14.70% 42.17% 1.45%" [ref=f4e1440]:
+                              - cell [ref=f4e1441]
+                              - cell "Array_Pixel" [ref=f4e1442]:
+                                - generic [ref=f4e1444] [cursor=pointer]: Array_Pixel
+                              - cell "5.42%" [ref=f4e1445]:
+                                - generic [ref=f4e1447] [cursor=pointer]: 5.42%
+                              - cell "22.62%" [ref=f4e1448]:
+                                - generic [ref=f4e1450] [cursor=pointer]: 22.62%
+                              - cell "0.00%" [ref=f4e1451]:
+                                - generic [ref=f4e1453] [cursor=pointer]: 0.00%
+                              - cell "6.96%" [ref=f4e1454]:
+                                - generic [ref=f4e1456] [cursor=pointer]: 6.96%
+                              - cell "39.04%" [ref=f4e1457]:
+                                - generic [ref=f4e1459] [cursor=pointer]: 39.04%
+                              - cell "0.00%" [ref=f4e1460]:
+                                - generic [ref=f4e1462] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1463]:
+                                - generic [ref=f4e1465] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1466]:
+                                - generic [ref=f4e1468] [cursor=pointer]: 0.00%
+                              - cell "0.03%" [ref=f4e1469]:
+                                - generic [ref=f4e1471] [cursor=pointer]: 0.03%
+                              - cell "14.70%" [ref=f4e1472]:
+                                - generic [ref=f4e1474] [cursor=pointer]: 14.70%
+                              - cell "42.17%" [ref=f4e1475]:
+                                - generic [ref=f4e1477] [cursor=pointer]: 42.17%
+                              - cell "1.45%" [ref=f4e1478]:
+                                - generic [ref=f4e1480] [cursor=pointer]: 1.45%
+                            - row "ARRAY其他 0.06% 0.12% 0.00% 0.07% 0.15% 0.00% 0.00% 0.00% 0.07% 0.08% 0.16% 0.00%" [ref=f4e1481]:
+                              - cell [ref=f4e1482]
+                              - cell "ARRAY其他" [ref=f4e1483]:
+                                - generic [ref=f4e1485] [cursor=pointer]: ARRAY其他
+                              - cell "0.06%" [ref=f4e1486]:
+                                - generic [ref=f4e1488] [cursor=pointer]: 0.06%
+                              - cell "0.12%" [ref=f4e1489]:
+                                - generic [ref=f4e1491] [cursor=pointer]: 0.12%
+                              - cell "0.00%" [ref=f4e1492]:
+                                - generic [ref=f4e1494] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e1495]:
+                                - generic [ref=f4e1497] [cursor=pointer]: 0.07%
+                              - cell "0.15%" [ref=f4e1498]:
+                                - generic [ref=f4e1500] [cursor=pointer]: 0.15%
+                              - cell "0.00%" [ref=f4e1501]:
+                                - generic [ref=f4e1503] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1504]:
+                                - generic [ref=f4e1506] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1507]:
+                                - generic [ref=f4e1509] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e1510]:
+                                - generic [ref=f4e1512] [cursor=pointer]: 0.07%
+                              - cell "0.08%" [ref=f4e1513]:
+                                - generic [ref=f4e1515] [cursor=pointer]: 0.08%
+                              - cell "0.16%" [ref=f4e1516]:
+                                - generic [ref=f4e1518] [cursor=pointer]: 0.16%
+                              - cell "0.00%" [ref=f4e1519]:
+                                - generic [ref=f4e1521] [cursor=pointer]: 0.00%
+                            - row "OLED_Mura 0.14% 3.98% 0.00% 3.77% 5.55% 0.00% 0.00% 0.00% 0.85% 7.03% 5.79% 2.75%" [ref=f4e1522]:
+                              - cell [ref=f4e1523]
+                              - cell "OLED_Mura" [ref=f4e1524]:
+                                - generic [ref=f4e1526] [cursor=pointer]: OLED_Mura
+                              - cell "0.14%" [ref=f4e1527]:
+                                - generic [ref=f4e1529] [cursor=pointer]: 0.14%
+                              - cell "3.98%" [ref=f4e1530]:
+                                - generic [ref=f4e1532] [cursor=pointer]: 3.98%
+                              - cell "0.00%" [ref=f4e1533]:
+                                - generic [ref=f4e1535] [cursor=pointer]: 0.00%
+                              - cell "3.77%" [ref=f4e1536]:
+                                - generic [ref=f4e1538] [cursor=pointer]: 3.77%
+                              - cell "5.55%" [ref=f4e1539]:
+                                - generic [ref=f4e1541] [cursor=pointer]: 5.55%
+                              - cell "0.00%" [ref=f4e1542]:
+                                - generic [ref=f4e1544] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1545]:
+                                - generic [ref=f4e1547] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1548]:
+                                - generic [ref=f4e1550] [cursor=pointer]: 0.00%
+                              - cell "0.85%" [ref=f4e1551]:
+                                - generic [ref=f4e1553] [cursor=pointer]: 0.85%
+                              - cell "7.03%" [ref=f4e1554]:
+                                - generic [ref=f4e1556] [cursor=pointer]: 7.03%
+                              - cell "5.79%" [ref=f4e1557]:
+                                - generic [ref=f4e1559] [cursor=pointer]: 5.79%
+                              - cell "2.75%" [ref=f4e1560]:
+                                - generic [ref=f4e1562] [cursor=pointer]: 2.75%
+                            - row "OLED_RS查杀 0.03% 0.04% 0.00% 0.02% 0.02% 0.00% 0.00% 0.00% 0.00% 0.04% 0.03% 0.00%" [ref=f4e1563]:
+                              - cell [ref=f4e1564]
+                              - cell "OLED_RS查杀" [ref=f4e1565]:
+                                - generic [ref=f4e1567] [cursor=pointer]: OLED_RS查杀
+                              - cell "0.03%" [ref=f4e1568]:
+                                - generic [ref=f4e1570] [cursor=pointer]: 0.03%
+                              - cell "0.04%" [ref=f4e1571]:
+                                - generic [ref=f4e1573] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e1574]:
+                                - generic [ref=f4e1576] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e1577]:
+                                - generic [ref=f4e1579] [cursor=pointer]: 0.02%
+                              - cell "0.02%" [ref=f4e1580]:
+                                - generic [ref=f4e1582] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e1583]:
+                                - generic [ref=f4e1585] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1586]:
+                                - generic [ref=f4e1588] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1589]:
+                                - generic [ref=f4e1591] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1592]:
+                                - generic [ref=f4e1594] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e1595]:
+                                - generic [ref=f4e1597] [cursor=pointer]: 0.04%
+                              - cell "0.03%" [ref=f4e1598]:
+                                - generic [ref=f4e1600] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e1601]:
+                                - generic [ref=f4e1603] [cursor=pointer]: 0.00%
+                            - row "TP_Short NG 0.15% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1604]:
+                              - cell [ref=f4e1605]
+                              - cell "TP_Short NG" [ref=f4e1606]:
+                                - generic [ref=f4e1608] [cursor=pointer]: TP_Short NG
+                              - cell "0.15%" [ref=f4e1609]:
+                                - generic [ref=f4e1611] [cursor=pointer]: 0.15%
+                              - cell "0.00%" [ref=f4e1612]:
+                                - generic [ref=f4e1614] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1615]:
+                                - generic [ref=f4e1617] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1618]:
+                                - generic [ref=f4e1620] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1621]:
+                                - generic [ref=f4e1623] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1624]:
+                                - generic [ref=f4e1626] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1627]:
+                                - generic [ref=f4e1629] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1630]:
+                                - generic [ref=f4e1632] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1633]:
+                                - generic [ref=f4e1635] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1636]:
+                                - generic [ref=f4e1638] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1639]:
+                                - generic [ref=f4e1641] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1642]:
+                                - generic [ref=f4e1644] [cursor=pointer]: 0.00%
+                            - row "TP 容值NG 0.05% 0.13% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e1645]:
+                              - cell [ref=f4e1646]
+                              - cell "TP 容值NG" [ref=f4e1647]:
+                                - generic [ref=f4e1649] [cursor=pointer]: TP 容值NG
+                              - cell "0.05%" [ref=f4e1650]:
+                                - generic [ref=f4e1652] [cursor=pointer]: 0.05%
+                              - cell "0.13%" [ref=f4e1653]:
+                                - generic [ref=f4e1655] [cursor=pointer]: 0.13%
+                              - cell "0.00%" [ref=f4e1656]:
+                                - generic [ref=f4e1658] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1659]:
+                                - generic [ref=f4e1661] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1662]:
+                                - generic [ref=f4e1664] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1665]:
+                                - generic [ref=f4e1667] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1668]:
+                                - generic [ref=f4e1670] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1671]:
+                                - generic [ref=f4e1673] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1674]:
+                                - generic [ref=f4e1676] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1677]:
+                                - generic [ref=f4e1679] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1680]:
+                                - generic [ref=f4e1682] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1683]:
+                                - generic [ref=f4e1685] [cursor=pointer]: 0.00%
+                            - row "OLED_Mura 彩斑Mura 0.14% 3.88% 0.00% 3.64% 5.44% 0.00% 0.00% 0.00% 0.85% 6.76% 5.67% 2.75%" [ref=f4e1686]:
+                              - cell [ref=f4e1687]
+                              - cell "OLED_Mura" [ref=f4e1688]:
+                                - generic [ref=f4e1689]: OLED_Mura
+                              - cell "彩斑Mura" [ref=f4e1690]:
+                                - generic [ref=f4e1692] [cursor=pointer]: 彩斑Mura
+                              - cell "0.14%" [ref=f4e1693]:
+                                - generic [ref=f4e1695] [cursor=pointer]: 0.14%
+                              - cell "3.88%" [ref=f4e1696]:
+                                - generic [ref=f4e1698] [cursor=pointer]: 3.88%
+                              - cell "0.00%" [ref=f4e1699]:
+                                - generic [ref=f4e1701] [cursor=pointer]: 0.00%
+                              - cell "3.64%" [ref=f4e1702]:
+                                - generic [ref=f4e1704] [cursor=pointer]: 3.64%
+                              - cell "5.44%" [ref=f4e1705]:
+                                - generic [ref=f4e1707] [cursor=pointer]: 5.44%
+                              - cell "0.00%" [ref=f4e1708]:
+                                - generic [ref=f4e1710] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1711]:
+                                - generic [ref=f4e1713] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1714]:
+                                - generic [ref=f4e1716] [cursor=pointer]: 0.00%
+                              - cell "0.85%" [ref=f4e1717]:
+                                - generic [ref=f4e1719] [cursor=pointer]: 0.85%
+                              - cell "6.76%" [ref=f4e1720]:
+                                - generic [ref=f4e1722] [cursor=pointer]: 6.76%
+                              - cell "5.67%" [ref=f4e1723]:
+                                - generic [ref=f4e1725] [cursor=pointer]: 5.67%
+                              - cell "2.75%" [ref=f4e1726]:
+                                - generic [ref=f4e1728] [cursor=pointer]: 2.75%
+                            - row "Array_Line G向单暗线 1.00% 0.88% 0.00% 1.48% 0.68% 0.00% 0.00% 0.00% 1.43% 1.53% 0.65% 1.13%" [ref=f4e1729]:
+                              - cell [ref=f4e1730]
+                              - cell "Array_Line" [ref=f4e1731]:
+                                - generic [ref=f4e1732]: Array_Line
+                              - cell "G向单暗线" [ref=f4e1733]:
+                                - generic [ref=f4e1735] [cursor=pointer]: G向单暗线
+                              - cell "1.00%" [ref=f4e1736]:
+                                - generic [ref=f4e1738] [cursor=pointer]: 1.00%
+                              - cell "0.88%" [ref=f4e1739]:
+                                - generic [ref=f4e1741] [cursor=pointer]: 0.88%
+                              - cell "0.00%" [ref=f4e1742]:
+                                - generic [ref=f4e1744] [cursor=pointer]: 0.00%
+                              - cell "1.48%" [ref=f4e1745]:
+                                - generic [ref=f4e1747] [cursor=pointer]: 1.48%
+                              - cell "0.68%" [ref=f4e1748]:
+                                - generic [ref=f4e1750] [cursor=pointer]: 0.68%
+                              - cell "0.00%" [ref=f4e1751]:
+                                - generic [ref=f4e1753] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1754]:
+                                - generic [ref=f4e1756] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1757]:
+                                - generic [ref=f4e1759] [cursor=pointer]: 0.00%
+                              - cell "1.43%" [ref=f4e1760]:
+                                - generic [ref=f4e1762] [cursor=pointer]: 1.43%
+                              - cell "1.53%" [ref=f4e1763]:
+                                - generic [ref=f4e1765] [cursor=pointer]: 1.53%
+                              - cell "0.65%" [ref=f4e1766]:
+                                - generic [ref=f4e1768] [cursor=pointer]: 0.65%
+                              - cell "1.13%" [ref=f4e1769]:
+                                - generic [ref=f4e1771] [cursor=pointer]: 1.13%
+                            - row "Array_Pixel 大面积亮点 0.05% 20.60% 0.00% 6.45% 37.75% 0.00% 0.00% 0.00% 0.00% 13.67% 40.81% 0.97%" [ref=f4e1772]:
+                              - cell [ref=f4e1773]
+                              - cell "Array_Pixel" [ref=f4e1774]:
+                                - generic [ref=f4e1775]: Array_Pixel
+                              - cell "大面积亮点" [ref=f4e1776]:
+                                - generic [ref=f4e1778] [cursor=pointer]: 大面积亮点
+                              - cell "0.05%" [ref=f4e1779]:
+                                - generic [ref=f4e1781] [cursor=pointer]: 0.05%
+                              - cell "20.60%" [ref=f4e1782]:
+                                - generic [ref=f4e1784] [cursor=pointer]: 20.60%
+                              - cell "0.00%" [ref=f4e1785]:
+                                - generic [ref=f4e1787] [cursor=pointer]: 0.00%
+                              - cell "6.45%" [ref=f4e1788]:
+                                - generic [ref=f4e1790] [cursor=pointer]: 6.45%
+                              - cell "37.75%" [ref=f4e1791]:
+                                - generic [ref=f4e1793] [cursor=pointer]: 37.75%
+                              - cell "0.00%" [ref=f4e1794]:
+                                - generic [ref=f4e1796] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1797]:
+                                - generic [ref=f4e1799] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1800]:
+                                - generic [ref=f4e1802] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1803]:
+                                - generic [ref=f4e1805] [cursor=pointer]: 0.00%
+                              - cell "13.67%" [ref=f4e1806]:
+                                - generic [ref=f4e1808] [cursor=pointer]: 13.67%
+                              - cell "40.81%" [ref=f4e1809]:
+                                - generic [ref=f4e1811] [cursor=pointer]: 40.81%
+                              - cell "0.97%" [ref=f4e1812]:
+                                - generic [ref=f4e1814] [cursor=pointer]: 0.97%
+                            - row "Array_Mura S向ELA Mura 0.02% 0.25% 0.00% 0.00% 0.52% 0.00% 0.00% 0.00% 0.00% 0.00% 0.51% 0.65%" [ref=f4e1815]:
+                              - cell [ref=f4e1816]
+                              - cell "Array_Mura" [ref=f4e1817]:
+                                - generic [ref=f4e1818]: Array_Mura
+                              - cell "S向ELA Mura" [ref=f4e1819]:
+                                - generic [ref=f4e1821] [cursor=pointer]: S向ELA Mura
+                              - cell "0.02%" [ref=f4e1822]:
+                                - generic [ref=f4e1824] [cursor=pointer]: 0.02%
+                              - cell "0.25%" [ref=f4e1825]:
+                                - generic [ref=f4e1827] [cursor=pointer]: 0.25%
+                              - cell "0.00%" [ref=f4e1828]:
+                                - generic [ref=f4e1830] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1831]:
+                                - generic [ref=f4e1833] [cursor=pointer]: 0.00%
+                              - cell "0.52%" [ref=f4e1834]:
+                                - generic [ref=f4e1836] [cursor=pointer]: 0.52%
+                              - cell "0.00%" [ref=f4e1837]:
+                                - generic [ref=f4e1839] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1840]:
+                                - generic [ref=f4e1842] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1843]:
+                                - generic [ref=f4e1845] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1846]:
+                                - generic [ref=f4e1848] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1849]:
+                                - generic [ref=f4e1851] [cursor=pointer]: 0.00%
+                              - cell "0.51%" [ref=f4e1852]:
+                                - generic [ref=f4e1854] [cursor=pointer]: 0.51%
+                              - cell "0.65%" [ref=f4e1855]:
+                                - generic [ref=f4e1857] [cursor=pointer]: 0.65%
+                            - row "Array_Pixel 群暗点 1.67% 0.81% 0.00% 0.50% 0.62% 0.00% 0.00% 0.00% 0.03% 1.03% 0.63% 0.48%" [ref=f4e1858]:
+                              - cell [ref=f4e1859]
+                              - cell "Array_Pixel" [ref=f4e1860]:
+                                - generic [ref=f4e1861]: Array_Pixel
+                              - cell "群暗点" [ref=f4e1862]:
+                                - generic [ref=f4e1864] [cursor=pointer]: 群暗点
+                              - cell "1.67%" [ref=f4e1865]:
+                                - generic [ref=f4e1867] [cursor=pointer]: 1.67%
+                              - cell "0.81%" [ref=f4e1868]:
+                                - generic [ref=f4e1870] [cursor=pointer]: 0.81%
+                              - cell "0.00%" [ref=f4e1871]:
+                                - generic [ref=f4e1873] [cursor=pointer]: 0.00%
+                              - cell "0.50%" [ref=f4e1874]:
+                                - generic [ref=f4e1876] [cursor=pointer]: 0.50%
+                              - cell "0.62%" [ref=f4e1877]:
+                                - generic [ref=f4e1879] [cursor=pointer]: 0.62%
+                              - cell "0.00%" [ref=f4e1880]:
+                                - generic [ref=f4e1882] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1883]:
+                                - generic [ref=f4e1885] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1886]:
+                                - generic [ref=f4e1888] [cursor=pointer]: 0.00%
+                              - cell "0.03%" [ref=f4e1889]:
+                                - generic [ref=f4e1891] [cursor=pointer]: 0.03%
+                              - cell "1.03%" [ref=f4e1892]:
+                                - generic [ref=f4e1894] [cursor=pointer]: 1.03%
+                              - cell "0.63%" [ref=f4e1895]:
+                                - generic [ref=f4e1897] [cursor=pointer]: 0.63%
+                              - cell "0.48%" [ref=f4e1898]:
+                                - generic [ref=f4e1900] [cursor=pointer]: 0.48%
+                            - row "Array_Line S向单暗线 0.29% 0.53% 0.00% 0.72% 0.50% 0.00% 0.00% 0.00% 0.55% 0.92% 0.51% 0.32%" [ref=f4e1901]:
+                              - cell [ref=f4e1902]
+                              - cell "Array_Line" [ref=f4e1903]:
+                                - generic [ref=f4e1904]: Array_Line
+                              - cell "S向单暗线" [ref=f4e1905]:
+                                - generic [ref=f4e1907] [cursor=pointer]: S向单暗线
+                              - cell "0.29%" [ref=f4e1908]:
+                                - generic [ref=f4e1910] [cursor=pointer]: 0.29%
+                              - cell "0.53%" [ref=f4e1911]:
+                                - generic [ref=f4e1913] [cursor=pointer]: 0.53%
+                              - cell "0.00%" [ref=f4e1914]:
+                                - generic [ref=f4e1916] [cursor=pointer]: 0.00%
+                              - cell "0.72%" [ref=f4e1917]:
+                                - generic [ref=f4e1919] [cursor=pointer]: 0.72%
+                              - cell "0.50%" [ref=f4e1920]:
+                                - generic [ref=f4e1922] [cursor=pointer]: 0.50%
+                              - cell "0.00%" [ref=f4e1923]:
+                                - generic [ref=f4e1925] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1926]:
+                                - generic [ref=f4e1928] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1929]:
+                                - generic [ref=f4e1931] [cursor=pointer]: 0.00%
+                              - cell "0.55%" [ref=f4e1932]:
+                                - generic [ref=f4e1934] [cursor=pointer]: 0.55%
+                              - cell "0.92%" [ref=f4e1935]:
+                                - generic [ref=f4e1937] [cursor=pointer]: 0.92%
+                              - cell "0.51%" [ref=f4e1938]:
+                                - generic [ref=f4e1940] [cursor=pointer]: 0.51%
+                              - cell "0.32%" [ref=f4e1941]:
+                                - generic [ref=f4e1943] [cursor=pointer]: 0.32%
+                            - row "Array_AD Aging AA区烧伤 0.39% 0.44% 0.00% 0.67% 0.40% 0.00% 0.00% 0.00% 0.72% 0.61% 0.42% 0.16%" [ref=f4e1944]:
+                              - cell [ref=f4e1945]
+                              - cell "Array_AD" [ref=f4e1946]:
+                                - generic [ref=f4e1947]: Array_AD
+                              - cell "Aging AA区烧伤" [ref=f4e1948]:
+                                - generic [ref=f4e1950] [cursor=pointer]: Aging AA区烧伤
+                              - cell "0.39%" [ref=f4e1951]:
+                                - generic [ref=f4e1953] [cursor=pointer]: 0.39%
+                              - cell "0.44%" [ref=f4e1954]:
+                                - generic [ref=f4e1956] [cursor=pointer]: 0.44%
+                              - cell "0.00%" [ref=f4e1957]:
+                                - generic [ref=f4e1959] [cursor=pointer]: 0.00%
+                              - cell "0.67%" [ref=f4e1960]:
+                                - generic [ref=f4e1962] [cursor=pointer]: 0.67%
+                              - cell "0.40%" [ref=f4e1963]:
+                                - generic [ref=f4e1965] [cursor=pointer]: 0.40%
+                              - cell "0.00%" [ref=f4e1966]:
+                                - generic [ref=f4e1968] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1969]:
+                                - generic [ref=f4e1971] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e1972]:
+                                - generic [ref=f4e1974] [cursor=pointer]: 0.00%
+                              - cell "0.72%" [ref=f4e1975]:
+                                - generic [ref=f4e1977] [cursor=pointer]: 0.72%
+                              - cell "0.61%" [ref=f4e1978]:
+                                - generic [ref=f4e1980] [cursor=pointer]: 0.61%
+                              - cell "0.42%" [ref=f4e1981]:
+                                - generic [ref=f4e1983] [cursor=pointer]: 0.42%
+                              - cell "0.16%" [ref=f4e1984]:
+                                - generic [ref=f4e1986] [cursor=pointer]: 0.16%
+                            - row "Array_Line G向群亮线 0.00% 0.06% 0.00% 0.07% 0.07% 0.00% 0.00% 0.00% 0.14% 0.00% 0.07% 0.16%" [ref=f4e1987]:
+                              - cell [ref=f4e1988]
+                              - cell "Array_Line" [ref=f4e1989]:
+                                - generic [ref=f4e1990]: Array_Line
+                              - cell "G向群亮线" [ref=f4e1991]:
+                                - generic [ref=f4e1993] [cursor=pointer]: G向群亮线
+                              - cell "0.00%" [ref=f4e1994]:
+                                - generic [ref=f4e1996] [cursor=pointer]: 0.00%
+                              - cell "0.06%" [ref=f4e1997]:
+                                - generic [ref=f4e1999] [cursor=pointer]: 0.06%
+                              - cell "0.00%" [ref=f4e2000]:
+                                - generic [ref=f4e2002] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e2003]:
+                                - generic [ref=f4e2005] [cursor=pointer]: 0.07%
+                              - cell "0.07%" [ref=f4e2006]:
+                                - generic [ref=f4e2008] [cursor=pointer]: 0.07%
+                              - cell "0.00%" [ref=f4e2009]:
+                                - generic [ref=f4e2011] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2012]:
+                                - generic [ref=f4e2014] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2015]:
+                                - generic [ref=f4e2017] [cursor=pointer]: 0.00%
+                              - cell "0.14%" [ref=f4e2018]:
+                                - generic [ref=f4e2020] [cursor=pointer]: 0.14%
+                              - cell "0.00%" [ref=f4e2021]:
+                                - generic [ref=f4e2023] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e2024]:
+                                - generic [ref=f4e2026] [cursor=pointer]: 0.07%
+                              - cell "0.16%" [ref=f4e2027]:
+                                - generic [ref=f4e2029] [cursor=pointer]: 0.16%
+                            - row "Array_AD 显示异常 0.08% 0.13% 0.00% 0.04% 0.14% 0.00% 0.00% 0.00% 0.00% 0.08% 0.15% 0.00%" [ref=f4e2030]:
+                              - cell [ref=f4e2031]
+                              - cell "Array_AD" [ref=f4e2032]:
+                                - generic [ref=f4e2033]: Array_AD
+                              - cell "显示异常" [ref=f4e2034]:
+                                - generic [ref=f4e2036] [cursor=pointer]: 显示异常
+                              - cell "0.08%" [ref=f4e2037]:
+                                - generic [ref=f4e2039] [cursor=pointer]: 0.08%
+                              - cell "0.13%" [ref=f4e2040]:
+                                - generic [ref=f4e2042] [cursor=pointer]: 0.13%
+                              - cell "0.00%" [ref=f4e2043]:
+                                - generic [ref=f4e2045] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e2046]:
+                                - generic [ref=f4e2048] [cursor=pointer]: 0.04%
+                              - cell "0.14%" [ref=f4e2049]:
+                                - generic [ref=f4e2051] [cursor=pointer]: 0.14%
+                              - cell "0.00%" [ref=f4e2052]:
+                                - generic [ref=f4e2054] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2055]:
+                                - generic [ref=f4e2057] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2058]:
+                                - generic [ref=f4e2060] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2061]:
+                                - generic [ref=f4e2063] [cursor=pointer]: 0.00%
+                              - cell "0.08%" [ref=f4e2064]:
+                                - generic [ref=f4e2066] [cursor=pointer]: 0.08%
+                              - cell "0.15%" [ref=f4e2067]:
+                                - generic [ref=f4e2069] [cursor=pointer]: 0.15%
+                              - cell "0.00%" [ref=f4e2070]:
+                                - generic [ref=f4e2072] [cursor=pointer]: 0.00%
+                            - row "Array_Line S向群暗线 0.02% 0.01% 0.00% 0.02% 0.01% 0.00% 0.00% 0.00% 0.03% 0.00% 0.01% 0.00%" [ref=f4e2073]:
+                              - cell [ref=f4e2074]
+                              - cell "Array_Line" [ref=f4e2075]:
+                                - generic [ref=f4e2076]: Array_Line
+                              - cell "S向群暗线" [ref=f4e2077]:
+                                - generic [ref=f4e2079] [cursor=pointer]: S向群暗线
+                              - cell "0.02%" [ref=f4e2080]:
+                                - generic [ref=f4e2082] [cursor=pointer]: 0.02%
+                              - cell "0.01%" [ref=f4e2083]:
+                                - generic [ref=f4e2085] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2086]:
+                                - generic [ref=f4e2088] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e2089]:
+                                - generic [ref=f4e2091] [cursor=pointer]: 0.02%
+                              - cell "0.01%" [ref=f4e2092]:
+                                - generic [ref=f4e2094] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2095]:
+                                - generic [ref=f4e2097] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2098]:
+                                - generic [ref=f4e2100] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2101]:
+                                - generic [ref=f4e2103] [cursor=pointer]: 0.00%
+                              - cell "0.03%" [ref=f4e2104]:
+                                - generic [ref=f4e2106] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e2107]:
+                                - generic [ref=f4e2109] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e2110]:
+                                - generic [ref=f4e2112] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2113]:
+                                - generic [ref=f4e2115] [cursor=pointer]: 0.00%
+                            - row "Array_Line G向单亮线 0.15% 0.10% 0.00% 0.25% 0.04% 0.00% 0.00% 0.00% 0.20% 0.31% 0.04% 0.00%" [ref=f4e2116]:
+                              - cell [ref=f4e2117]
+                              - cell "Array_Line" [ref=f4e2118]:
+                                - generic [ref=f4e2119]: Array_Line
+                              - cell "G向单亮线" [ref=f4e2120]:
+                                - generic [ref=f4e2122] [cursor=pointer]: G向单亮线
+                              - cell "0.15%" [ref=f4e2123]:
+                                - generic [ref=f4e2125] [cursor=pointer]: 0.15%
+                              - cell "0.10%" [ref=f4e2126]:
+                                - generic [ref=f4e2128] [cursor=pointer]: 0.10%
+                              - cell "0.00%" [ref=f4e2129]:
+                                - generic [ref=f4e2131] [cursor=pointer]: 0.00%
+                              - cell "0.25%" [ref=f4e2132]:
+                                - generic [ref=f4e2134] [cursor=pointer]: 0.25%
+                              - cell "0.04%" [ref=f4e2135]:
+                                - generic [ref=f4e2137] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2138]:
+                                - generic [ref=f4e2140] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2141]:
+                                - generic [ref=f4e2143] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2144]:
+                                - generic [ref=f4e2146] [cursor=pointer]: 0.00%
+                              - cell "0.20%" [ref=f4e2147]:
+                                - generic [ref=f4e2149] [cursor=pointer]: 0.20%
+                              - cell "0.31%" [ref=f4e2150]:
+                                - generic [ref=f4e2152] [cursor=pointer]: 0.31%
+                              - cell "0.04%" [ref=f4e2153]:
+                                - generic [ref=f4e2155] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2156]:
+                                - generic [ref=f4e2158] [cursor=pointer]: 0.00%
+                            - row "Array_Line S向群亮线 0.03% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2159]:
+                              - cell [ref=f4e2160]
+                              - cell "Array_Line" [ref=f4e2161]:
+                                - generic [ref=f4e2162]: Array_Line
+                              - cell "S向群亮线" [ref=f4e2163]:
+                                - generic [ref=f4e2165] [cursor=pointer]: S向群亮线
+                              - cell "0.03%" [ref=f4e2166]:
+                                - generic [ref=f4e2168] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e2169]:
+                                - generic [ref=f4e2171] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2172]:
+                                - generic [ref=f4e2174] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2175]:
+                                - generic [ref=f4e2177] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2178]:
+                                - generic [ref=f4e2180] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2181]:
+                                - generic [ref=f4e2183] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2184]:
+                                - generic [ref=f4e2186] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2187]:
+                                - generic [ref=f4e2189] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2190]:
+                                - generic [ref=f4e2192] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2193]:
+                                - generic [ref=f4e2195] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2196]:
+                                - generic [ref=f4e2198] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2199]:
+                                - generic [ref=f4e2201] [cursor=pointer]: 0.00%
+                            - row "Array_Line G向群暗线 0.02% 0.03% 0.00% 0.09% 0.00% 0.00% 0.00% 0.00% 0.17% 0.00% 0.00% 0.00%" [ref=f4e2202]:
+                              - cell [ref=f4e2203]
+                              - cell "Array_Line" [ref=f4e2204]:
+                                - generic [ref=f4e2205]: Array_Line
+                              - cell "G向群暗线" [ref=f4e2206]:
+                                - generic [ref=f4e2208] [cursor=pointer]: G向群暗线
+                              - cell "0.02%" [ref=f4e2209]:
+                                - generic [ref=f4e2211] [cursor=pointer]: 0.02%
+                              - cell "0.03%" [ref=f4e2212]:
+                                - generic [ref=f4e2214] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e2215]:
+                                - generic [ref=f4e2217] [cursor=pointer]: 0.00%
+                              - cell "0.09%" [ref=f4e2218]:
+                                - generic [ref=f4e2220] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e2221]:
+                                - generic [ref=f4e2223] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2224]:
+                                - generic [ref=f4e2226] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2227]:
+                                - generic [ref=f4e2229] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2230]:
+                                - generic [ref=f4e2232] [cursor=pointer]: 0.00%
+                              - cell "0.17%" [ref=f4e2233]:
+                                - generic [ref=f4e2235] [cursor=pointer]: 0.17%
+                              - cell "0.00%" [ref=f4e2236]:
+                                - generic [ref=f4e2238] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2239]:
+                                - generic [ref=f4e2241] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2242]:
+                                - generic [ref=f4e2244] [cursor=pointer]: 0.00%
+                            - row "Array_Line S向亮线 0.08% 0.25% 0.00% 0.49% 0.16% 0.00% 0.00% 0.00% 0.38% 0.61% 0.17% 0.00%" [ref=f4e2245]:
+                              - cell [ref=f4e2246]
+                              - cell "Array_Line" [ref=f4e2247]:
+                                - generic [ref=f4e2248]: Array_Line
+                              - cell "S向亮线" [ref=f4e2249]:
+                                - generic [ref=f4e2251] [cursor=pointer]: S向亮线
+                              - cell "0.08%" [ref=f4e2252]:
+                                - generic [ref=f4e2254] [cursor=pointer]: 0.08%
+                              - cell "0.25%" [ref=f4e2255]:
+                                - generic [ref=f4e2257] [cursor=pointer]: 0.25%
+                              - cell "0.00%" [ref=f4e2258]:
+                                - generic [ref=f4e2260] [cursor=pointer]: 0.00%
+                              - cell "0.49%" [ref=f4e2261]:
+                                - generic [ref=f4e2263] [cursor=pointer]: 0.49%
+                              - cell "0.16%" [ref=f4e2264]:
+                                - generic [ref=f4e2266] [cursor=pointer]: 0.16%
+                              - cell "0.00%" [ref=f4e2267]:
+                                - generic [ref=f4e2269] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2270]:
+                                - generic [ref=f4e2272] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2273]:
+                                - generic [ref=f4e2275] [cursor=pointer]: 0.00%
+                              - cell "0.38%" [ref=f4e2276]:
+                                - generic [ref=f4e2278] [cursor=pointer]: 0.38%
+                              - cell "0.61%" [ref=f4e2279]:
+                                - generic [ref=f4e2281] [cursor=pointer]: 0.61%
+                              - cell "0.17%" [ref=f4e2282]:
+                                - generic [ref=f4e2284] [cursor=pointer]: 0.17%
+                              - cell "0.00%" [ref=f4e2285]:
+                                - generic [ref=f4e2287] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 常暗黑斑Mura 0.74% 0.11% 0.00% 0.13% 0.04% 0.00% 0.00% 0.00% 0.03% 0.23% 0.04% 0.00%" [ref=f4e2288]:
+                              - cell [ref=f4e2289]
+                              - cell "Array_Mura" [ref=f4e2290]:
+                                - generic [ref=f4e2291]: Array_Mura
+                              - cell "常暗黑斑Mura" [ref=f4e2292]:
+                                - generic [ref=f4e2294] [cursor=pointer]: 常暗黑斑Mura
+                              - cell "0.74%" [ref=f4e2295]:
+                                - generic [ref=f4e2297] [cursor=pointer]: 0.74%
+                              - cell "0.11%" [ref=f4e2298]:
+                                - generic [ref=f4e2300] [cursor=pointer]: 0.11%
+                              - cell "0.00%" [ref=f4e2301]:
+                                - generic [ref=f4e2303] [cursor=pointer]: 0.00%
+                              - cell "0.13%" [ref=f4e2304]:
+                                - generic [ref=f4e2306] [cursor=pointer]: 0.13%
+                              - cell "0.04%" [ref=f4e2307]:
+                                - generic [ref=f4e2309] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2310]:
+                                - generic [ref=f4e2312] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2313]:
+                                - generic [ref=f4e2315] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2316]:
+                                - generic [ref=f4e2318] [cursor=pointer]: 0.00%
+                              - cell "0.03%" [ref=f4e2319]:
+                                - generic [ref=f4e2321] [cursor=pointer]: 0.03%
+                              - cell "0.23%" [ref=f4e2322]:
+                                - generic [ref=f4e2324] [cursor=pointer]: 0.23%
+                              - cell "0.04%" [ref=f4e2325]:
+                                - generic [ref=f4e2327] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2328]:
+                                - generic [ref=f4e2330] [cursor=pointer]: 0.00%
+                            - row "Array_Mura G向带状Mura 0.43% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2331]:
+                              - cell [ref=f4e2332]
+                              - cell "Array_Mura" [ref=f4e2333]:
+                                - generic [ref=f4e2334]: Array_Mura
+                              - cell "G向带状Mura" [ref=f4e2335]:
+                                - generic [ref=f4e2337] [cursor=pointer]: G向带状Mura
+                              - cell "0.43%" [ref=f4e2338]:
+                                - generic [ref=f4e2340] [cursor=pointer]: 0.43%
+                              - cell "0.00%" [ref=f4e2341]:
+                                - generic [ref=f4e2343] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2344]:
+                                - generic [ref=f4e2346] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2347]:
+                                - generic [ref=f4e2349] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2350]:
+                                - generic [ref=f4e2352] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2353]:
+                                - generic [ref=f4e2355] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2356]:
+                                - generic [ref=f4e2358] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2359]:
+                                - generic [ref=f4e2361] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2362]:
+                                - generic [ref=f4e2364] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2365]:
+                                - generic [ref=f4e2367] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2368]:
+                                - generic [ref=f4e2370] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2371]:
+                                - generic [ref=f4e2373] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 大圆环Mura 0.00% 0.02% 0.00% 0.02% 0.00% 0.00% 0.00% 0.00% 0.00% 0.04% 0.00% 0.00%" [ref=f4e2374]:
+                              - cell [ref=f4e2375]
+                              - cell "Array_Mura" [ref=f4e2376]:
+                                - generic [ref=f4e2377]: Array_Mura
+                              - cell "大圆环Mura" [ref=f4e2378]:
+                                - generic [ref=f4e2380] [cursor=pointer]: 大圆环Mura
+                              - cell "0.00%" [ref=f4e2381]:
+                                - generic [ref=f4e2383] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e2384]:
+                                - generic [ref=f4e2386] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2387]:
+                                - generic [ref=f4e2389] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e2390]:
+                                - generic [ref=f4e2392] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2393]:
+                                - generic [ref=f4e2395] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2396]:
+                                - generic [ref=f4e2398] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2399]:
+                                - generic [ref=f4e2401] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2402]:
+                                - generic [ref=f4e2404] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2405]:
+                                - generic [ref=f4e2407] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e2408]:
+                                - generic [ref=f4e2410] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2411]:
+                                - generic [ref=f4e2413] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2414]:
+                                - generic [ref=f4e2416] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 流星状划线 0.06% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2417]:
+                              - cell [ref=f4e2418]
+                              - cell "Array_Mura" [ref=f4e2419]:
+                                - generic [ref=f4e2420]: Array_Mura
+                              - cell "流星状划线" [ref=f4e2421]:
+                                - generic [ref=f4e2423] [cursor=pointer]: 流星状划线
+                              - cell "0.06%" [ref=f4e2424]:
+                                - generic [ref=f4e2426] [cursor=pointer]: 0.06%
+                              - cell "0.00%" [ref=f4e2427]:
+                                - generic [ref=f4e2429] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2430]:
+                                - generic [ref=f4e2432] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2433]:
+                                - generic [ref=f4e2435] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2436]:
+                                - generic [ref=f4e2438] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2439]:
+                                - generic [ref=f4e2441] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2442]:
+                                - generic [ref=f4e2444] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2445]:
+                                - generic [ref=f4e2447] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2448]:
+                                - generic [ref=f4e2450] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2451]:
+                                - generic [ref=f4e2453] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2454]:
+                                - generic [ref=f4e2456] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2457]:
+                                - generic [ref=f4e2459] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 雪花状Mura 0.02% 0.01% 0.00% 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.01% 0.00%" [ref=f4e2460]:
+                              - cell [ref=f4e2461]
+                              - cell "Array_Mura" [ref=f4e2462]:
+                                - generic [ref=f4e2463]: Array_Mura
+                              - cell "雪花状Mura" [ref=f4e2464]:
+                                - generic [ref=f4e2466] [cursor=pointer]: 雪花状Mura
+                              - cell "0.02%" [ref=f4e2467]:
+                                - generic [ref=f4e2469] [cursor=pointer]: 0.02%
+                              - cell "0.01%" [ref=f4e2470]:
+                                - generic [ref=f4e2472] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2473]:
+                                - generic [ref=f4e2475] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2476]:
+                                - generic [ref=f4e2478] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e2479]:
+                                - generic [ref=f4e2481] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2482]:
+                                - generic [ref=f4e2484] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2485]:
+                                - generic [ref=f4e2487] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2488]:
+                                - generic [ref=f4e2490] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2491]:
+                                - generic [ref=f4e2493] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2494]:
+                                - generic [ref=f4e2496] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e2497]:
+                                - generic [ref=f4e2499] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2500]:
+                                - generic [ref=f4e2502] [cursor=pointer]: 0.00%
+                            - row "Array_Mura S向带状Mura 0.33% 0.04% 0.00% 0.02% 0.00% 0.00% 0.00% 0.00% 0.03% 0.00% 0.00% 0.00%" [ref=f4e2503]:
+                              - cell [ref=f4e2504]
+                              - cell "Array_Mura" [ref=f4e2505]:
+                                - generic [ref=f4e2506]: Array_Mura
+                              - cell "S向带状Mura" [ref=f4e2507]:
+                                - generic [ref=f4e2509] [cursor=pointer]: S向带状Mura
+                              - cell "0.33%" [ref=f4e2510]:
+                                - generic [ref=f4e2512] [cursor=pointer]: 0.33%
+                              - cell "0.04%" [ref=f4e2513]:
+                                - generic [ref=f4e2515] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e2516]:
+                                - generic [ref=f4e2518] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e2519]:
+                                - generic [ref=f4e2521] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2522]:
+                                - generic [ref=f4e2524] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2525]:
+                                - generic [ref=f4e2527] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2528]:
+                                - generic [ref=f4e2530] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2531]:
+                                - generic [ref=f4e2533] [cursor=pointer]: 0.00%
+                              - cell "0.03%" [ref=f4e2534]:
+                                - generic [ref=f4e2536] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e2537]:
+                                - generic [ref=f4e2539] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2540]:
+                                - generic [ref=f4e2542] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2543]:
+                                - generic [ref=f4e2545] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 孔区跑道Mura 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2546]:
+                              - cell [ref=f4e2547]
+                              - cell "Array_Mura" [ref=f4e2548]:
+                                - generic [ref=f4e2549]: Array_Mura
+                              - cell "孔区跑道Mura" [ref=f4e2550]:
+                                - generic [ref=f4e2552] [cursor=pointer]: 孔区跑道Mura
+                              - cell "0.00%" [ref=f4e2553]:
+                                - generic [ref=f4e2555] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e2556]:
+                                - generic [ref=f4e2558] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2559]:
+                                - generic [ref=f4e2561] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2562]:
+                                - generic [ref=f4e2564] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2565]:
+                                - generic [ref=f4e2567] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2568]:
+                                - generic [ref=f4e2570] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2571]:
+                                - generic [ref=f4e2573] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2574]:
+                                - generic [ref=f4e2576] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2577]:
+                                - generic [ref=f4e2579] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2580]:
+                                - generic [ref=f4e2582] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2583]:
+                                - generic [ref=f4e2585] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2586]:
+                                - generic [ref=f4e2588] [cursor=pointer]: 0.00%
+                            - row "Array_Mura G向ELA Mura 0.03% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2589]:
+                              - cell [ref=f4e2590]
+                              - cell "Array_Mura" [ref=f4e2591]:
+                                - generic [ref=f4e2592]: Array_Mura
+                              - cell "G向ELA Mura" [ref=f4e2593]:
+                                - generic [ref=f4e2595] [cursor=pointer]: G向ELA Mura
+                              - cell "0.03%" [ref=f4e2596]:
+                                - generic [ref=f4e2598] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e2599]:
+                                - generic [ref=f4e2601] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2602]:
+                                - generic [ref=f4e2604] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2605]:
+                                - generic [ref=f4e2607] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2608]:
+                                - generic [ref=f4e2610] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2611]:
+                                - generic [ref=f4e2613] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2614]:
+                                - generic [ref=f4e2616] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2617]:
+                                - generic [ref=f4e2619] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2620]:
+                                - generic [ref=f4e2622] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2623]:
+                                - generic [ref=f4e2625] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2626]:
+                                - generic [ref=f4e2628] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2629]:
+                                - generic [ref=f4e2631] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 白画面黑斑Mura 0.05% 0.07% 0.00% 0.05% 0.09% 0.00% 0.00% 0.00% 0.00% 0.11% 0.09% 0.00%" [ref=f4e2632]:
+                              - cell [ref=f4e2633]
+                              - cell "Array_Mura" [ref=f4e2634]:
+                                - generic [ref=f4e2635]: Array_Mura
+                              - cell "白画面黑斑Mura" [ref=f4e2636]:
+                                - generic [ref=f4e2638] [cursor=pointer]: 白画面黑斑Mura
+                              - cell "0.05%" [ref=f4e2639]:
+                                - generic [ref=f4e2641] [cursor=pointer]: 0.05%
+                              - cell "0.07%" [ref=f4e2642]:
+                                - generic [ref=f4e2644] [cursor=pointer]: 0.07%
+                              - cell "0.00%" [ref=f4e2645]:
+                                - generic [ref=f4e2647] [cursor=pointer]: 0.00%
+                              - cell "0.05%" [ref=f4e2648]:
+                                - generic [ref=f4e2650] [cursor=pointer]: 0.05%
+                              - cell "0.09%" [ref=f4e2651]:
+                                - generic [ref=f4e2653] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e2654]:
+                                - generic [ref=f4e2656] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2657]:
+                                - generic [ref=f4e2659] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2660]:
+                                - generic [ref=f4e2662] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2663]:
+                                - generic [ref=f4e2665] [cursor=pointer]: 0.00%
+                              - cell "0.11%" [ref=f4e2666]:
+                                - generic [ref=f4e2668] [cursor=pointer]: 0.11%
+                              - cell "0.09%" [ref=f4e2669]:
+                                - generic [ref=f4e2671] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e2672]:
+                                - generic [ref=f4e2674] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 灰阶点状白斑Mura 0.02% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2675]:
+                              - cell [ref=f4e2676]
+                              - cell "Array_Mura" [ref=f4e2677]:
+                                - generic [ref=f4e2678]: Array_Mura
+                              - cell "灰阶点状白斑Mura" [ref=f4e2679]:
+                                - generic [ref=f4e2681] [cursor=pointer]: 灰阶点状白斑Mura
+                              - cell "0.02%" [ref=f4e2682]:
+                                - generic [ref=f4e2684] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2685]:
+                                - generic [ref=f4e2687] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2688]:
+                                - generic [ref=f4e2690] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2691]:
+                                - generic [ref=f4e2693] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2694]:
+                                - generic [ref=f4e2696] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2697]:
+                                - generic [ref=f4e2699] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2700]:
+                                - generic [ref=f4e2702] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2703]:
+                                - generic [ref=f4e2705] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2706]:
+                                - generic [ref=f4e2708] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2709]:
+                                - generic [ref=f4e2711] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2712]:
+                                - generic [ref=f4e2714] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2715]:
+                                - generic [ref=f4e2717] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 常亮白斑 0.62% 0.13% 0.00% 0.18% 0.06% 0.00% 0.00% 0.00% 0.27% 0.08% 0.07% 0.00%" [ref=f4e2718]:
+                              - cell [ref=f4e2719]
+                              - cell "Array_Mura" [ref=f4e2720]:
+                                - generic [ref=f4e2721]: Array_Mura
+                              - cell "常亮白斑" [ref=f4e2722]:
+                                - generic [ref=f4e2724] [cursor=pointer]: 常亮白斑
+                              - cell "0.62%" [ref=f4e2725]:
+                                - generic [ref=f4e2727] [cursor=pointer]: 0.62%
+                              - cell "0.13%" [ref=f4e2728]:
+                                - generic [ref=f4e2730] [cursor=pointer]: 0.13%
+                              - cell "0.00%" [ref=f4e2731]:
+                                - generic [ref=f4e2733] [cursor=pointer]: 0.00%
+                              - cell "0.18%" [ref=f4e2734]:
+                                - generic [ref=f4e2736] [cursor=pointer]: 0.18%
+                              - cell "0.06%" [ref=f4e2737]:
+                                - generic [ref=f4e2739] [cursor=pointer]: 0.06%
+                              - cell "0.00%" [ref=f4e2740]:
+                                - generic [ref=f4e2742] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2743]:
+                                - generic [ref=f4e2745] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2746]:
+                                - generic [ref=f4e2748] [cursor=pointer]: 0.00%
+                              - cell "0.27%" [ref=f4e2749]:
+                                - generic [ref=f4e2751] [cursor=pointer]: 0.27%
+                              - cell "0.08%" [ref=f4e2752]:
+                                - generic [ref=f4e2754] [cursor=pointer]: 0.08%
+                              - cell "0.07%" [ref=f4e2755]:
+                                - generic [ref=f4e2757] [cursor=pointer]: 0.07%
+                              - cell "0.00%" [ref=f4e2758]:
+                                - generic [ref=f4e2760] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 群亮点 0.14% 0.12% 0.00% 0.00% 0.09% 0.00% 0.00% 0.00% 0.00% 0.00% 0.09% 0.00%" [ref=f4e2761]:
+                              - cell [ref=f4e2762]
+                              - cell "Array_Pixel" [ref=f4e2763]:
+                                - generic [ref=f4e2764]: Array_Pixel
+                              - cell "群亮点" [ref=f4e2765]:
+                                - generic [ref=f4e2767] [cursor=pointer]: 群亮点
+                              - cell "0.14%" [ref=f4e2768]:
+                                - generic [ref=f4e2770] [cursor=pointer]: 0.14%
+                              - cell "0.12%" [ref=f4e2771]:
+                                - generic [ref=f4e2773] [cursor=pointer]: 0.12%
+                              - cell "0.00%" [ref=f4e2774]:
+                                - generic [ref=f4e2776] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2777]:
+                                - generic [ref=f4e2779] [cursor=pointer]: 0.00%
+                              - cell "0.09%" [ref=f4e2780]:
+                                - generic [ref=f4e2782] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e2783]:
+                                - generic [ref=f4e2785] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2786]:
+                                - generic [ref=f4e2788] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2789]:
+                                - generic [ref=f4e2791] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2792]:
+                                - generic [ref=f4e2794] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2795]:
+                                - generic [ref=f4e2797] [cursor=pointer]: 0.00%
+                              - cell "0.09%" [ref=f4e2798]:
+                                - generic [ref=f4e2800] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e2801]:
+                                - generic [ref=f4e2803] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 单亮点 0.26% 0.10% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2804]:
+                              - cell [ref=f4e2805]
+                              - cell "Array_Pixel" [ref=f4e2806]:
+                                - generic [ref=f4e2807]: Array_Pixel
+                              - cell "单亮点" [ref=f4e2808]:
+                                - generic [ref=f4e2810] [cursor=pointer]: 单亮点
+                              - cell "0.26%" [ref=f4e2811]:
+                                - generic [ref=f4e2813] [cursor=pointer]: 0.26%
+                              - cell "0.10%" [ref=f4e2814]:
+                                - generic [ref=f4e2816] [cursor=pointer]: 0.10%
+                              - cell "0.00%" [ref=f4e2817]:
+                                - generic [ref=f4e2819] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2820]:
+                                - generic [ref=f4e2822] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2823]:
+                                - generic [ref=f4e2825] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2826]:
+                                - generic [ref=f4e2828] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2829]:
+                                - generic [ref=f4e2831] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2832]:
+                                - generic [ref=f4e2834] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2835]:
+                                - generic [ref=f4e2837] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2838]:
+                                - generic [ref=f4e2840] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2841]:
+                                - generic [ref=f4e2843] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2844]:
+                                - generic [ref=f4e2846] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 2nit亮点 0.02% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2847]:
+                              - cell [ref=f4e2848]
+                              - cell "Array_Pixel" [ref=f4e2849]:
+                                - generic [ref=f4e2850]: Array_Pixel
+                              - cell "2nit亮点" [ref=f4e2851]:
+                                - generic [ref=f4e2853] [cursor=pointer]: 2nit亮点
+                              - cell "0.02%" [ref=f4e2854]:
+                                - generic [ref=f4e2856] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2857]:
+                                - generic [ref=f4e2859] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2860]:
+                                - generic [ref=f4e2862] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2863]:
+                                - generic [ref=f4e2865] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2866]:
+                                - generic [ref=f4e2868] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2869]:
+                                - generic [ref=f4e2871] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2872]:
+                                - generic [ref=f4e2874] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2875]:
+                                - generic [ref=f4e2877] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2878]:
+                                - generic [ref=f4e2880] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2881]:
+                                - generic [ref=f4e2883] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2884]:
+                                - generic [ref=f4e2886] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2887]:
+                                - generic [ref=f4e2889] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 暗点 2.11% 0.42% 0.00% 0.00% 0.27% 0.00% 0.00% 0.00% 0.00% 0.00% 0.30% 0.00%" [ref=f4e2890]:
+                              - cell [ref=f4e2891]
+                              - cell "Array_Pixel" [ref=f4e2892]:
+                                - generic [ref=f4e2893]: Array_Pixel
+                              - cell "暗点" [ref=f4e2894]:
+                                - generic [ref=f4e2896] [cursor=pointer]: 暗点
+                              - cell "2.11%" [ref=f4e2897]:
+                                - generic [ref=f4e2899] [cursor=pointer]: 2.11%
+                              - cell "0.42%" [ref=f4e2900]:
+                                - generic [ref=f4e2902] [cursor=pointer]: 0.42%
+                              - cell "0.00%" [ref=f4e2903]:
+                                - generic [ref=f4e2905] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2906]:
+                                - generic [ref=f4e2908] [cursor=pointer]: 0.00%
+                              - cell "0.27%" [ref=f4e2909]:
+                                - generic [ref=f4e2911] [cursor=pointer]: 0.27%
+                              - cell "0.00%" [ref=f4e2912]:
+                                - generic [ref=f4e2914] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2915]:
+                                - generic [ref=f4e2917] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2918]:
+                                - generic [ref=f4e2920] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2921]:
+                                - generic [ref=f4e2923] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2924]:
+                                - generic [ref=f4e2926] [cursor=pointer]: 0.00%
+                              - cell "0.30%" [ref=f4e2927]:
+                                - generic [ref=f4e2929] [cursor=pointer]: 0.30%
+                              - cell "0.00%" [ref=f4e2930]:
+                                - generic [ref=f4e2932] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 微亮点 0.02% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e2933]:
+                              - cell [ref=f4e2934]
+                              - cell "Array_Pixel" [ref=f4e2935]:
+                                - generic [ref=f4e2936]: Array_Pixel
+                              - cell "微亮点" [ref=f4e2937]:
+                                - generic [ref=f4e2939] [cursor=pointer]: 微亮点
+                              - cell "0.02%" [ref=f4e2940]:
+                                - generic [ref=f4e2942] [cursor=pointer]: 0.02%
+                              - cell "0.01%" [ref=f4e2943]:
+                                - generic [ref=f4e2945] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e2946]:
+                                - generic [ref=f4e2948] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2949]:
+                                - generic [ref=f4e2951] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2952]:
+                                - generic [ref=f4e2954] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2955]:
+                                - generic [ref=f4e2957] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2958]:
+                                - generic [ref=f4e2960] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2961]:
+                                - generic [ref=f4e2963] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2964]:
+                                - generic [ref=f4e2966] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2967]:
+                                - generic [ref=f4e2969] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2970]:
+                                - generic [ref=f4e2972] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2973]:
+                                - generic [ref=f4e2975] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 斑中带点 0.02% 0.02% 0.00% 0.00% 0.05% 0.00% 0.00% 0.00% 0.00% 0.00% 0.05% 0.00%" [ref=f4e2976]:
+                              - cell [ref=f4e2977]
+                              - cell "Array_Pixel" [ref=f4e2978]:
+                                - generic [ref=f4e2979]: Array_Pixel
+                              - cell "斑中带点" [ref=f4e2980]:
+                                - generic [ref=f4e2982] [cursor=pointer]: 斑中带点
+                              - cell "0.02%" [ref=f4e2983]:
+                                - generic [ref=f4e2985] [cursor=pointer]: 0.02%
+                              - cell "0.02%" [ref=f4e2986]:
+                                - generic [ref=f4e2988] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e2989]:
+                                - generic [ref=f4e2991] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e2992]:
+                                - generic [ref=f4e2994] [cursor=pointer]: 0.00%
+                              - cell "0.05%" [ref=f4e2995]:
+                                - generic [ref=f4e2997] [cursor=pointer]: 0.05%
+                              - cell "0.00%" [ref=f4e2998]:
+                                - generic [ref=f4e3000] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3001]:
+                                - generic [ref=f4e3003] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3004]:
+                                - generic [ref=f4e3006] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3007]:
+                                - generic [ref=f4e3009] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3010]:
+                                - generic [ref=f4e3012] [cursor=pointer]: 0.00%
+                              - cell "0.05%" [ref=f4e3013]:
+                                - generic [ref=f4e3015] [cursor=pointer]: 0.05%
+                              - cell "0.00%" [ref=f4e3016]:
+                                - generic [ref=f4e3018] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel G3亮点 0.94% 0.32% 0.00% 0.00% 0.21% 0.00% 0.00% 0.00% 0.00% 0.00% 0.23% 0.00%" [ref=f4e3019]:
+                              - cell [ref=f4e3020]
+                              - cell "Array_Pixel" [ref=f4e3021]:
+                                - generic [ref=f4e3022]: Array_Pixel
+                              - cell "G3亮点" [ref=f4e3023]:
+                                - generic [ref=f4e3025] [cursor=pointer]: G3亮点
+                              - cell "0.94%" [ref=f4e3026]:
+                                - generic [ref=f4e3028] [cursor=pointer]: 0.94%
+                              - cell "0.32%" [ref=f4e3029]:
+                                - generic [ref=f4e3031] [cursor=pointer]: 0.32%
+                              - cell "0.00%" [ref=f4e3032]:
+                                - generic [ref=f4e3034] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3035]:
+                                - generic [ref=f4e3037] [cursor=pointer]: 0.00%
+                              - cell "0.21%" [ref=f4e3038]:
+                                - generic [ref=f4e3040] [cursor=pointer]: 0.21%
+                              - cell "0.00%" [ref=f4e3041]:
+                                - generic [ref=f4e3043] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3044]:
+                                - generic [ref=f4e3046] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3047]:
+                                - generic [ref=f4e3049] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3050]:
+                                - generic [ref=f4e3052] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3053]:
+                                - generic [ref=f4e3055] [cursor=pointer]: 0.00%
+                              - cell "0.23%" [ref=f4e3056]:
+                                - generic [ref=f4e3058] [cursor=pointer]: 0.23%
+                              - cell "0.00%" [ref=f4e3059]:
+                                - generic [ref=f4e3061] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel B暗点 0.15% 0.11% 0.00% 0.00% 0.04% 0.00% 0.00% 0.00% 0.00% 0.00% 0.04% 0.00%" [ref=f4e3062]:
+                              - cell [ref=f4e3063]
+                              - cell "Array_Pixel" [ref=f4e3064]:
+                                - generic [ref=f4e3065]: Array_Pixel
+                              - cell "B暗点" [ref=f4e3066]:
+                                - generic [ref=f4e3068] [cursor=pointer]: B暗点
+                              - cell "0.15%" [ref=f4e3069]:
+                                - generic [ref=f4e3071] [cursor=pointer]: 0.15%
+                              - cell "0.11%" [ref=f4e3072]:
+                                - generic [ref=f4e3074] [cursor=pointer]: 0.11%
+                              - cell "0.00%" [ref=f4e3075]:
+                                - generic [ref=f4e3077] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3078]:
+                                - generic [ref=f4e3080] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e3081]:
+                                - generic [ref=f4e3083] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e3084]:
+                                - generic [ref=f4e3086] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3087]:
+                                - generic [ref=f4e3089] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3090]:
+                                - generic [ref=f4e3092] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3093]:
+                                - generic [ref=f4e3095] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3096]:
+                                - generic [ref=f4e3098] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e3099]:
+                                - generic [ref=f4e3101] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e3102]:
+                                - generic [ref=f4e3104] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel HBM亮点 0.05% 0.02% 0.00% 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.01% 0.00%" [ref=f4e3105]:
+                              - cell [ref=f4e3106]
+                              - cell "Array_Pixel" [ref=f4e3107]:
+                                - generic [ref=f4e3108]: Array_Pixel
+                              - cell "HBM亮点" [ref=f4e3109]:
+                                - generic [ref=f4e3111] [cursor=pointer]: HBM亮点
+                              - cell "0.05%" [ref=f4e3112]:
+                                - generic [ref=f4e3114] [cursor=pointer]: 0.05%
+                              - cell "0.02%" [ref=f4e3115]:
+                                - generic [ref=f4e3117] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e3118]:
+                                - generic [ref=f4e3120] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3121]:
+                                - generic [ref=f4e3123] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3124]:
+                                - generic [ref=f4e3126] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3127]:
+                                - generic [ref=f4e3129] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3130]:
+                                - generic [ref=f4e3132] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3133]:
+                                - generic [ref=f4e3135] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3136]:
+                                - generic [ref=f4e3138] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3139]:
+                                - generic [ref=f4e3141] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3142]:
+                                - generic [ref=f4e3144] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3145]:
+                                - generic [ref=f4e3147] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel RGB亮点 0.09% 0.03% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3148]:
+                              - cell [ref=f4e3149]
+                              - cell "Array_Pixel" [ref=f4e3150]:
+                                - generic [ref=f4e3151]: Array_Pixel
+                              - cell "RGB亮点" [ref=f4e3152]:
+                                - generic [ref=f4e3154] [cursor=pointer]: RGB亮点
+                              - cell "0.09%" [ref=f4e3155]:
+                                - generic [ref=f4e3157] [cursor=pointer]: 0.09%
+                              - cell "0.03%" [ref=f4e3158]:
+                                - generic [ref=f4e3160] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e3161]:
+                                - generic [ref=f4e3163] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3164]:
+                                - generic [ref=f4e3166] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3167]:
+                                - generic [ref=f4e3169] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3170]:
+                                - generic [ref=f4e3172] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3173]:
+                                - generic [ref=f4e3175] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3176]:
+                                - generic [ref=f4e3178] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3179]:
+                                - generic [ref=f4e3181] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3182]:
+                                - generic [ref=f4e3184] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3185]:
+                                - generic [ref=f4e3187] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3188]:
+                                - generic [ref=f4e3190] [cursor=pointer]: 0.00%
+                            - row "ARRAY其他 屏体黑斑 0.06% 0.12% 0.00% 0.07% 0.15% 0.00% 0.00% 0.00% 0.07% 0.08% 0.16% 0.00%" [ref=f4e3191]:
+                              - cell [ref=f4e3192]
+                              - cell "ARRAY其他" [ref=f4e3193]:
+                                - generic [ref=f4e3194]: ARRAY其他
+                              - cell "屏体黑斑" [ref=f4e3195]:
+                                - generic [ref=f4e3197] [cursor=pointer]: 屏体黑斑
+                              - cell "0.06%" [ref=f4e3198]:
+                                - generic [ref=f4e3200] [cursor=pointer]: 0.06%
+                              - cell "0.12%" [ref=f4e3201]:
+                                - generic [ref=f4e3203] [cursor=pointer]: 0.12%
+                              - cell "0.00%" [ref=f4e3204]:
+                                - generic [ref=f4e3206] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e3207]:
+                                - generic [ref=f4e3209] [cursor=pointer]: 0.07%
+                              - cell "0.15%" [ref=f4e3210]:
+                                - generic [ref=f4e3212] [cursor=pointer]: 0.15%
+                              - cell "0.00%" [ref=f4e3213]:
+                                - generic [ref=f4e3215] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3216]:
+                                - generic [ref=f4e3218] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3219]:
+                                - generic [ref=f4e3221] [cursor=pointer]: 0.00%
+                              - cell "0.07%" [ref=f4e3222]:
+                                - generic [ref=f4e3224] [cursor=pointer]: 0.07%
+                              - cell "0.08%" [ref=f4e3225]:
+                                - generic [ref=f4e3227] [cursor=pointer]: 0.08%
+                              - cell "0.16%" [ref=f4e3228]:
+                                - generic [ref=f4e3230] [cursor=pointer]: 0.16%
+                              - cell "0.00%" [ref=f4e3231]:
+                                - generic [ref=f4e3233] [cursor=pointer]: 0.00%
+                            - row "OLED_Mura G向彩色带状Mura 0.00% 0.01% 0.00% 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.01% 0.00%" [ref=f4e3234]:
+                              - cell [ref=f4e3235]
+                              - cell "OLED_Mura" [ref=f4e3236]:
+                                - generic [ref=f4e3237]: OLED_Mura
+                              - cell "G向彩色带状Mura" [ref=f4e3238]:
+                                - generic [ref=f4e3240] [cursor=pointer]: G向彩色带状Mura
+                              - cell "0.00%" [ref=f4e3241]:
+                                - generic [ref=f4e3243] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3244]:
+                                - generic [ref=f4e3246] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3247]:
+                                - generic [ref=f4e3249] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3250]:
+                                - generic [ref=f4e3252] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3253]:
+                                - generic [ref=f4e3255] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3256]:
+                                - generic [ref=f4e3258] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3259]:
+                                - generic [ref=f4e3261] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3262]:
+                                - generic [ref=f4e3264] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3265]:
+                                - generic [ref=f4e3267] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3268]:
+                                - generic [ref=f4e3270] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3271]:
+                                - generic [ref=f4e3273] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3274]:
+                                - generic [ref=f4e3276] [cursor=pointer]: 0.00%
+                            - row "OLED_Mura S向边缘Mura 0.00% 0.09% 0.00% 0.13% 0.10% 0.00% 0.00% 0.00% 0.00% 0.27% 0.11% 0.00%" [ref=f4e3277]:
+                              - cell [ref=f4e3278]
+                              - cell "OLED_Mura" [ref=f4e3279]:
+                                - generic [ref=f4e3280]: OLED_Mura
+                              - cell "S向边缘Mura" [ref=f4e3281]:
+                                - generic [ref=f4e3283] [cursor=pointer]: S向边缘Mura
+                              - cell "0.00%" [ref=f4e3284]:
+                                - generic [ref=f4e3286] [cursor=pointer]: 0.00%
+                              - cell "0.09%" [ref=f4e3287]:
+                                - generic [ref=f4e3289] [cursor=pointer]: 0.09%
+                              - cell "0.00%" [ref=f4e3290]:
+                                - generic [ref=f4e3292] [cursor=pointer]: 0.00%
+                              - cell "0.13%" [ref=f4e3293]:
+                                - generic [ref=f4e3295] [cursor=pointer]: 0.13%
+                              - cell "0.10%" [ref=f4e3296]:
+                                - generic [ref=f4e3298] [cursor=pointer]: 0.10%
+                              - cell "0.00%" [ref=f4e3299]:
+                                - generic [ref=f4e3301] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3302]:
+                                - generic [ref=f4e3304] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3305]:
+                                - generic [ref=f4e3307] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3308]:
+                                - generic [ref=f4e3310] [cursor=pointer]: 0.00%
+                              - cell "0.27%" [ref=f4e3311]:
+                                - generic [ref=f4e3313] [cursor=pointer]: 0.27%
+                              - cell "0.11%" [ref=f4e3314]:
+                                - generic [ref=f4e3316] [cursor=pointer]: 0.11%
+                              - cell "0.00%" [ref=f4e3317]:
+                                - generic [ref=f4e3319] [cursor=pointer]: 0.00%
+                            - row "OLED_RS查杀 点灯异物 0.03% 0.04% 0.00% 0.02% 0.02% 0.00% 0.00% 0.00% 0.00% 0.04% 0.03% 0.00%" [ref=f4e3320]:
+                              - cell [ref=f4e3321]
+                              - cell "OLED_RS查杀" [ref=f4e3322]:
+                                - generic [ref=f4e3323]: OLED_RS查杀
+                              - cell "点灯异物" [ref=f4e3324]:
+                                - generic [ref=f4e3326] [cursor=pointer]: 点灯异物
+                              - cell "0.03%" [ref=f4e3327]:
+                                - generic [ref=f4e3329] [cursor=pointer]: 0.03%
+                              - cell "0.04%" [ref=f4e3330]:
+                                - generic [ref=f4e3332] [cursor=pointer]: 0.04%
+                              - cell "0.00%" [ref=f4e3333]:
+                                - generic [ref=f4e3335] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e3336]:
+                                - generic [ref=f4e3338] [cursor=pointer]: 0.02%
+                              - cell "0.02%" [ref=f4e3339]:
+                                - generic [ref=f4e3341] [cursor=pointer]: 0.02%
+                              - cell "0.00%" [ref=f4e3342]:
+                                - generic [ref=f4e3344] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3345]:
+                                - generic [ref=f4e3347] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3348]:
+                                - generic [ref=f4e3350] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3351]:
+                                - generic [ref=f4e3353] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e3354]:
+                                - generic [ref=f4e3356] [cursor=pointer]: 0.04%
+                              - cell "0.03%" [ref=f4e3357]:
+                                - generic [ref=f4e3359] [cursor=pointer]: 0.03%
+                              - cell "0.00%" [ref=f4e3360]:
+                                - generic [ref=f4e3362] [cursor=pointer]: 0.00%
+                            - row "TP_Short NG Short Test NG 0.15% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3363]:
+                              - cell [ref=f4e3364]
+                              - cell "TP_Short NG" [ref=f4e3365]:
+                                - generic [ref=f4e3366]: TP_Short NG
+                              - cell "Short Test NG" [ref=f4e3367]:
+                                - generic [ref=f4e3369] [cursor=pointer]: Short Test NG
+                              - cell "0.15%" [ref=f4e3370]:
+                                - generic [ref=f4e3372] [cursor=pointer]: 0.15%
+                              - cell "0.00%" [ref=f4e3373]:
+                                - generic [ref=f4e3375] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3376]:
+                                - generic [ref=f4e3378] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3379]:
+                                - generic [ref=f4e3381] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3382]:
+                                - generic [ref=f4e3384] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3385]:
+                                - generic [ref=f4e3387] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3388]:
+                                - generic [ref=f4e3390] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3391]:
+                                - generic [ref=f4e3393] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3394]:
+                                - generic [ref=f4e3396] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3397]:
+                                - generic [ref=f4e3399] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3400]:
+                                - generic [ref=f4e3402] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3403]:
+                                - generic [ref=f4e3405] [cursor=pointer]: 0.00%
+                            - row "TP 容值NG TP复测NG 0.05% 0.13% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3406]:
+                              - cell [ref=f4e3407]
+                              - cell "TP 容值NG" [ref=f4e3408]:
+                                - generic [ref=f4e3409]: TP 容值NG
+                              - cell "TP复测NG" [ref=f4e3410]:
+                                - generic [ref=f4e3412] [cursor=pointer]: TP复测NG
+                              - cell "0.05%" [ref=f4e3413]:
+                                - generic [ref=f4e3415] [cursor=pointer]: 0.05%
+                              - cell "0.13%" [ref=f4e3416]:
+                                - generic [ref=f4e3418] [cursor=pointer]: 0.13%
+                              - cell "0.00%" [ref=f4e3419]:
+                                - generic [ref=f4e3421] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3422]:
+                                - generic [ref=f4e3424] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3425]:
+                                - generic [ref=f4e3427] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3428]:
+                                - generic [ref=f4e3430] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3431]:
+                                - generic [ref=f4e3433] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3434]:
+                                - generic [ref=f4e3436] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3437]:
+                                - generic [ref=f4e3439] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3440]:
+                                - generic [ref=f4e3442] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3443]:
+                                - generic [ref=f4e3445] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3446]:
+                                - generic [ref=f4e3448] [cursor=pointer]: 0.00%
+                            - row "Array_AD G向分屏 0.00% 0.01% 0.00% 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.01% 0.00%" [ref=f4e3449]:
+                              - cell [ref=f4e3450]
+                              - cell "Array_AD" [ref=f4e3451]:
+                                - generic [ref=f4e3452]: Array_AD
+                              - cell "G向分屏" [ref=f4e3453]:
+                                - generic [ref=f4e3455] [cursor=pointer]: G向分屏
+                              - cell "0.00%" [ref=f4e3456]:
+                                - generic [ref=f4e3458] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3459]:
+                                - generic [ref=f4e3461] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3462]:
+                                - generic [ref=f4e3464] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3465]:
+                                - generic [ref=f4e3467] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3468]:
+                                - generic [ref=f4e3470] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3471]:
+                                - generic [ref=f4e3473] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3474]:
+                                - generic [ref=f4e3476] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3477]:
+                                - generic [ref=f4e3479] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3480]:
+                                - generic [ref=f4e3482] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3483]:
+                                - generic [ref=f4e3485] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3486]:
+                                - generic [ref=f4e3488] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3489]:
+                                - generic [ref=f4e3491] [cursor=pointer]: 0.00%
+                            - row "Array_Line PCD裂纹亮线 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3492]:
+                              - cell [ref=f4e3493]
+                              - cell "Array_Line" [ref=f4e3494]:
+                                - generic [ref=f4e3495]: Array_Line
+                              - cell "PCD裂纹亮线" [ref=f4e3496]:
+                                - generic [ref=f4e3498] [cursor=pointer]: PCD裂纹亮线
+                              - cell "0.00%" [ref=f4e3499]:
+                                - generic [ref=f4e3501] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3502]:
+                                - generic [ref=f4e3504] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3505]:
+                                - generic [ref=f4e3507] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3508]:
+                                - generic [ref=f4e3510] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3511]:
+                                - generic [ref=f4e3513] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3514]:
+                                - generic [ref=f4e3516] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3517]:
+                                - generic [ref=f4e3519] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3520]:
+                                - generic [ref=f4e3522] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3523]:
+                                - generic [ref=f4e3525] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3526]:
+                                - generic [ref=f4e3528] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3529]:
+                                - generic [ref=f4e3531] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3532]:
+                                - generic [ref=f4e3534] [cursor=pointer]: 0.00%
+                            - row "Array_Line S向微亮线 0.00% 0.01% 0.00% 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.01% 0.00%" [ref=f4e3535]:
+                              - cell [ref=f4e3536]
+                              - cell "Array_Line" [ref=f4e3537]:
+                                - generic [ref=f4e3538]: Array_Line
+                              - cell "S向微亮线" [ref=f4e3539]:
+                                - generic [ref=f4e3541] [cursor=pointer]: S向微亮线
+                              - cell "0.00%" [ref=f4e3542]:
+                                - generic [ref=f4e3544] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3545]:
+                                - generic [ref=f4e3547] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3548]:
+                                - generic [ref=f4e3550] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3551]:
+                                - generic [ref=f4e3553] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3554]:
+                                - generic [ref=f4e3556] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3557]:
+                                - generic [ref=f4e3559] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3560]:
+                                - generic [ref=f4e3562] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3563]:
+                                - generic [ref=f4e3565] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3566]:
+                                - generic [ref=f4e3568] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3569]:
+                                - generic [ref=f4e3571] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3572]:
+                                - generic [ref=f4e3574] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3575]:
+                                - generic [ref=f4e3577] [cursor=pointer]: 0.00%
+                            - row "Array_Mura 环状Mura 0.00% 0.01% 0.00% 0.02% 0.01% 0.00% 0.00% 0.00% 0.00% 0.04% 0.01% 0.00%" [ref=f4e3578]:
+                              - cell [ref=f4e3579]
+                              - cell "Array_Mura" [ref=f4e3580]:
+                                - generic [ref=f4e3581]: Array_Mura
+                              - cell "环状Mura" [ref=f4e3582]:
+                                - generic [ref=f4e3584] [cursor=pointer]: 环状Mura
+                              - cell "0.00%" [ref=f4e3585]:
+                                - generic [ref=f4e3587] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3588]:
+                                - generic [ref=f4e3590] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3591]:
+                                - generic [ref=f4e3593] [cursor=pointer]: 0.00%
+                              - cell "0.02%" [ref=f4e3594]:
+                                - generic [ref=f4e3596] [cursor=pointer]: 0.02%
+                              - cell "0.01%" [ref=f4e3597]:
+                                - generic [ref=f4e3599] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3600]:
+                                - generic [ref=f4e3602] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3603]:
+                                - generic [ref=f4e3605] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3606]:
+                                - generic [ref=f4e3608] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3609]:
+                                - generic [ref=f4e3611] [cursor=pointer]: 0.00%
+                              - cell "0.04%" [ref=f4e3612]:
+                                - generic [ref=f4e3614] [cursor=pointer]: 0.04%
+                              - cell "0.01%" [ref=f4e3615]:
+                                - generic [ref=f4e3617] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3618]:
+                                - generic [ref=f4e3620] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 可修复暗点 0.00% 0.06% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3621]:
+                              - cell [ref=f4e3622]
+                              - cell "Array_Pixel" [ref=f4e3623]:
+                                - generic [ref=f4e3624]: Array_Pixel
+                              - cell "可修复暗点" [ref=f4e3625]:
+                                - generic [ref=f4e3627] [cursor=pointer]: 可修复暗点
+                              - cell "0.00%" [ref=f4e3628]:
+                                - generic [ref=f4e3630] [cursor=pointer]: 0.00%
+                              - cell "0.06%" [ref=f4e3631]:
+                                - generic [ref=f4e3633] [cursor=pointer]: 0.06%
+                              - cell "0.00%" [ref=f4e3634]:
+                                - generic [ref=f4e3636] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3637]:
+                                - generic [ref=f4e3639] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3640]:
+                                - generic [ref=f4e3642] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3643]:
+                                - generic [ref=f4e3645] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3646]:
+                                - generic [ref=f4e3648] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3649]:
+                                - generic [ref=f4e3651] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3652]:
+                                - generic [ref=f4e3654] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3655]:
+                                - generic [ref=f4e3657] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3658]:
+                                - generic [ref=f4e3660] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3661]:
+                                - generic [ref=f4e3663] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 灰阶暗点 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3664]:
+                              - cell [ref=f4e3665]
+                              - cell "Array_Pixel" [ref=f4e3666]:
+                                - generic [ref=f4e3667]: Array_Pixel
+                              - cell "灰阶暗点" [ref=f4e3668]:
+                                - generic [ref=f4e3670] [cursor=pointer]: 灰阶暗点
+                              - cell "0.00%" [ref=f4e3671]:
+                                - generic [ref=f4e3673] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3674]:
+                                - generic [ref=f4e3676] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3677]:
+                                - generic [ref=f4e3679] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3680]:
+                                - generic [ref=f4e3682] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3683]:
+                                - generic [ref=f4e3685] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3686]:
+                                - generic [ref=f4e3688] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3689]:
+                                - generic [ref=f4e3691] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3692]:
+                                - generic [ref=f4e3694] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3695]:
+                                - generic [ref=f4e3697] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3698]:
+                                - generic [ref=f4e3700] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3701]:
+                                - generic [ref=f4e3703] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3704]:
+                                - generic [ref=f4e3706] [cursor=pointer]: 0.00%
+                            - row "Array_Pixel 微暗点 0.00% 0.01% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00% 0.00%" [ref=f4e3707]:
+                              - cell [ref=f4e3708]
+                              - cell "Array_Pixel" [ref=f4e3709]:
+                                - generic [ref=f4e3710]: Array_Pixel
+                              - cell "微暗点" [ref=f4e3711]:
+                                - generic [ref=f4e3713] [cursor=pointer]: 微暗点
+                              - cell "0.00%" [ref=f4e3714]:
+                                - generic [ref=f4e3716] [cursor=pointer]: 0.00%
+                              - cell "0.01%" [ref=f4e3717]:
+                                - generic [ref=f4e3719] [cursor=pointer]: 0.01%
+                              - cell "0.00%" [ref=f4e3720]:
+                                - generic [ref=f4e3722] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3723]:
+                                - generic [ref=f4e3725] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3726]:
+                                - generic [ref=f4e3728] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3729]:
+                                - generic [ref=f4e3731] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3732]:
+                                - generic [ref=f4e3734] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3735]:
+                                - generic [ref=f4e3737] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3738]:
+                                - generic [ref=f4e3740] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3741]:
+                                - generic [ref=f4e3743] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3744]:
+                                - generic [ref=f4e3746] [cursor=pointer]: 0.00%
+                              - cell "0.00%" [ref=f4e3747]:
+                                - generic [ref=f4e3749] [cursor=pointer]: 0.00%
+                - img [ref=f4e3751]
+                - img [ref=f4e3753]
+                - img [ref=f4e3755]
+                - img [ref=f4e3757]
+              - list [ref=f4e159]:
+                - listitem "MVI" [ref=f4e160]:
+                  - generic [ref=f4e162] [cursor=pointer]: MVI
+                - listitem "AVI" [ref=f4e164]:
+                  - generic [ref=f4e165] [cursor=pointer]: AVI
+                - listitem "APP1" [ref=f4e167]:
+                  - generic [ref=f4e168] [cursor=pointer]: APP1
+                - listitem "APP2" [ref=f4e170]:
+                  - generic [ref=f4e171] [cursor=pointer]: APP2
+                - listitem "AGING" [ref=f4e173]:
+                  - generic [ref=f4e174] [cursor=pointer]: AGING
+                - listitem "CUT" [ref=f4e176]:
+                  - generic [ref=f4e177] [cursor=pointer]: CUT
+                - listitem "CT" [ref=f4e179]:
+                  - generic [ref=f4e180] [cursor=pointer]: CT
+                - listitem "屏体综合良率" [ref=f4e182]:
+                  - generic [ref=f4e183] [cursor=pointer]: 屏体综合良率
+          - table [ref=f4e91]:
+            - rowgroup [ref=f4e92]:
+              - row "页面设置 打印预览 打印 导出 邮件" [ref=f4e93]:
+                - cell "页面设置" [ref=f4e94]:
+                  - emphasis [ref=f4e98]:
+                    - button "页面设置" [ref=f4e99]
+                - cell [ref=f4e100]
+                - cell "打印预览" [ref=f4e102]:
+                  - emphasis [ref=f4e106]:
+                    - button "打印预览" [ref=f4e107]
+                - cell [ref=f4e108]
+                - cell "打印" [ref=f4e110]:
+                  - emphasis [ref=f4e114]:
+                    - button "打印" [ref=f4e115]
+                - cell [ref=f4e116]
+                - cell "导出" [ref=f4e118]:
+                  - emphasis [ref=f4e122]:
+                    - button "导出" [ref=f4e123]
+                - cell [ref=f4e124]
+                - cell "邮件" [ref=f4e126]:
+                  - emphasis [ref=f4e130]:
+                    - button "邮件" [ref=f4e131]
+          - generic [ref=f4e132] [cursor=pointer]: 产品型号不可为空！
+      - generic [ref=e11]:
+        - generic [ref=e13]:
+          - generic [ref=e361] [cursor=pointer]: 
+          - generic [ref=e365] [cursor=pointer]: V3良率及不良率By月周天汇总报表
+        - generic [ref=e22] [cursor=pointer]: 
+    - generic [ref=e23]:
+      - generic [ref=e25]: 
+      - generic:
+        - generic:
+          - text:  
+          - generic [ref=e34] [cursor=pointer]: 
+          - generic [ref=e36] [cursor=pointer]: 
+          - generic [ref=e326]:
+            - generic:
+              - generic:
+                - textbox: V3良率及不良率By月周天汇总报表
+            - generic [ref=e332] [cursor=pointer]: 
+          - generic:
+            - generic:
+              - text:                                                           
+              - generic [ref=e335]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-无CT良率
+                        - generic: 目录/良率监控/无CT良率
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-APP
+                        - generic: 目录/V3 待测报表/良率监控 (测试)/综合良率 (测试)
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表
+                        - generic: 目录/良率监控/综合良率
+        - text: 
+  - generic [ref=e199]:
+    - generic [ref=e200]:
+      - img [ref=e201]
+      - generic [ref=e202]: V3生产管理平台
+    - generic [ref=e203]:
+      - generic [ref=e207] [cursor=pointer]: 
+      - generic [ref=e209] [cursor=pointer]:
+        - generic [ref=e211]: 
+        - generic [ref=e213]: 王梓尧
+        - generic [ref=e215]: 

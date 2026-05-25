@@ -1,0 +1,152 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - iframe [active] [ref=e357]:
+        - generic [ref=f4e1]:
+          - generic [ref=f4e2]:
+            - generic [ref=f4e7]:
+              - table [ref=f4e9]:
+                - rowgroup [ref=f4e10]:
+                  - row "产品型号：" [ref=f4e11]:
+                    - cell "产品型号：" [ref=f4e12]:
+                      - generic [ref=f4e13]: 产品型号：
+              - generic [ref=f4e15]:
+                - generic [ref=f4e138]: "%"
+                - textbox [ref=f4e133]
+              - table [ref=f4e20]:
+                - rowgroup [ref=f4e21]:
+                  - row "工单类型：" [ref=f4e22]:
+                    - cell "工单类型：" [ref=f4e23]:
+                      - generic [ref=f4e24]: 工单类型：
+              - generic [ref=f4e26]:
+                - generic [ref=f4e28]: P(量产品)
+                - textbox [ref=f4e29]
+              - table [ref=f4e33]:
+                - rowgroup [ref=f4e34]:
+                  - row "结束日期：" [ref=f4e35]:
+                    - cell "结束日期：" [ref=f4e36]:
+                      - generic [ref=f4e37]: 结束日期：
+              - textbox [ref=f4e40]: 2026-05-25
+              - emphasis [ref=f4e46]:
+                - button "查询" [active] [ref=f4e47]
+              - table [ref=f4e49]:
+                - rowgroup [ref=f4e50]:
+                  - row "产品规格：" [ref=f4e51]:
+                    - cell "产品规格：" [ref=f4e52]:
+                      - generic [ref=f4e53]: 产品规格：
+              - textbox [ref=f4e56]
+              - table [ref=f4e60]:
+                - rowgroup [ref=f4e61]:
+                  - row "查看周期：" [ref=f4e62]:
+                    - cell "查看周期：" [ref=f4e63]:
+                      - generic [ref=f4e64]: 查看周期：
+              - textbox [ref=f4e66]: "2"
+              - table [ref=f4e68]:
+                - rowgroup [ref=f4e69]:
+                  - row "月" [ref=f4e70]:
+                    - cell "月" [ref=f4e71]:
+                      - generic [ref=f4e72]: 月
+              - textbox [ref=f4e74]: "3"
+              - table [ref=f4e76]:
+                - rowgroup [ref=f4e77]:
+                  - row "周" [ref=f4e78]:
+                    - cell "周" [ref=f4e79]:
+                      - generic [ref=f4e80]: 周
+              - textbox [ref=f4e82]: "7"
+              - table [ref=f4e84]:
+                - rowgroup [ref=f4e85]:
+                  - row "天" [ref=f4e86]:
+                    - cell "天" [ref=f4e87]:
+                      - generic [ref=f4e88]: 天
+            - list [ref=f4e159]:
+              - listitem "MVI" [ref=f4e160]:
+                - generic [ref=f4e162] [cursor=pointer]: MVI
+              - listitem "AVI" [ref=f4e164]:
+                - generic [ref=f4e165] [cursor=pointer]: AVI
+              - listitem "APP1" [ref=f4e167]:
+                - generic [ref=f4e168] [cursor=pointer]: APP1
+              - listitem "APP2" [ref=f4e170]:
+                - generic [ref=f4e171] [cursor=pointer]: APP2
+              - listitem "AGING" [ref=f4e173]:
+                - generic [ref=f4e174] [cursor=pointer]: AGING
+              - listitem "CUT" [ref=f4e176]:
+                - generic [ref=f4e177] [cursor=pointer]: CUT
+              - listitem "CT" [ref=f4e179]:
+                - generic [ref=f4e180] [cursor=pointer]: CT
+              - listitem "屏体综合良率" [ref=f4e182]:
+                - generic [ref=f4e183] [cursor=pointer]: 屏体综合良率
+          - table [ref=f4e91]:
+            - rowgroup [ref=f4e92]:
+              - row "页面设置 打印预览 打印 导出 邮件" [ref=f4e93]:
+                - cell "页面设置" [ref=f4e94]:
+                  - emphasis [ref=f4e98]:
+                    - button "页面设置" [ref=f4e99]
+                - cell [ref=f4e100]
+                - cell "打印预览" [ref=f4e102]:
+                  - emphasis [ref=f4e106]:
+                    - button "打印预览" [ref=f4e107]
+                - cell [ref=f4e108]
+                - cell "打印" [ref=f4e110]:
+                  - emphasis [ref=f4e114]:
+                    - button "打印" [ref=f4e115]
+                - cell [ref=f4e116]
+                - cell "导出" [ref=f4e118]:
+                  - emphasis [ref=f4e122]:
+                    - button "导出" [ref=f4e123]
+                - cell [ref=f4e124]
+                - cell "邮件" [ref=f4e126]:
+                  - emphasis [ref=f4e130]:
+                    - button "邮件" [ref=f4e131]
+          - generic [ref=f4e132] [cursor=pointer]: 产品型号不可为空！
+      - generic [ref=e11]:
+        - generic [ref=e13]:
+          - generic [ref=e361] [cursor=pointer]: 
+          - generic [ref=e365] [cursor=pointer]: V3良率及不良率By月周天汇总报表
+        - generic [ref=e22] [cursor=pointer]: 
+    - generic [ref=e23]:
+      - generic [ref=e25]: 
+      - generic:
+        - generic:
+          - text:  
+          - generic [ref=e34] [cursor=pointer]: 
+          - generic [ref=e36] [cursor=pointer]: 
+          - generic [ref=e326]:
+            - generic:
+              - generic:
+                - textbox: V3良率及不良率By月周天汇总报表
+            - generic [ref=e332] [cursor=pointer]: 
+          - generic:
+            - generic:
+              - text:                                                           
+              - generic [ref=e335]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-无CT良率
+                        - generic: 目录/良率监控/无CT良率
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-APP
+                        - generic: 目录/V3 待测报表/良率监控 (测试)/综合良率 (测试)
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表
+                        - generic: 目录/良率监控/综合良率
+        - text: 
+  - generic [ref=e199]:
+    - generic [ref=e200]:
+      - img [ref=e201]
+      - generic [ref=e202]: V3生产管理平台
+    - generic [ref=e203]:
+      - generic [ref=e207] [cursor=pointer]: 
+      - generic [ref=e209] [cursor=pointer]:
+        - generic [ref=e211]: 
+        - generic [ref=e213]: 王梓尧
+        - generic [ref=e215]: 

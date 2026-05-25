@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inline RS监控智能体</title>
+    <title>良率监控智能体-日报生成模块</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         table { border-collapse: collapse; width: 100%; table-layout: fixed; font-family: 'Microsoft YaHei', sans-serif; }
         th { background-color: #F3F4F6; border: 1px solid #D1D5DB; padding: 6px 4px; text-align: center; font-weight: bold; color: #374151; font-size: 13px; }
         td { border: 1px solid #D1D5DB; vertical-align: middle; word-wrap: break-word; overflow-wrap: break-word; padding: 8px 10px; }
-        
-        /* 字体大小排版层级 */
+
         .col-fixed { text-align: center; background-color: #FFFFFF; font-size: 14px; line-height: 1.3; font-weight: bold; color: #1F2937; }
         .col-module { text-align: center; background-color: #F9FAFB; font-size: 14px; line-height: 1.4; font-weight: bold; color: #111827; }
         .col-timeline { text-align: left; vertical-align: top; background-color: #FFFFFF; padding: 10px 12px; }
-        
-        /* 内容列表样式：字体大且易读 */
+
         .plan-content { font-size: 13px; color: #4B5563; line-height: 1.6; font-weight: 400; list-style-type: disc; padding-left: 18px; margin: 0; }
         .plan-content li { margin-bottom: 6px; }
         .plan-content li::marker { color: #9CA3AF; }
-        
-        /* 实际进度的各种状态样式 */
+
         .text-actual-done { color: #2563EB; font-weight: 700; font-size: 13px; display: block; text-align: center; margin-top: 10px; }
         .text-actual-inprogress { color: #059669; font-style: italic; font-weight: 700; font-size: 13px; display: block; text-align: center; margin-top: 10px; }
         .text-actual-pending { color: #9CA3AF; font-style: italic; font-weight: bold; font-size: 13px; display: block; text-align: center; margin-top: 10px; }
-        
-        .timeline-empty { background-color: #F3F4F6; }
-        .week-sub { display: block; font-size: 11px; font-weight: normal; color: #6B7280; margin-top: 1px; }
+        /* ── 计划行 ── */
         .type-plan {
             background-color: #FFF8E7;
             text-align: center;
@@ -36,6 +31,7 @@
             letter-spacing: 2px;
             border-left: 3px solid #F59E0B;
         }
+        /* ── 实际行 ── */
         .type-actual {
             background-color: #F0FDF4;
             text-align: center;
@@ -45,33 +41,37 @@
             letter-spacing: 2px;
             border-left: 3px solid #22C55E;
         }
+        .timeline-empty { background-color: #F3F4F6; }
+        .week-sub { display: block; font-size: 11px; font-weight: normal; color: #6B7280; margin-top: 1px; }
     </style>
 </head>
-<body class="p-4 bg-gray-50">
-    <div class="w-full mx-auto bg-white p-4 rounded-xl shadow-sm">
-        <div class="flex justify-between items-end mb-3 border-b pb-2">
-            <h2 class="text-xl font-bold text-gray-800 border-l-4 border-blue-600 pl-3 leading-none">Inline RS监控智能体</h2>
+<body class="p-2 bg-gray-50">
+    <div class="w-full max-w-screen-xl mx-auto bg-white p-2 rounded-lg shadow-sm">
+        <div class="flex justify-between items-end mb-2 border-b pb-2">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-blue-600 pl-3 leading-none">良率监控智能体-日报生成模块</h2>
         </div>
         <table>
             <thead>
                 <tr>
                     <th style="width: 8%;">事项</th>
-                    <th style="width: 10%;">任务模块</th>
-                    <th style="width: 4%;">类别</th>
+                    <th style="width: 8%;">任务模块</th>
+                    <th style="width: 5%;">类别</th>
                     <th style="width: 26%;">Week 20<span class="week-sub">5.11 — 5.17</span></th>
-                    <th style="width: 26%;">Week 23<span class="week-sub">6.1 — 6.7</span></th>
-                    <th style="width: 26%;">Week 24<span class="week-sub">6.8 — 6.14</span></th>
+                    <th style="width: 26%;">Week 21<span class="week-sub">5.18 — 5.24</span></th>
+                    <th style="width: 27%;">Week 22<span class="week-sub">5.25 — 5.31</span></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td rowspan="6" class="col-fixed">Inline RS监控<br>智能体开发</td>
-                    <td rowspan="2" class="col-module">数据输入</td>
+                    <td rowspan="6" class="col-fixed">良率监控<br>日报生成</td>
+                    <td rowspan="2" class="col-module">数据获取：<br>自动下载报表</td>
                     <td class="type-plan">计<br>划</td>
                     <td class="col-timeline">
                         <ul class="plan-content">
-                            <li>基于邮件中接收的 URL 进行解析</li>
-                            <li>开发爬虫获取EDA flow数据</li>
+                            <li>月/周/天及批次良率数据提取</li>
+                            <li>产出率 > 30% 恶化逻辑判断规则搭建</li>
+                            <li>CT 及已知异常数据拉取</li>
+                            <li>Gap 分析规则与目标阈值设定</li>
                         </ul>
                     </td>
                     <td class="col-timeline timeline-empty"></td>
@@ -79,18 +79,21 @@
                 </tr>
                 <tr>
                     <td class="type-actual">实<br>际</td>
-                    <td class="col-timeline"><span class="text-actual-done">✓ EDA flow数据抓取</span></td>
+                    <td class="col-timeline"><span class="text-actual-done">✓ 数据提取与规则模板搭建完成</span></td>
                     <td class="col-timeline timeline-empty"></td>
                     <td class="col-timeline timeline-empty"></td>
                 </tr>
+
                 <tr>
-                    <td rowspan="2" class="col-module">数据分析</td>
+                    <td rowspan="2" class="col-module">数据分析：<br>By 产品维度</td>
                     <td class="type-plan">计<br>划</td>
                     <td class="col-timeline timeline-empty"></td>
                     <td class="col-timeline">
                         <ul class="plan-content">
-                            <li><strong>RS连续超规：</strong>根据 EDA flow 数据，判定连续两天超规或连续两天上升 (2+2原则)</li>
-                            <li><strong>机腔差分析：</strong>时间范围、数据筛选、飘高判定</li>
+                            <li>日良率 Gap 计算及异常 Group 锁定</li>
+                            <li>批次恶化判定 & Top3 不良 Code 溯源</li>
+                            <li>趋势分析（连续 3 日/周恶化）</li>
+                            <li>回复文本精简 & 固定句式输出</li>
                         </ul>
                     </td>
                     <td class="col-timeline timeline-empty"></td>
@@ -98,18 +101,22 @@
                 <tr>
                     <td class="type-actual">实<br>际</td>
                     <td class="col-timeline timeline-empty"></td>
-                    <td class="col-timeline"><span class="text-actual-inprogress">⟳ 等待开发...</span></td>
+                    <td class="col-timeline"><span class="text-actual-done">✓ 日度数据分析已完成</span></td>
                     <td class="col-timeline timeline-empty"></td>
                 </tr>
+
                 <tr>
-                    <td rowspan="2" class="col-module">输出</td>
+                    <td rowspan="2" class="col-module">报告输出：<br>Excel 生成</td>
                     <td class="type-plan">计<br>划</td>
                     <td class="col-timeline timeline-empty"></td>
                     <td class="col-timeline timeline-empty"></td>
                     <td class="col-timeline">
                         <ul class="plan-content">
-                            <li><strong>图像输出 (By天/机台/腔室)：</strong>自动生成过货量-柱状堆叠图与 RS density-折线图</li>
-                            <li><strong>语句输出：</strong>整合输出包含 RS 检测站点、超规 Code 及异常机台/腔室要素的结论总结</li>
+                            <li>Excel 报告排版与整合输出：</li>
+                            <li style="list-style: circle;">① 当日 Gap 解释模块</li>
+                            <li style="list-style: circle;">② 当日异常明细模块</li>
+                            <li style="list-style: circle;">③ 已知异常追踪模块</li>
+                            <li>报告自动分发流程联调</li>
                         </ul>
                     </td>
                 </tr>
@@ -117,9 +124,8 @@
                     <td class="type-actual">实<br>际</td>
                     <td class="col-timeline timeline-empty"></td>
                     <td class="col-timeline timeline-empty"></td>
-                    <td class="col-timeline"><span class="text-actual-pending">待前置数据产出，待执行...</span></td>
+                    <td class="col-timeline"><span class="text-actual-inprogress">⟳ 正在开发中 …</span></td>
                 </tr>
-            </tbody>
         </table>
     </div>
 </body>

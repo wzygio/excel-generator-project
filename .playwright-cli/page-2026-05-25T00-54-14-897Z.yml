@@ -1,0 +1,13 @@
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - img [ref=e8]
+    - generic [ref=e10]: V3生产管理平台
+  - generic [ref=e14]:
+    - generic [ref=e17]:
+      - generic [ref=e20]: 
+      - textbox "用户名" [ref=e22]
+    - generic [ref=e26]:
+      - generic [ref=e29]: 
+      - textbox "密码" [ref=e31]
+    - generic [ref=e38] [cursor=pointer]: 保持登录状态
+    - generic [ref=e40] [cursor=pointer]: 登录

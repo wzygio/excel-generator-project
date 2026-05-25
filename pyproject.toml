@@ -34,7 +34,7 @@ dev = [
 dev-dependencies = ["yield-report-generator[dev]"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/yield_report", "app"]
+packages = ["src/yield_report", "src/shared_kernel", "app"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

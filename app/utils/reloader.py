@@ -14,7 +14,7 @@ reloader.py: [代码热重载] 模块卸载 + 项目指纹
     from app.utils.reloader import unload_module, get_project_fingerprint
 
     # 热重载指定模块
-    unload_module("yield_report.shared_kernel.config")
+    unload_module("shared_kernel.config")
 
     # 获取当前项目指纹
     fingerprint = get_project_fingerprint()
@@ -33,6 +33,8 @@ logger = logging.getLogger(__name__)
 
 # 受管控的模块前缀列表，只有这些模块可以被安全卸载
 _CONTROLLED_PREFIXES = (
+    "shared_kernel.",
+
     "yield_report.",
     "app.",
 )
@@ -43,7 +45,7 @@ def unload_module(module_name: str) -> bool:
     强制卸载指定模块及其所有子模块。
 
     安全规则:
-        - 只允许卸载以 yield_report. 或 app. 开头的模块
+        - 只允许卸载以 shared_kernel.、yield_report. 或 app. 开头的模块
         - sys.modules 中的内置模块和第三方库不会被卸载
 
     Args:
@@ -119,6 +121,7 @@ def get_project_fingerprint(
     """
     if watch_patterns is None:
         watch_patterns = [
+            "src/shared_kernel/**/*.py",
             "src/yield_report/**/*.py",
             "app/**/*.py",
             "config/*.yaml",

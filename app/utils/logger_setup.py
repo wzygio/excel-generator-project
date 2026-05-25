@@ -5,7 +5,7 @@ logger_setup.py: [企业级日志架构] 按领域+级别二维隔离
 
 领域分流（纵轴）:
     根据代码文件路径自动将日志分流到对应领域的 .log 文件。
-    例如 src/yield_report/core/gap_analysis.py 的日志会写入 logs/core.log。
+    例如 src/yield_report/core/gap_analysis.py 的日志会写入 logs/yield_report.core.log。
     而 app/main.py 的日志会写入 logs/app.log。
 
 级别隔离（横轴）:
@@ -48,16 +48,18 @@ def _resolve_domain_name(logger_name: str) -> str:
     根据 logger 名称解析领域名称。
 
     规则:
-        yield_report.shared_kernel.config → shared_kernel
-        yield_report.yield_report.core.gap → yield_report.core
+        shared_kernel.config → shared_kernel
+        yield_report.core.gap → yield_report.core
+        yield_report.application.orchestrator → yield_report.application
         app.main → app
         __main__ → root
     """
     parts = logger_name.split(".")
-    if len(parts) >= 3 and parts[0] == "yield_report":
-        # src/yield_report/shared_kernel/... → shared_kernel
-        # src/yield_report/yield_report/core/... → yield_report.core
-        return ".".join(parts[1:-1]) if len(parts) > 2 else parts[1]
+    if len(parts) >= 1 and parts[0] == "shared_kernel":
+        return "shared_kernel"
+    elif len(parts) >= 2 and parts[0] == "yield_report":
+        # yield_report.core.gap → yield_report.core
+        return ".".join(parts[:2])
     elif len(parts) >= 1 and parts[0] == "app":
         return "app"
     return "root"

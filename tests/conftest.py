@@ -1,4 +1,4 @@
-"""
+﻿"""
 conftest.py: Pytest Fixtures
 
 提供测试所需的共享 Fixture，包括:
@@ -15,8 +15,8 @@ from typing import Generator
 import pytest
 import yaml
 
-from yield_report.shared_kernel.config import ConfigLoader
-from yield_report.shared_kernel.config_model import AppConfig
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import AppConfig
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +24,7 @@ def _reset_config_loader(monkeypatch: pytest.MonkeyPatch):
     """每个测试前阻止 .env 环境变量覆盖，测试后重置 ConfigLoader 单例。"""
     # 阻止 _load_env_overrides 从 .env 加载真实值，确保测试使用临时配置
     monkeypatch.setattr(
-        "yield_report.shared_kernel.config._load_env_overrides",
+        "shared_kernel.config._load_env_overrides",
         lambda: {},
     )
     yield

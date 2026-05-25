@@ -1,4 +1,4 @@
-"""
+﻿"""
 app_setup.py: 应用初始化
 
 负责:
@@ -25,8 +25,8 @@ from typing import Optional
 from dotenv import load_dotenv
 
 from app.utils.logger_setup import setup_logging
-from yield_report.shared_kernel.config import config as config_loader
-from yield_report.shared_kernel.config_model import AppConfig
+from shared_kernel.config import config as config_loader
+from shared_kernel.config_model import AppConfig
 
 
 def load_environment(env_path: Optional[str | Path] = None) -> None:

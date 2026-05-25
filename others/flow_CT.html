@@ -3,131 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>良率监控智能体-合并开发时间轴</title>
+    <title>CT良率监控智能体</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Microsoft YaHei', sans-serif; background-color: #FFFFFF !important; }
-        .timeline-line { background: linear-gradient(to bottom, #E5E7EB, #E5E7EB 90%, transparent); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="p-4">
-    <div class="w-full max-w-[380px] mx-auto">
-        <div class="flex items-center gap-2 mb-10 border-b pb-3 border-gray-100">
-            <div class="h-5 w-1.5 bg-blue-600 rounded-full"></div>
-            <h2 class="text-sm font-bold text-gray-800">核心子智能体 — 开发时间轴</h2>
+<body class="p-4 bg-white">
+
+    <div class="w-full max-w-7xl mx-auto overflow-x-auto no-scrollbar py-12">
+        
+        <div class="flex items-center gap-3 mb-20 border-b pb-4 border-gray-100">
+            <div class="h-6 w-1.5 bg-slate-800 rounded-full"></div>
+            <h2 class="text-base font-bold text-gray-800">CT良率监控智能体</h2>
         </div>
 
-        <div class="relative pl-24 space-y-8">
+        <div class="relative flex justify-between items-center min-w-[1300px] px-4">
             
-            <div class="absolute left-[18px] top-2 bottom-0 w-0.5 timeline-line"></div>
+            <div class="absolute left-0 right-0 h-0.5 bg-gray-200 top-1/2 transform -translate-y-1/2 z-0"></div>
 
-            <div class="relative flex flex-col items-start gap-3">
-                <div class="absolute -left-24 top-1 w-20 text-right">
-                    <span class="block text-sm font-bold text-blue-600 leading-none">Week 20</span>
-                    <span class="block text-[10px] text-gray-400 mt-1">5.11 — 5.17</span>
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="absolute bottom-8 border border-blue-200 rounded-lg p-2.5 w-44 bg-white shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded">日报生成</span>
+                        <span class="text-[10px] text-blue-600 font-bold">✓ 已完成</span>
+                    </div>
+                    <h4 class="text-xs font-bold text-gray-800 mb-0.5">数据获取</h4>
+                    <p class="text-[11px] text-gray-500 leading-tight">月周天良率及阈值设定</p>
                 </div>
-                <div class="absolute left-[-11px] top-1.5 w-3.5 h-3.5 bg-white border-4 border-blue-600 rounded-full z-10 flex items-center justify-center"></div>
-                
-                <div class="w-full border border-gray-200 rounded-lg p-3 space-y-2.5">
-                    <div>
-                        <div class="flex items-center justify-between gap-1 mb-1.5">
-                            <h3 class="text-xs font-bold text-blue-900 bg-blue-50 px-1 rounded">日报生成</h3>
-                            <span class="text-[10px] font-semibold text-blue-600">✓ 已完成</span>
-                        </div>
-                        <ul class="text-[11px] text-gray-500 space-y-1 list-disc pl-3.5">
-                            <li>月/周/天及批次良率基础数据提取</li>
-                            <li>搭建 &gt;30% 产出率恶化判定与 Gap 分析</li>
-                        </ul>
-                    </div>
-                    <div class="pt-2 border-t border-dashed border-gray-100">
-                        <div class="flex items-center justify-between gap-1 mb-1.5">
-                            <h3 class="text-xs font-bold text-cyan-900 bg-cyan-50 px-1 rounded">Inline RS</h3>
-                            <span class="text-[10px] font-semibold text-blue-600">✓ 已完成</span>
-                        </div>
-                        <ul class="text-[11px] text-gray-500 space-y-1 list-disc pl-3.5">
-                            <li>解析邮件 URL 并完成 EDA 爬虫抓取</li>
-                        </ul>
-                    </div>
+                <div class="w-3.5 h-3.5 bg-white border-4 border-blue-600 rounded-full my-2"></div>
+                <div class="text-center">
+                    <span class="block text-xs font-bold text-blue-600">Week 20</span>
+                    <span class="block text-[10px] text-gray-400">5.11 — 5.17</span>
                 </div>
             </div>
 
-            <div class="relative flex flex-col items-start gap-3">
-                <div class="absolute -left-24 top-1 w-20 text-right">
-                    <span class="block text-sm font-bold text-emerald-600 leading-none">Week 21</span>
-                    <span class="block text-[10px] text-gray-400 mt-1">5.18 — 5.24</span>
-                </div>
-                <div class="absolute left-[-11px] top-1.5 w-3.5 h-3.5 bg-white border-4 border-emerald-500 rounded-full z-10 animate-pulse"></div>
-                
-                <div class="w-full border border-gray-200 rounded-lg p-3">
-                    <div class="flex items-center justify-between gap-1 mb-1.5">
-                        <h3 class="text-xs font-bold text-blue-900 bg-blue-50 px-1 rounded">日报生成</h3>
-                        <span class="text-[10px] font-semibold text-emerald-600">⟳ 正在开发</span>
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="absolute bottom-8 border border-emerald-200 rounded-lg p-2.5 w-44 bg-white shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded">日报生成</span>
+                        <span class="text-[10px] text-emerald-600 font-bold">✓ 已完成</span>
                     </div>
-                    <ul class="text-[11px] text-gray-500 space-y-1 list-disc pl-3.5">
-                        <li>计算日良率 Gap 并锁定异常 Group</li>
-                        <li>溯源 Top3 不良 Code 及连续 3日/周趋势</li>
-                    </ul>
+                    <h4 class="text-xs font-bold text-gray-800 mb-0.5">数据分析</h4>
+                    <p class="text-[11px] text-gray-500 leading-tight">日良率 Gap 计算及趋势分析</p>
+                </div>
+                <div class="w-3.5 h-3.5 bg-white border-4 border-blue-600 rounded-full my-2"></div>
+                <div class="text-center">
+                    <span class="block text-xs font-bold text-blue-600">Week 21</span>
+                    <span class="block text-[10px] text-gray-400">5.18 — 5.24</span>
                 </div>
             </div>
 
-            <div class="relative flex flex-col items-start gap-3">
-                <div class="absolute -left-24 top-1 w-20 text-right">
-                    <span class="block text-sm font-bold text-gray-400 leading-none">Week 22</span>
-                    <span class="block text-[10px] text-gray-400 mt-1">5.25 — 5.31</span>
-                </div>
-                <div class="absolute left-[-11px] top-1.5 w-3.5 h-3.5 bg-white border-4 border-gray-300 rounded-full z-10"></div>
-                
-                <div class="w-full border border-gray-100 rounded-lg p-3 opacity-70">
-                    <div class="flex items-center justify-between gap-1 mb-1.5">
-                        <h3 class="text-xs font-bold text-gray-700 bg-gray-50 px-1 rounded">日报生成</h3>
-                        <span class="text-[10px] font-semibold text-gray-500">○ 待开始</span>
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="absolute bottom-8 border border-amber-200 rounded-lg p-2.5 w-44 bg-white shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded">日报生成</span>
+                        <span class="text-[10px] text-amber-600 font-bold">⟳ 正在开发</span>
                     </div>
-                    <ul class="text-[11px] text-gray-400 space-y-1 list-disc pl-3.5">
-                        <li>Excel 排版并集成 Gap解释、明细与追踪</li>
-                        <li>报告自动分发与最终全流程联调</li>
-                    </ul>
+                    <h4 class="text-xs font-bold text-gray-800 mb-0.5">报告输出</h4>
+                    <p class="text-[11px] text-gray-500 leading-tight">Excel 报告排版与分发联调</p>
+                </div>
+                <div class="w-3.5 h-3.5 bg-white border-4 border-emerald-500 rounded-full my-2 animate-pulse"></div>
+                <div class="text-center">
+                    <span class="block text-xs font-bold text-emerald-600">Week 22</span>
+                    <span class="block text-[10px] text-gray-400">5.25 — 5.31</span>
                 </div>
             </div>
 
-            <div class="relative flex flex-col items-start gap-3">
-                <div class="absolute -left-24 top-1 w-20 text-right">
-                    <span class="block text-sm font-bold text-amber-600 leading-none">Week 25</span>
-                    <span class="block text-[10px] text-gray-400 mt-1">6.08 — 6.14</span>
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="w-3.5 h-3.5 bg-white border-4 border-gray-300 rounded-full my-2"></div>
+                <div class="text-center mb-8">
+                    <span class="block text-xs font-bold text-gray-400">Week 25</span>
+                    <span class="block text-[10px] text-gray-400">6.15 — 6.21</span>
                 </div>
-                <div class="absolute left-[-11px] top-1.5 w-3.5 h-3.5 bg-white border-4 border-amber-500 rounded-full z-10 animate-pulse"></div>
-                
-                <div class="w-full border border-gray-200 rounded-lg p-3">
-                    <div class="flex items-center justify-between gap-1 mb-1.5">
-                        <h3 class="text-xs font-bold text-cyan-900 bg-cyan-50 px-1 rounded">Inline RS</h3>
-                        <span class="text-[10px] font-semibold text-emerald-600">⟳ 正在开发</span>
+                <div class="absolute top-16 border border-gray-200 rounded-lg p-2.5 w-44 bg-white shadow-sm opacity-60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1 py-0.5 rounded">异常监控</span>
+                        <span class="text-[10px] text-gray-500">○ 待开始</span>
                     </div>
-                    <ul class="text-[11px] text-gray-500 space-y-1 list-disc pl-3.5">
-                        <li>部署 2+2 原则判定连续两天超规/上升</li>
-                        <li>核心工艺站点与主要机台腔室差筛选判定</li>
-                    </ul>
+                    <h4 class="text-xs font-bold text-gray-700 mb-0.5">数据抓取与整理</h4>
+                    <p class="text-[11px] text-gray-400 leading-tight">HL 及集中性分析数据拉取</p>
                 </div>
             </div>
 
-            <div class="relative flex flex-col items-start gap-3">
-                <div class="absolute -left-24 top-1 w-20 text-right">
-                    <span class="block text-sm font-bold text-gray-400 leading-none">Week 26</span>
-                    <span class="block text-[10px] text-gray-400 mt-1">6.15 — 6.21</span>
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="w-3.5 h-3.5 bg-white border-4 border-gray-300 rounded-full my-2"></div>
+                <div class="text-center mb-8">
+                    <span class="block text-xs font-bold text-gray-400">Week 26</span>
+                    <span class="block text-[10px] text-gray-400">6.22 — 6.28</span>
                 </div>
-                <div class="absolute left-[-11px] top-1.5 w-3.5 h-3.5 bg-white border-4 border-gray-300 rounded-full z-10"></div>
-                
-                <div class="w-full border border-gray-100 rounded-lg p-3 opacity-70">
-                    <div class="flex items-center justify-between gap-1 mb-1.5">
-                        <h3 class="text-xs font-bold text-cyan-700 bg-gray-50 px-1 rounded">Inline RS</h3>
-                        <span class="text-[10px] font-semibold text-gray-500">○ 待开始</span>
+                <div class="absolute top-16 border border-gray-200 rounded-lg p-2.5 w-44 bg-white shadow-sm opacity-60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1 py-0.5 rounded">异常监控</span>
+                        <span class="text-[10px] text-gray-500">○ 待开始</span>
                     </div>
-                    <ul class="text-[11px] text-gray-400 space-y-1 list-disc pl-3.5">
-                        <li>过货量堆叠图与 RS density 折线图自动输出</li>
-                        <li>多要素整合并输出固定格式分析语句</li>
-                    </ul>
+                    <h4 class="text-xs font-bold text-gray-700 mb-0.5">真实异常识别</h4>
+                    <p class="text-[11px] text-gray-400 leading-tight">HL 规则复刻与工作流搭建</p>
+                </div>
+            </div>
+
+            <div class="relative flex flex-col items-center w-48 z-10">
+                <div class="w-3.5 h-3.5 bg-white border-4 border-gray-300 rounded-full my-2"></div>
+                <div class="text-center mb-8">
+                    <span class="block text-xs font-bold text-gray-400">Week 27</span>
+                    <span class="block text-[10px] text-gray-400">6.29 — 7.05</span>
+                </div>
+                <div class="absolute top-16 border border-gray-200 rounded-lg p-2.5 w-44 bg-white shadow-sm opacity-60">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-bold text-gray-500 bg-gray-50 px-1 py-0.5 rounded">异常监控</span>
+                        <span class="text-[10px] text-gray-500">○ 待开始</span>
+                    </div>
+                    <h4 class="text-xs font-bold text-gray-700 mb-0.5">异常追踪</h4>
+                    <p class="text-[11px] text-gray-400 leading-tight">处置进度追踪与改善效果确认</p>
                 </div>
             </div>
 
         </div>
     </div>
+
 </body>
 </html>

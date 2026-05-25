@@ -1,0 +1,190 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - iframe [ref=e10]:
+        - generic [ref=f1e5]:
+          - table [ref=f1e10]:
+            - rowgroup [ref=f1e13]:
+              - row "V3 生 产 管 理 平 台" [ref=f1e14]:
+                - cell "V3 生 产 管 理 平 台" [ref=f1e15]
+          - table [ref=f1e20]:
+            - rowgroup [ref=f1e27]:
+              - row "公告 下载：报表系统使用手册SOP" [ref=f1e28]:
+                - cell [ref=f1e29]
+                - cell "公告" [ref=f1e30]
+                - cell "下载：报表系统使用手册SOP" [ref=f1e31]
+              - row "报表使用细则：" [ref=f1e32]:
+                - cell [ref=f1e33]
+                - cell "报表使用细则：" [ref=f1e34]
+                - cell [ref=f1e35]
+              - row "1、 报表维护人需保证数据内容真实可信；" [ref=f1e36]:
+                - cell [ref=f1e37]
+                - cell "1、" [ref=f1e38]
+                - cell "报表维护人需保证数据内容真实可信；" [ref=f1e39]
+                - cell [ref=f1e40]
+              - row "2、 报表维护人及时进行报表维护;" [ref=f1e41]:
+                - cell "2、" [ref=f1e42]
+                - cell "报表维护人及时进行报表维护;" [ref=f1e43]
+                - cell [ref=f1e44]
+              - row "3、 内部数据，请勿外泄；" [ref=f1e45]:
+                - cell "3、" [ref=f1e46]
+                - cell "内部数据，请勿外泄；" [ref=f1e47]
+                - cell [ref=f1e48]
+              - row "4、 各部门人均使用量不得少于1次；" [ref=f1e49]:
+                - cell "4、" [ref=f1e50]
+                - cell "各部门人均使用量不得少于1次；" [ref=f1e51]
+                - cell [ref=f1e52]
+              - row [ref=f1e53]:
+                - cell [ref=f1e54]
+                - cell [ref=f1e55]
+                - cell [ref=f1e56]
+                - cell [ref=f1e57]
+                - cell [ref=f1e58]
+      - generic [ref=e11]:
+        - generic [ref=e219] [cursor=pointer]: 
+        - generic [ref=e22] [cursor=pointer]: 
+    - generic [ref=e23]:
+      - generic [ref=e25]: 
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - text:  
+          - generic [ref=e34] [cursor=pointer]: 
+          - generic [ref=e36] [cursor=pointer]: 
+          - generic [ref=e326]:
+            - generic [ref=e328]:
+              - generic [ref=e329]: 搜索
+              - textbox [active] [ref=e330]
+            - generic [ref=e332] [cursor=pointer]: 
+          - generic [ref=e44]:
+            - generic [ref=e46] [cursor=pointer]:
+              - generic [ref=e49]: 
+              - generic [ref=e51]: 
+              - generic [ref=e52]: BU3工厂会议
+            - generic [ref=e54] [cursor=pointer]:
+              - generic [ref=e57]: 
+              - generic [ref=e59]: 
+              - generic [ref=e60]: 工厂早会监控报表
+            - generic [ref=e62] [cursor=pointer]:
+              - generic [ref=e65]: 
+              - generic [ref=e67]: 
+              - generic [ref=e68]: CIM内部
+            - generic [ref=e70] [cursor=pointer]:
+              - generic [ref=e73]: 
+              - generic [ref=e75]: 
+              - generic [ref=e76]: 通用报表
+            - generic [ref=e78] [cursor=pointer]:
+              - generic [ref=e81]: 
+              - generic [ref=e83]: 
+              - generic [ref=e84]: 屏体生产监控
+            - generic [ref=e86] [cursor=pointer]:
+              - generic [ref=e89]: 
+              - generic [ref=e91]: 
+              - generic [ref=e92]: 生产监控
+            - generic [ref=e94] [cursor=pointer]:
+              - generic [ref=e97]: 
+              - generic [ref=e99]: 
+              - generic [ref=e100]: 过程质量管理平台
+            - generic [ref=e102] [cursor=pointer]:
+              - generic [ref=e105]: 
+              - generic [ref=e107]: 
+              - generic [ref=e108]: Inline监控看板
+            - generic [ref=e109]:
+              - generic [ref=e110] [cursor=pointer]:
+                - generic [ref=e113]: 
+                - generic [ref=e115]: 
+                - generic [ref=e116]: 良率监控
+              - generic [ref=e224]:
+                - generic [ref=e225] [cursor=pointer]:
+                  - generic [ref=e228]: 
+                  - generic [ref=e229]: 良率监控导航页
+                - generic [ref=e231] [cursor=pointer]:
+                  - generic [ref=e235]: 
+                  - generic [ref=e237]: 
+                  - generic [ref=e238]: 综合良率
+                - generic [ref=e240] [cursor=pointer]:
+                  - generic [ref=e244]: 
+                  - generic [ref=e246]: 
+                  - generic [ref=e247]: 综合良率细项
+                - generic [ref=e249] [cursor=pointer]:
+                  - generic [ref=e253]: 
+                  - generic [ref=e255]: 
+                  - generic [ref=e256]: 入库良率
+                - generic [ref=e258] [cursor=pointer]:
+                  - generic [ref=e262]: 
+                  - generic [ref=e264]: 
+                  - generic [ref=e265]: 产出率
+                - generic [ref=e267] [cursor=pointer]:
+                  - generic [ref=e271]: 
+                  - generic [ref=e273]: 
+                  - generic [ref=e274]: 模组良率
+                - generic [ref=e276] [cursor=pointer]:
+                  - generic [ref=e280]: 
+                  - generic [ref=e282]: 
+                  - generic [ref=e283]: Inline监控
+                - generic [ref=e285] [cursor=pointer]:
+                  - generic [ref=e289]: 
+                  - generic [ref=e291]: 
+                  - generic [ref=e292]: 不良监控
+                - generic [ref=e294] [cursor=pointer]:
+                  - generic [ref=e298]: 
+                  - generic [ref=e300]: 
+                  - generic [ref=e301]: 不良分析
+                - generic [ref=e303] [cursor=pointer]:
+                  - generic [ref=e307]: 
+                  - generic [ref=e309]: 
+                  - generic [ref=e310]: 无CT良率
+                - generic [ref=e312] [cursor=pointer]:
+                  - generic [ref=e316]: 
+                  - generic [ref=e318]: 
+                  - generic [ref=e319]: 填报表
+            - generic [ref=e118] [cursor=pointer]:
+              - generic [ref=e121]: 
+              - generic [ref=e123]: 
+              - generic [ref=e124]: 设备管理
+            - generic [ref=e126] [cursor=pointer]:
+              - generic [ref=e129]: 
+              - generic [ref=e131]: 
+              - generic [ref=e132]: 物料管理
+            - generic [ref=e134] [cursor=pointer]:
+              - generic [ref=e137]: 
+              - generic [ref=e139]: 
+              - generic [ref=e140]: 人员管理
+            - generic [ref=e142] [cursor=pointer]:
+              - generic [ref=e145]: 
+              - generic [ref=e147]: 
+              - generic [ref=e148]: 质量管控
+            - generic [ref=e150] [cursor=pointer]:
+              - generic [ref=e153]: 
+              - generic [ref=e155]: 
+              - generic [ref=e156]: 仓储物流
+            - generic [ref=e158] [cursor=pointer]:
+              - generic [ref=e161]: 
+              - generic [ref=e163]: 
+              - generic [ref=e164]: 成本管理
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e169]: 
+              - generic [ref=e171]: 
+              - generic [ref=e172]: 填报报表
+            - generic [ref=e174] [cursor=pointer]:
+              - generic [ref=e177]: 
+              - generic [ref=e179]: 
+              - generic [ref=e180]: 生产日报
+            - generic [ref=e182] [cursor=pointer]:
+              - generic [ref=e185]: 
+              - generic [ref=e187]: 
+              - generic [ref=e188]: V3工厂首页填报报表
+            - generic [ref=e190] [cursor=pointer]:
+              - generic [ref=e193]: 
+              - generic [ref=e195]: 
+              - generic [ref=e196]: V3 待测报表
+        - text: 
+  - generic [ref=e199]:
+    - generic [ref=e200]:
+      - img [ref=e201]
+      - generic [ref=e202]: V3生产管理平台
+    - generic [ref=e203]:
+      - generic [ref=e207] [cursor=pointer]: 
+      - generic [ref=e209] [cursor=pointer]:
+        - generic [ref=e211]: 
+        - generic [ref=e213]: 王梓尧
+        - generic [ref=e215]: 

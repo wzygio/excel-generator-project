@@ -1,4 +1,4 @@
-"""
+﻿"""
 app/main.py: Streamlit 前端入口
 
 本模块是良率日报生成系统的用户界面，提供:
@@ -49,10 +49,10 @@ from app.utils.app_setup import (
     print_startup_banner,
 )
 from app.utils.reloader import unload_all_controlled_modules
-from yield_report.yield_report.application.orchestrator import (
+from yield_report.application.orchestrator import (
     DataAcquisitionOrchestrator,
 )
-from yield_report.yield_report.core.query_parser import ReportType
+from yield_report.core.query_parser import ReportType
 
 logger = logging.getLogger(__name__)
 

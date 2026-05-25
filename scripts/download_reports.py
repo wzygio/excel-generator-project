@@ -1,4 +1,4 @@
-"""
+﻿"""
 download_reports.py: 直接运行后端程序下载两个 FineReport 报表到 resources 文件夹
 
 使用方式:
@@ -35,7 +35,7 @@ def main():
     # Step 1: 读取产品型号列表
     print("\n[1/4] 读取产品型号列表...")
     try:
-        from yield_report.yield_report.infrastructure.product_models import (
+        from yield_report.infrastructure.product_models import (
             extract_product_models,
         )
         models = extract_product_models()
@@ -49,7 +49,7 @@ def main():
     # Step 2: 下载 V3良率及不良率By月周天汇总报表
     print("\n[2/4] 下载 V3良率及不良率By月周天汇总报表...")
     try:
-        from yield_report.yield_report.infrastructure.finereport_client import (
+        from yield_report.infrastructure.finereport_client import (
             FinereportClient,
             FineReportConnectionError,
             FineReportDownloadError,
@@ -79,7 +79,7 @@ def main():
     try:
         if client is None:
             # 重新创建客户端（如果上一步失败）
-            from yield_report.yield_report.infrastructure.finereport_client import (
+            from yield_report.infrastructure.finereport_client import (
                 FinereportClient,
             )
             client = FinereportClient()

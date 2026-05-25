@@ -1,4 +1,4 @@
-"""
+﻿"""
 debug_finereport.py: FineReport API 调试脚本
 直接输出 page_content 返回的原始 HTML 结构，帮助诊断数据不对的问题。
 """
@@ -21,7 +21,7 @@ logging.getLogger("yield_report").setLevel(logging.DEBUG)
 # 强制 NO_PROXY
 os.environ["NO_PROXY"] = "10.73.17.76"
 
-from yield_report.yield_report.infrastructure.finereport_client import FinereportClient
+from yield_report.infrastructure.finereport_client import FinereportClient
 
 
 def main():

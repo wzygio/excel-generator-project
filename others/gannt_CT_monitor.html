@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>良率监控智能体-异常监控模块</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; table-layout: fixed; font-family: 'Microsoft YaHei', sans-serif; }
+        th { background-color: #F3F4F6; border: 1px solid #D1D5DB; padding: 6px 4px; text-align: center; font-weight: bold; color: #374151; font-size: 13px; }
+        td { border: 1px solid #D1D5DB; vertical-align: middle; word-wrap: break-word; overflow-wrap: break-word; padding: 8px 10px; }
+
+        .col-fixed { text-align: center; background-color: #FFFFFF; font-size: 14px; line-height: 1.3; font-weight: bold; color: #1F2937; }
+        .col-module { text-align: center; background-color: #F9FAFB; font-size: 14px; line-height: 1.4; font-weight: bold; color: #111827; }
+        .col-timeline { text-align: left; vertical-align: top; background-color: #FFFFFF; }
+        
+        /* 继承原生的高质感状态标签与列表样式 */
+        .type-plan { text-align: center; font-size: 12px; font-weight: bold; color: #2563EB; background-color: #EFF6FF; width: 35px; line-height: 1.2; }
+        .type-actual { text-align: center; font-size: 12px; font-weight: bold; color: #059669; background-color: #ECFDF5; width: 35px; line-height: 1.2; }
+        
+        .plan-content { list-style-type: disc; padding-left: 16px; margin: 0; font-size: 12px; color: #4B5563; }
+        .plan-content li { margin-bottom: 4px; line-height: 1.4; }
+        .plan-content li::marker { color: #3B82F6; }
+
+        .text-actual-done { font-size: 12px; color: #059669; font-weight: bold; display: flex; items-center: center; gap: 4px; }
+        .text-actual-inprogress { font-size: 12px; color: #D97706; font-weight: bold; display: flex; items-center: center; gap: 4px; }
+        .text-actual-pending { font-size: 12px; color: #9CA3AF; font-style: italic; }
+        
+        .timeline-empty { background-color: #FAFAFA; position: relative; }
+        /* 经典斑马线或斜线条纹表示不可用/非当前周 */
+        .timeline-empty::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(243,244,246,0.6) 25%, transparent 25%, transparent 50%, rgba(243,244,246,0.6) 50%, rgba(243,244,246,0.6) 75%, transparent 75%, transparent);
+            background-size: 8px 8px;
+        }
+    </style>
+</head>
+<body class="p-6 bg-white">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <div class="flex items-center gap-3 mb-6 border-b pb-4 border-gray-100">
+            <div class="h-6 w-1.5 bg-blue-600 rounded-full"></div>
+            <h2 class="text-lg font-bold text-gray-800">良率监控智能体-异常监控模块</h2>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 140px;">核心分析维度</th>
+                    <th style="width: 50px;">类别</th>
+                    <th style="width: 300px;">Week 25 (6.15 — 6.21)</th>
+                    <th style="width: 300px;">Week 26 (6.22 — 6.28)</th>
+                    <th style="width: 300px;">Week 27 (6.29 — 7.05)</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="col-module">数据抓取与整理</td>
+                    <td class="type-plan">计<br>划</td>
+                    <td class="col-timeline">
+                        <ul class="plan-content">
+                            <strong>HL相关数据抓取：</strong>
+                            <li>日/周/月度良率数据获取</li>
+                            <li>集中性分析数据、历史异常数据</li>
+                        </ul>
+                    </td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline timeline-empty"></td>
+                </tr>
+                <tr>
+                    <td class="type-actual">实<br>际</td>
+                    <td class="col-timeline">
+                        <span class="text-actual-done">预计6月15日开始开发，待执行...</span>
+                    </td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline timeline-empty"></td>
+                </tr>
+
+                <tr>
+                    <td rowspan="2" class="col-module">真实异常识别</td>
+                    <td class="type-plan">计<br>划</td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline">
+                        <ul class="plan-content">
+                            <strong>异常HL Agent开发（V-Agent）：</strong>
+                            <li>HL规则复刻（数学建模+大模型分析）</li>
+                            <li>工作流搭建</li>
+                        </ul>
+                    </td>
+                    <td class="col-timeline timeline-empty"></td>
+                </tr>
+                <tr>
+                    <td class="type-actual">实<br>际</td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline">
+                        <span class="text-actual-pending">待前置步骤完成，待执行...</span>
+                    </td>
+                    <td class="col-timeline timeline-empty"></td>
+                </tr>
+
+                <tr>
+                    <td rowspan="2" class="col-module">异常追踪</td>
+                    <td class="type-plan">计<br>划</td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline">
+                        <ul class="plan-content">
+                            <strong>异常追踪Agent开发：</strong>
+                            <li>异常处置进度追踪</li>
+                            <li>异常改善效果确认</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="type-actual">实<br>际</td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline timeline-empty"></td>
+                    <td class="col-timeline">
+                        <span class="text-actual-pending">待前置步骤完成，待执行...</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

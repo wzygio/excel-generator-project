@@ -1,0 +1,613 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - iframe [active] [ref=e357]:
+        - generic [active] [ref=f4e1]:
+          - generic [ref=f4e2]:
+            - generic [ref=f4e7]:
+              - table [ref=f4e9]:
+                - rowgroup [ref=f4e10]:
+                  - row "产品型号：" [ref=f4e11]:
+                    - cell "产品型号：" [ref=f4e12]:
+                      - generic [ref=f4e13]: 产品型号：
+              - textbox "必选" [ref=f4e676]
+              - table [ref=f4e20]:
+                - rowgroup [ref=f4e21]:
+                  - row "工单类型：" [ref=f4e22]:
+                    - cell "工单类型：" [ref=f4e23]:
+                      - generic [ref=f4e24]: 工单类型：
+              - generic [ref=f4e26]:
+                - generic [ref=f4e28]: P(量产品)
+                - textbox [ref=f4e29]
+              - table [ref=f4e33]:
+                - rowgroup [ref=f4e34]:
+                  - row "结束日期：" [ref=f4e35]:
+                    - cell "结束日期：" [ref=f4e36]:
+                      - generic [ref=f4e37]: 结束日期：
+              - textbox [ref=f4e40]: 2026-05-25
+              - emphasis [ref=f4e46] [cursor=pointer]:
+                - button "查询" [ref=f4e47]
+              - table [ref=f4e49]:
+                - rowgroup [ref=f4e50]:
+                  - row "产品规格：" [ref=f4e51]:
+                    - cell "产品规格：" [ref=f4e52]:
+                      - generic [ref=f4e53]: 产品规格：
+              - textbox [ref=f4e56]
+              - table [ref=f4e60]:
+                - rowgroup [ref=f4e61]:
+                  - row "查看周期：" [ref=f4e62]:
+                    - cell "查看周期：" [ref=f4e63]:
+                      - generic [ref=f4e64]: 查看周期：
+              - textbox [ref=f4e66]: "2"
+              - table [ref=f4e68]:
+                - rowgroup [ref=f4e69]:
+                  - row "月" [ref=f4e70]:
+                    - cell "月" [ref=f4e71]:
+                      - generic [ref=f4e72]: 月
+              - textbox [ref=f4e74]: "3"
+              - table [ref=f4e76]:
+                - rowgroup [ref=f4e77]:
+                  - row "周" [ref=f4e78]:
+                    - cell "周" [ref=f4e79]:
+                      - generic [ref=f4e80]: 周
+              - textbox [ref=f4e82]: "7"
+              - table [ref=f4e84]:
+                - rowgroup [ref=f4e85]:
+                  - row "天" [ref=f4e86]:
+                    - cell "天" [ref=f4e87]:
+                      - generic [ref=f4e88]: 天
+            - generic [ref=f4e139]:
+              - generic [ref=f4e185]:
+                - table [ref=f4e186]:
+                  - rowgroup [ref=f4e187]:
+                    - row "MVI良率及不良率By月周天汇总报表V1.0 报表说明 ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e188]:
+                      - cell:
+                        - generic:
+                          - table:
+                            - rowgroup:
+                              - row
+                      - cell "MVI良率及不良率By月周天汇总报表V1.0 报表说明 ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e189]:
+                        - table [ref=f4e191]:
+                          - rowgroup [ref=f4e210]:
+                            - row "MVI良率及不良率By月周天汇总报表V1.0" [ref=f4e211]:
+                              - cell [ref=f4e212]
+                              - cell "MVI良率及不良率By月周天汇总报表V1.0" [ref=f4e213]:
+                                - generic [ref=f4e214]: MVI良率及不良率By月周天汇总报表V1.0
+                            - row "报表说明" [ref=f4e215]:
+                              - cell [ref=f4e216]
+                              - cell [ref=f4e217]
+                              - cell [ref=f4e218]
+                              - cell [ref=f4e219]
+                              - cell [ref=f4e220]
+                              - cell "报表说明" [ref=f4e221]:
+                                - generic [ref=f4e223] [cursor=pointer]: 报表说明
+                            - row "ProductCode 产品型号 Operation 站点 DefectGroup 不良分组 M04 M05 W20 W21 W22 5/19 5/20 5/21 5/22 5/23 5/24 5/25" [ref=f4e224]:
+                              - cell [ref=f4e225]
+                              - cell "ProductCode 产品型号" [ref=f4e226]:
+                                - generic [ref=f4e227]:
+                                  - text: ProductCode
+                                  - text: 产品型号
+                              - cell "Operation 站点" [ref=f4e228]:
+                                - generic [ref=f4e229]:
+                                  - text: Operation
+                                  - text: 站点
+                              - cell "DefectGroup 不良分组" [ref=f4e230]:
+                                - generic [ref=f4e231]:
+                                  - text: DefectGroup
+                                  - text: 不良分组
+                              - cell [ref=f4e232]:
+                                - img [ref=f4e234]
+                              - cell "M04" [ref=f4e235]:
+                                - generic [ref=f4e236]: M04
+                              - cell "M05" [ref=f4e237]:
+                                - generic [ref=f4e238]: M05
+                              - cell "W20" [ref=f4e239]:
+                                - generic [ref=f4e240]: W20
+                              - cell "W21" [ref=f4e241]:
+                                - generic [ref=f4e242]: W21
+                              - cell "W22" [ref=f4e243]:
+                                - generic [ref=f4e244]: W22
+                              - cell "5/19" [ref=f4e245]:
+                                - generic [ref=f4e246]: 5/19
+                              - cell "5/20" [ref=f4e247]:
+                                - generic [ref=f4e248]: 5/20
+                              - cell "5/21" [ref=f4e249]:
+                                - generic [ref=f4e250]: 5/21
+                              - cell "5/22" [ref=f4e251]:
+                                - generic [ref=f4e252]: 5/22
+                              - cell "5/23" [ref=f4e253]:
+                                - generic [ref=f4e254]: 5/23
+                              - cell "5/24" [ref=f4e255]:
+                                - generic [ref=f4e256]: 5/24
+                              - cell "5/25" [ref=f4e257]:
+                                - generic [ref=f4e258]: 5/25
+                    - row [ref=f4e259]:
+                      - cell:
+                        - generic:
+                          - table:
+                            - rowgroup
+                      - cell [ref=f4e260]:
+                        - table [ref=f4e262]:
+                          - rowgroup [ref=f4e281]:
+                            - row [ref=f4e282]:
+                              - cell [ref=f4e283]
+                - img [ref=f4e285]
+                - img [ref=f4e287]
+                - img [ref=f4e289]
+                - img [ref=f4e291]
+              - list [ref=f4e159]:
+                - listitem "MVI" [ref=f4e160]:
+                  - generic [ref=f4e162] [cursor=pointer]: MVI
+                - listitem "AVI" [ref=f4e164]:
+                  - generic [ref=f4e165] [cursor=pointer]: AVI
+                - listitem "APP1" [ref=f4e167]:
+                  - generic [ref=f4e168] [cursor=pointer]: APP1
+                - listitem "APP2" [ref=f4e170]:
+                  - generic [ref=f4e171] [cursor=pointer]: APP2
+                - listitem "AGING" [ref=f4e173]:
+                  - generic [ref=f4e174] [cursor=pointer]: AGING
+                - listitem "CUT" [ref=f4e176]:
+                  - generic [ref=f4e177] [cursor=pointer]: CUT
+                - listitem "CT" [ref=f4e179]:
+                  - generic [ref=f4e180] [cursor=pointer]: CT
+                - listitem "屏体综合良率" [ref=f4e182]:
+                  - generic [ref=f4e183] [cursor=pointer]: 屏体综合良率
+          - table [ref=f4e91]:
+            - rowgroup [ref=f4e92]:
+              - row "页面设置 打印预览 打印 导出 邮件" [ref=f4e93]:
+                - cell "页面设置" [ref=f4e94]:
+                  - emphasis [ref=f4e98] [cursor=pointer]:
+                    - button "页面设置" [ref=f4e99]
+                - cell [ref=f4e100]
+                - cell "打印预览" [ref=f4e102]:
+                  - emphasis [ref=f4e106] [cursor=pointer]:
+                    - button "打印预览" [ref=f4e107]
+                - cell [ref=f4e108]
+                - cell "打印" [ref=f4e110]:
+                  - emphasis [ref=f4e114] [cursor=pointer]:
+                    - button "打印" [ref=f4e115]
+                - cell [ref=f4e116]
+                - cell "导出" [ref=f4e118]:
+                  - emphasis [ref=f4e122] [cursor=pointer]:
+                    - button "导出" [ref=f4e123]
+                - cell [ref=f4e124]
+                - cell "邮件" [ref=f4e126]:
+                  - emphasis [ref=f4e130] [cursor=pointer]:
+                    - button "邮件" [ref=f4e131]
+          - generic [ref=f4e134]:
+            - generic [ref=f4e293]: 全选/不选
+            - generic "2025 DOE MASK" [ref=f4e294] [cursor=pointer]:
+              - generic [ref=f4e295]: 2025 DOE MASK
+            - generic "Aries" [ref=f4e296]:
+              - generic [ref=f4e297]: Aries
+            - generic "Array-MQC-NXM" [ref=f4e298]:
+              - generic [ref=f4e299]: Array-MQC-NXM
+            - generic "C10" [ref=f4e300]:
+              - generic [ref=f4e301]: C10
+            - generic "C11" [ref=f4e302]:
+              - generic [ref=f4e303]: C11
+            - generic "C11 DOE MASK" [ref=f4e304]:
+              - generic [ref=f4e305]: C11 DOE MASK
+            - generic "C11 DOE V2" [ref=f4e306]:
+              - generic [ref=f4e307]: C11 DOE V2
+            - generic "C15" [ref=f4e308]:
+              - generic [ref=f4e309]: C15
+            - generic "C16" [ref=f4e310]:
+              - generic [ref=f4e311]: C16
+            - generic "C19" [ref=f4e312]:
+              - generic [ref=f4e313]: C19
+            - generic "C2" [ref=f4e314]:
+              - generic [ref=f4e315]: C2
+            - generic "C20" [ref=f4e316]:
+              - generic [ref=f4e317]: C20
+            - generic "C21" [ref=f4e318]:
+              - generic [ref=f4e319]: C21
+            - generic "C22" [ref=f4e320]:
+              - generic [ref=f4e321]: C22
+            - generic "C23" [ref=f4e322]:
+              - generic [ref=f4e323]: C23
+            - generic "C35" [ref=f4e324]:
+              - generic [ref=f4e325]: C35
+            - generic "C37" [ref=f4e326]:
+              - generic [ref=f4e327]: C37
+            - generic "C39" [ref=f4e328]:
+              - generic [ref=f4e329]: C39
+            - generic "C441" [ref=f4e330]:
+              - generic [ref=f4e331]: C441
+            - generic "C451" [ref=f4e332]:
+              - generic [ref=f4e333]: C451
+            - generic "C452" [ref=f4e334]:
+              - generic [ref=f4e335]: C452
+            - generic "C453" [ref=f4e336]:
+              - generic [ref=f4e337]: C453
+            - generic "C466" [ref=f4e338]:
+              - generic [ref=f4e339]: C466
+            - generic "C471" [ref=f4e340]:
+              - generic [ref=f4e341]: C471
+            - generic "C472" [ref=f4e342]:
+              - generic [ref=f4e343]: C472
+            - generic "C480" [ref=f4e344]:
+              - generic [ref=f4e345]: C480
+            - generic "C480迪拜" [ref=f4e346]:
+              - generic [ref=f4e347]: C480迪拜
+            - generic "C4900" [ref=f4e348]:
+              - generic [ref=f4e349]: C4900
+            - generic "C5" [ref=f4e350]:
+              - generic [ref=f4e351]: C5
+            - generic "C50" [ref=f4e352]:
+              - generic [ref=f4e353]: C50
+            - generic "C51" [ref=f4e354]:
+              - generic [ref=f4e355]: C51
+            - generic "C514" [ref=f4e356]:
+              - generic [ref=f4e357]: C514
+            - generic "C516" [ref=f4e358]:
+              - generic [ref=f4e359]: C516
+            - generic "C516-7" [ref=f4e360]:
+              - generic [ref=f4e361]: C516-7
+            - generic "C521" [ref=f4e362]:
+              - generic [ref=f4e363]: C521
+            - generic "C522" [ref=f4e364]:
+              - generic [ref=f4e365]: C522
+            - generic "C523" [ref=f4e366]:
+              - generic [ref=f4e367]: C523
+            - generic "C530" [ref=f4e368]:
+              - generic [ref=f4e369]: C530
+            - generic "C534" [ref=f4e370]:
+              - generic [ref=f4e371]: C534
+            - generic "C538" [ref=f4e372]:
+              - generic [ref=f4e373]: C538
+            - generic "C539" [ref=f4e374]:
+              - generic [ref=f4e375]: C539
+            - generic "C540" [ref=f4e376]:
+              - generic [ref=f4e377]: C540
+            - generic "C546&C547" [ref=f4e378]:
+              - generic [ref=f4e379]: C546&C547
+            - generic "C548&C549" [ref=f4e380]:
+              - generic [ref=f4e381]: C548&C549
+            - generic "C55" [ref=f4e382]:
+              - generic [ref=f4e383]: C55
+            - generic "C550" [ref=f4e384]:
+              - generic [ref=f4e385]: C550
+            - generic "C551" [ref=f4e386]:
+              - generic [ref=f4e387]: C551
+            - generic "C553" [ref=f4e388]:
+              - generic [ref=f4e389]: C553
+            - generic "C556" [ref=f4e390]:
+              - generic [ref=f4e391]: C556
+            - generic "C57" [ref=f4e392]:
+              - generic [ref=f4e393]: C57
+            - generic "C57-TB" [ref=f4e394]:
+              - generic [ref=f4e395]: C57-TB
+            - generic "C57-TS" [ref=f4e396]:
+              - generic [ref=f4e397]: C57-TS
+            - generic "C58" [ref=f4e398]:
+              - generic [ref=f4e399]: C58
+            - generic "C581" [ref=f4e400]:
+              - generic [ref=f4e401]: C581
+            - generic "C59" [ref=f4e402]:
+              - generic [ref=f4e403]: C59
+            - generic "C5900" [ref=f4e404]:
+              - generic [ref=f4e405]: C5900
+            - generic "D106" [ref=f4e406]:
+              - generic [ref=f4e407]: D106
+            - generic "D107" [ref=f4e408]:
+              - generic [ref=f4e409]: D107
+            - generic "D12" [ref=f4e410]:
+              - generic [ref=f4e411]: D12
+            - generic "D127" [ref=f4e412]:
+              - generic [ref=f4e413]: D127
+            - generic "D136" [ref=f4e414]:
+              - generic [ref=f4e415]: D136
+            - generic "D137" [ref=f4e416]:
+              - generic [ref=f4e417]: D137
+            - generic "D17" [ref=f4e418]:
+              - generic [ref=f4e419]: D17
+            - generic "D171" [ref=f4e420]:
+              - generic [ref=f4e421]: D171
+            - generic "D172" [ref=f4e422]:
+              - generic [ref=f4e423]: D172
+            - generic "D192" [ref=f4e424]:
+              - generic [ref=f4e425]: D192
+            - generic "D21" [ref=f4e426]:
+              - generic [ref=f4e427]: D21
+            - generic "D22" [ref=f4e428]:
+              - generic [ref=f4e429]: D22
+            - generic "D23" [ref=f4e430]:
+              - generic [ref=f4e431]: D23
+            - generic "D24" [ref=f4e432]:
+              - generic [ref=f4e433]: D24
+            - generic "D26" [ref=f4e434]:
+              - generic [ref=f4e435]: D26
+            - generic "D268" [ref=f4e436]:
+              - generic [ref=f4e437]: D268
+            - generic "D286" [ref=f4e438]:
+              - generic [ref=f4e439]: D286
+            - generic "D36" [ref=f4e440]:
+              - generic [ref=f4e441]: D36
+            - generic "D50" [ref=f4e442]:
+              - generic [ref=f4e443]: D50
+            - generic "D52" [ref=f4e444]:
+              - generic [ref=f4e445]: D52
+            - generic "D85" [ref=f4e446]:
+              - generic [ref=f4e447]: D85
+            - generic "DOE" [ref=f4e448]:
+              - generic [ref=f4e449]: DOE
+            - generic "DOE MASK" [ref=f4e450]:
+              - generic [ref=f4e451]: DOE MASK
+            - generic "Doha" [ref=f4e452]:
+              - generic [ref=f4e453]: Doha
+            - generic "F1" [ref=f4e454]:
+              - generic [ref=f4e455]: F1
+            - generic "F136" [ref=f4e456]:
+              - generic [ref=f4e457]: F136
+            - generic "F153" [ref=f4e458]:
+              - generic [ref=f4e459]: F153
+            - generic "F156" [ref=f4e460]:
+              - generic [ref=f4e461]: F156
+            - generic "F157" [ref=f4e462]:
+              - generic [ref=f4e463]: F157
+            - generic "H1" [ref=f4e464]:
+              - generic [ref=f4e465]: H1
+            - generic "H118&H119" [ref=f4e466]:
+              - generic [ref=f4e467]: H118&H119
+            - generic "H126" [ref=f4e468]:
+              - generic [ref=f4e469]: H126
+            - generic "H1-2T1C" [ref=f4e470]:
+              - generic [ref=f4e471]: H1-2T1C
+            - generic "H1-5T2C" [ref=f4e472]:
+              - generic [ref=f4e473]: H1-5T2C
+            - generic "H1-VR" [ref=f4e474]:
+              - generic [ref=f4e475]: H1-VR
+            - generic "HBS" [ref=f4e476]:
+              - generic [ref=f4e477]: HBS
+            - generic "JiZhou" [ref=f4e478]:
+              - generic [ref=f4e479]: JiZhou
+            - generic "K121" [ref=f4e480]:
+              - generic [ref=f4e481]: K121
+            - generic "K128" [ref=f4e482]:
+              - generic [ref=f4e483]: K128
+            - generic "L311" [ref=f4e484]:
+              - generic [ref=f4e485]: L311
+            - generic "L861" [ref=f4e486]:
+              - generic [ref=f4e487]: L861
+            - generic "LBS" [ref=f4e488]:
+              - generic [ref=f4e489]: LBS
+            - generic "LTPO" [ref=f4e490]:
+              - generic [ref=f4e491]: LTPO
+            - generic "LTPO TEG" [ref=f4e492]:
+              - generic [ref=f4e493]: LTPO TEG
+            - generic "LTPOXCCD" [ref=f4e494]:
+              - generic [ref=f4e495]: LTPOXCCD
+            - generic "LTPOZBSJ-FHS" [ref=f4e496]:
+              - generic [ref=f4e497]: LTPOZBSJ-FHS
+            - generic "LTPOZBSJ-HS" [ref=f4e498]:
+              - generic [ref=f4e499]: LTPOZBSJ-HS
+            - generic "LTPOZDSJ" [ref=f4e500]:
+              - generic [ref=f4e501]: LTPOZDSJ
+            - generic "LTPSZBSJ" [ref=f4e502]:
+              - generic [ref=f4e503]: LTPSZBSJ
+            - generic "LTPSZCBD" [ref=f4e504]:
+              - generic [ref=f4e505]: LTPSZCBD
+            - generic "LuZhou" [ref=f4e506]:
+              - generic [ref=f4e507]: LuZhou
+            - generic "M110&M146" [ref=f4e508]:
+              - generic [ref=f4e509]: M110&M146
+            - generic "M182" [ref=f4e510]:
+              - generic [ref=f4e511]: M182
+            - generic "M215" [ref=f4e512]:
+              - generic [ref=f4e513]: M215
+            - generic "M216" [ref=f4e514]:
+              - generic [ref=f4e515]: M216
+            - generic "M256" [ref=f4e516]:
+              - generic [ref=f4e517]: M256
+            - generic "M279" [ref=f4e518]:
+              - generic [ref=f4e519]: M279
+            - generic "M2A7" [ref=f4e520]:
+              - generic [ref=f4e521]: M2A7
+            - generic "M326" [ref=f4e522]:
+              - generic [ref=f4e523]: M326
+            - generic "M511" [ref=f4e524]:
+              - generic [ref=f4e525]: M511
+            - generic "M511-C" [ref=f4e526]:
+              - generic [ref=f4e527]: M511-C
+            - generic "M516" [ref=f4e528]:
+              - generic [ref=f4e529]: M516
+            - generic "M530" [ref=f4e530]:
+              - generic [ref=f4e531]: M530
+            - generic "M559" [ref=f4e532]:
+              - generic [ref=f4e533]: M559
+            - generic "M567" [ref=f4e534]:
+              - generic [ref=f4e535]: M567
+            - generic "M588" [ref=f4e536]:
+              - generic [ref=f4e537]: M588
+            - generic "M596" [ref=f4e538]:
+              - generic [ref=f4e539]: M596
+            - generic "M608" [ref=f4e540]:
+              - generic [ref=f4e541]: M608
+            - generic "M626" [ref=f4e542]:
+              - generic [ref=f4e543]: M626
+            - generic "M628" [ref=f4e544]:
+              - generic [ref=f4e545]: M628
+            - generic "M631" [ref=f4e546]:
+              - generic [ref=f4e547]: M631
+            - generic "M655" [ref=f4e548]:
+              - generic [ref=f4e549]: M655
+            - generic "M656" [ref=f4e550]:
+              - generic [ref=f4e551]: M656
+            - generic "M660" [ref=f4e552]:
+              - generic [ref=f4e553]: M660
+            - generic "M673" [ref=f4e554]:
+              - generic [ref=f4e555]: M673
+            - generic "M678" [ref=f4e556]:
+              - generic [ref=f4e557]: M678
+            - generic "M680" [ref=f4e558]:
+              - generic [ref=f4e559]: M680
+            - generic "M692" [ref=f4e560]:
+              - generic [ref=f4e561]: M692
+            - generic "M693" [ref=f4e562]:
+              - generic [ref=f4e563]: M693
+            - generic "M698" [ref=f4e564]:
+              - generic [ref=f4e565]: M698
+            - generic "M701" [ref=f4e566]:
+              - generic [ref=f4e567]: M701
+            - generic "M702" [ref=f4e568]:
+              - generic [ref=f4e569]: M702
+            - generic "M717" [ref=f4e570]:
+              - generic [ref=f4e571]: M717
+            - generic "M721" [ref=f4e572]:
+              - generic [ref=f4e573]: M721
+            - generic "M727" [ref=f4e574]:
+              - generic [ref=f4e575]: M727
+            - generic "M75" [ref=f4e576]:
+              - generic [ref=f4e577]: M75
+            - generic "M755" [ref=f4e578]:
+              - generic [ref=f4e579]: M755
+            - generic "M756" [ref=f4e580]:
+              - generic [ref=f4e581]: M756
+            - generic "M759" [ref=f4e582]:
+              - generic [ref=f4e583]: M759
+            - generic "M761" [ref=f4e584]:
+              - generic [ref=f4e585]: M761
+            - generic "MARS" [ref=f4e586]:
+              - generic [ref=f4e587]: MARS
+            - generic "MQC" [ref=f4e588]:
+              - generic [ref=f4e589]: MQC
+            - generic "N236" [ref=f4e590]:
+              - generic [ref=f4e591]: N236
+            - generic "N301" [ref=f4e592]:
+              - generic [ref=f4e593]: N301
+            - generic "N项目V3代工D23 MASK" [ref=f4e594]:
+              - generic [ref=f4e595]: N项目V3代工D23 MASK
+            - generic "N项目V3代工mirco验证" [ref=f4e596]:
+              - generic [ref=f4e597]: N项目V3代工mirco验证
+            - generic "O675" [ref=f4e598]:
+              - generic [ref=f4e599]: O675
+            - generic "O678" [ref=f4e600]:
+              - generic [ref=f4e601]: O678
+            - generic "O782" [ref=f4e602]:
+              - generic [ref=f4e603]: O782
+            - generic "S120" [ref=f4e604]:
+              - generic [ref=f4e605]: S120
+            - generic "T219" [ref=f4e606]:
+              - generic [ref=f4e607]: T219
+            - generic "TBS" [ref=f4e608]:
+              - generic [ref=f4e609]: TBS
+            - generic "TP646" [ref=f4e610]:
+              - generic [ref=f4e611]: TP646
+            - generic "TP661" [ref=f4e612]:
+              - generic [ref=f4e613]: TP661
+            - generic "V100" [ref=f4e614]:
+              - generic [ref=f4e615]: V100
+            - generic "V101" [ref=f4e616]:
+              - generic [ref=f4e617]: V101
+            - generic "V123" [ref=f4e618]:
+              - generic [ref=f4e619]: V123
+            - generic "V1 ELA基板代工" [ref=f4e620]:
+              - generic [ref=f4e621]: V1 ELA基板代工
+            - generic "V2 P-Si基板代工" [ref=f4e622]:
+              - generic [ref=f4e623]: V2 P-Si基板代工
+            - generic "W376" [ref=f4e624]:
+              - generic [ref=f4e625]: W376
+            - generic "W378" [ref=f4e626]:
+              - generic [ref=f4e627]: W378
+            - generic "W395" [ref=f4e628]:
+              - generic [ref=f4e629]: W395
+            - generic "W532" [ref=f4e630]:
+              - generic [ref=f4e631]: W532
+            - generic "W537" [ref=f4e632]:
+              - generic [ref=f4e633]: W537
+            - generic "X005" [ref=f4e634]:
+              - generic [ref=f4e635]: X005
+            - generic "X006" [ref=f4e636]:
+              - generic [ref=f4e637]: X006
+            - generic "XF01" [ref=f4e638]:
+              - generic [ref=f4e639]: XF01
+            - generic "XF02" [ref=f4e640]:
+              - generic [ref=f4e641]: XF02
+            - generic "XFD" [ref=f4e642]:
+              - generic [ref=f4e643]: XFD
+            - generic "XN01" [ref=f4e644]:
+              - generic [ref=f4e645]: XN01
+            - generic "XN02" [ref=f4e646]:
+              - generic [ref=f4e647]: XN02
+            - generic "Z517" [ref=f4e648]:
+              - generic [ref=f4e649]: Z517
+            - generic "Z571" [ref=f4e650]:
+              - generic [ref=f4e651]: Z571
+            - generic "Z576" [ref=f4e652]:
+              - generic [ref=f4e653]: Z576
+            - generic "Z611" [ref=f4e654]:
+              - generic [ref=f4e655]: Z611
+            - generic "中尺寸主动笔" [ref=f4e656]:
+              - generic [ref=f4e657]: 中尺寸主动笔
+            - generic "侧刻验证MQC" [ref=f4e658]:
+              - generic [ref=f4e659]: 侧刻验证MQC
+            - generic "凯旋门" [ref=f4e660]:
+              - generic [ref=f4e661]: 凯旋门
+            - generic "和田玉VIP自研" [ref=f4e662]:
+              - generic [ref=f4e663]: 和田玉VIP自研
+            - generic "天青石中尺寸预研项目" [ref=f4e664]:
+              - generic [ref=f4e665]: 天青石中尺寸预研项目
+            - generic "玉京山自研项目氧化物" [ref=f4e666]:
+              - generic [ref=f4e667]: 玉京山自研项目氧化物
+            - generic "玉京山预研项目LTPO高刷" [ref=f4e668]:
+              - generic [ref=f4e669]: 玉京山预研项目LTPO高刷
+            - generic "玉京山预研项目氧化物" [ref=f4e670]:
+              - generic [ref=f4e671]: 玉京山预研项目氧化物
+            - generic "禹贡" [ref=f4e672]:
+              - generic [ref=f4e673]: 禹贡
+            - generic "颐和园" [ref=f4e674]:
+              - generic [ref=f4e675]: 颐和园
+          - generic [ref=f4e132] [cursor=pointer]: 产品型号不可为空！
+      - generic [ref=e11]:
+        - generic [ref=e13]:
+          - generic [ref=e361] [cursor=pointer]: 
+          - generic [ref=e365] [cursor=pointer]: V3良率及不良率By月周天汇总报表
+        - generic [ref=e22] [cursor=pointer]: 
+    - generic [ref=e23]:
+      - generic [ref=e25]: 
+      - generic:
+        - generic:
+          - text:  
+          - generic [ref=e34] [cursor=pointer]: 
+          - generic [ref=e36] [cursor=pointer]: 
+          - generic [ref=e326]:
+            - generic:
+              - generic:
+                - textbox: V3良率及不良率By月周天汇总报表
+            - generic [ref=e332] [cursor=pointer]: 
+          - generic:
+            - generic:
+              - text:                                                           
+              - generic [ref=e335]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-无CT良率
+                        - generic: 目录/良率监控/无CT良率
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表-APP
+                        - generic: 目录/V3 待测报表/良率监控 (测试)/综合良率 (测试)
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: V3良率及不良率By月周天汇总报表
+                        - generic: 目录/良率监控/综合良率
+        - text: 
+  - generic [ref=e199]:
+    - generic [ref=e200]:
+      - img [ref=e201]
+      - generic [ref=e202]: V3生产管理平台
+    - generic [ref=e203]:
+      - generic [ref=e207] [cursor=pointer]: 
+      - generic [ref=e209] [cursor=pointer]:
+        - generic [ref=e211]: 
+        - generic [ref=e213]: 王梓尧
+        - generic [ref=e215]: 
