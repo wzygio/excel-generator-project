@@ -1,22 +1,13 @@
-1. 请问为什么要将包的目录结构重构为这种样式，：“““
-packages/common_utils/src/fr_common_utils/
-├── __init__.py
-├── interface/
-│   ├── __init__.py
-│   ├── interfaces.py      # ITaskEngine
-│   └── app_setup.py
-├── infrastructure/
-│   ├── __init__.py
-│   ├── db_manager.py
-│   └── logger.py
-└── utils/
-    ├── __init__.py
-    ├── email_utils.py
-    ├── html_utils.py
-    └── misc.py
-”””
-既然包名已经被放入了src下，为什么src的上层还要有一层命名，命名规则是什么？
+谢谢。我还是对于我们的配置路径心存疑虑，请你探索以下三条路径的文件树：
+“C:\Users\V0141351\.claude\plugins”
+“C:\Users\V0141351\.agents\plugins”
+“C:\Users\V0141351\.codex\plugins”
 
-2. 请介绍一下pyproject.toml中的结构。每个部分的作用分别是什么？
+--------------------Question 1
+然后回答以下问题：
+1. 首先请系统地解释一下这三条路径？
+2. .agents真的是CC和Codex都能够识别的路径吗？
+3. 请解释一下CC中的plugins下的文件树：我尤其不能理解的是marketplace这个概念。superpowers的本质是MCP，还是MCP+skills？它的源文件又被放在哪里？
+4. 请在解释一下Codex中的plugins下的文件树，它似乎与Claude Code截然不同。
 
-3. 将通用包放置于cell-projects中是否合理，是否应该放置于通用路径下？
+【Hint】请不要限制长度，您可以将回答完整地输出到“docs\prompt”下，我要求您一次性让我明白配置路径的差异
