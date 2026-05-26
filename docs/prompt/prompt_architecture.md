@@ -1,1 +1,0 @@
-1. excel_generator_project是旧模块，包含数据分析、报告输出两个功能。yield_report是新模块，额外包含一个报表自动下载的功能。
