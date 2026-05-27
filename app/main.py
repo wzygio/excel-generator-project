@@ -1,4 +1,4 @@
-﻿"""
+"""
 app/main.py: Streamlit 前端入口
 
 本模块是良率日报生成系统的用户界面，提供:
@@ -534,8 +534,8 @@ with tab3:
 # Tab 4: 智能查询
 # ============================================================
 with tab4:
-    from tests.analyze_yield.code_generator import CodeGenerator, extract_schema
-    from tests.analyze_yield.code_executor import CodeExecutor
+    from yield_report.infrastructure.code_generator import CodeGenerator, extract_schema
+    from yield_report.infrastructure.code_executor import CodeExecutor
 
     st.markdown("### 💬 智能查询")
     st.caption(

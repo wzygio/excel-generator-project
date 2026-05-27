@@ -4,7 +4,7 @@
 
 # 日志和输出
 logs/
-output/
+.output/
 
 # Python 缓存
 __pycache__/

@@ -21,3 +21,22 @@
 [2026-05-26 08:00:14] Dropped refs/stash@{0} (7f93927f1f36436e3ca1b072bb186f545f228a37)
 [2026-05-26 08:00:14] ======== Auto Sync Completed ========
 [2026-05-26 20:00:09] ======== Auto Sync Started: Action=push, branch=main ========
+[2026-05-27 08:00:13] From https://github.com/wzygio/excel-generator-project
+[2026-05-27 08:00:13]  * branch            main       -> FETCH_HEAD
+[2026-05-27 08:00:14] Already up to date.
+[2026-05-27 08:00:14] Restoring stashed changes...
+[2026-05-27 08:00:14] error: Your local changes to the following files would be overwritten by merge:
+[2026-05-27 08:00:14] 	.git-auto-sync.log
+[2026-05-27 08:00:14] Please commit your changes or stash them before you merge.
+[2026-05-27 08:00:14] Aborting
+[2026-05-27 08:00:14] On branch main
+[2026-05-27 08:00:14] Your branch is up to date with 'origin/main'.
+[2026-05-27 08:00:14] 
+[2026-05-27 08:00:14] Changes not staged for commit:
+[2026-05-27 08:00:14]   (use "git add <file>..." to update what will be committed)
+[2026-05-27 08:00:14]   (use "git restore <file>..." to discard changes in working directory)
+[2026-05-27 08:00:14] 
+[2026-05-27 08:00:14] no changes added to commit (use "git add" and/or "git commit -a")
+[2026-05-27 08:00:14] The stash entry is kept in case you need it again.
+[2026-05-27 08:00:14] ======== Auto Sync Completed ========
+[2026-05-27 20:02:45] ======== Auto Sync Started: Action=push, branch=main ========
