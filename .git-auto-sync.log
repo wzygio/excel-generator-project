@@ -80,3 +80,23 @@
 [2026-05-29 08:00:15] The stash entry is kept in case you need it again.
 [2026-05-29 08:00:15] ======== Auto Sync Completed ========
 [2026-05-29 20:00:10] ======== Auto Sync Started: Action=push, branch=main ========
+[2026-05-30 08:00:16] From https://github.com/wzygio/excel-generator-project
+[2026-05-30 08:00:16]  * branch            main       -> FETCH_HEAD
+[2026-05-30 08:00:16] Already up to date.
+[2026-05-30 08:00:16] Restoring stashed changes...
+[2026-05-30 08:00:17] error: Your local changes to the following files would be overwritten by merge:
+[2026-05-30 08:00:17] 	.git-auto-sync.log
+[2026-05-30 08:00:17] Please commit your changes or stash them before you merge.
+[2026-05-30 08:00:17] Aborting
+[2026-05-30 08:00:17] On branch main
+[2026-05-30 08:00:17] Your branch is up to date with 'origin/main'.
+[2026-05-30 08:00:17] 
+[2026-05-30 08:00:17] Changes not staged for commit:
+[2026-05-30 08:00:17]   (use "git add <file>..." to update what will be committed)
+[2026-05-30 08:00:17]   (use "git restore <file>..." to discard changes in working directory)
+[2026-05-30 08:00:17] 	modified:   .git-auto-sync.log
+[2026-05-30 08:00:17] 
+[2026-05-30 08:00:17] no changes added to commit (use "git add" and/or "git commit -a")
+[2026-05-30 08:00:17] The stash entry is kept in case you need it again.
+[2026-05-30 08:00:17] ======== Auto Sync Completed ========
+[2026-05-30 20:00:11] ======== Auto Sync Started: Action=push, branch=main ========
