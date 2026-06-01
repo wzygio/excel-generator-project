@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime
+import re
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
@@ -76,6 +77,47 @@ class AnalysisQueryRequest(BaseModel):
 
 class AnalysisQueryParserError(Exception):
     """Raised when analysis query parsing fails."""
+
+
+def build_heuristic_analysis_request(
+    user_input: str,
+    today: date | None = None,
+) -> AnalysisQueryRequest | None:
+    """Build a conservative fallback request for common yield-analysis phrasing.
+
+    The LLM parser remains the primary path. This fallback only covers narrow,
+    high-confidence project phrases so local smoke tests and UI demos are not
+    blocked by transient LLM connectivity.
+    """
+    text = user_input.strip()
+    if not text:
+        return None
+
+    text_upper = text.upper()
+    product_models = sorted(set(re.findall(r"(?<![A-Z0-9])[A-Z]\d{3,}[A-Z0-9]*", text_upper)))
+    is_ct_yield = "CT" in text_upper and "良率" in text
+    is_trend = any(keyword in text for keyword in ["趋势", "变化", "波动"])
+    is_recent_week = any(keyword in text for keyword in ["近一周", "最近一周", "过去一周", "一周"])
+
+    if not (is_ct_yield and is_trend):
+        return None
+
+    current_day = today or date.today()
+    start_date = current_day - timedelta(days=6) if is_recent_week else None
+    file_keywords = ["月周天", "良率", "CT"]
+
+    return AnalysisQueryRequest(
+        source_file_type=ReportType.DAILY_YIELD,
+        file_keywords=file_keywords,
+        product_models=product_models or None,
+        start_date=start_date.isoformat() if start_date else None,
+        end_date=current_day.isoformat() if is_recent_week else None,
+        target_metrics=["CT良率", "日度良率"],
+        filter_conditions={"product_model": product_models[0]} if product_models else {},
+        analysis_logic="趋势分析",
+        user_intent=f"分析{','.join(product_models) if product_models else ''}日度CT良率变化趋势",
+        uncertainty_notes="LLM解析不可用时由项目内启发式规则生成，请在结果中核对。",
+    )
 
 
 ANALYSIS_QUERY_SYSTEM_PROMPT = """你是良率日报项目的数据分析需求解析助手。请把用户的自然语言分析需求转换为结构化 JSON。

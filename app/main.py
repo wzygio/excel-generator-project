@@ -11,11 +11,11 @@ from typing import Any
 import streamlit as st
 
 from app.utils.app_setup import initialize_app, print_startup_banner
-from yield_report.application.analysis_orchestrator import AnalysisOrchestrator
-from yield_report.application.orchestrator import (
-    DataAcquisitionOrchestrator,
-    UserQueryResult,
-)
+from yield_report.agent.spec_model import RunContext, SkillResult
+from yield_report.skills.data_analysis import tool as data_analysis_tool
+from yield_report.skills.data_analysis.models import DataAnalysisRequest
+from yield_report.skills.report_download import tool as report_download_tool
+from yield_report.skills.report_download.models import ReportDownloadRequest
 
 logger = logging.getLogger(__name__)
 RESULT_AREA_HEIGHT = 320
@@ -37,21 +37,13 @@ def init_app() -> Any:
     return config
 
 
-def init_download_orchestrator() -> DataAcquisitionOrchestrator:
-    """Create a fresh report-download orchestrator for each execution."""
-    return DataAcquisitionOrchestrator()
-
-
-@st.cache_resource
-def init_analysis_orchestrator() -> AnalysisOrchestrator:
-    """Create the data-analysis orchestrator."""
-    return AnalysisOrchestrator()
-
-
 def _init_session_state() -> None:
     defaults: dict[str, Any] = {
         "download_result_text": "",
         "analysis_result_text": "",
+        "analysis_step_text": "",
+        "analysis_memory_record_id": "",
+        "analysis_feedback_text": "",
         "report_result_text": "",
         "download_logs": [],
         "analysis_logs": [],
@@ -91,28 +83,97 @@ def _render_result_area(
     )
 
 
-def _format_download_result(result: UserQueryResult) -> str:
-    request = result.parsed_request
+def _new_run_context() -> RunContext:
+    return RunContext(
+        run_id=datetime.now().strftime("ui-%Y%m%d-%H%M%S"),
+        workspace=Path.cwd(),
+        output_dir=Path(APP_CONFIG.paths.output_dir),
+    )
+
+
+def _format_download_result(result: SkillResult) -> str:
+    request = result.data.get("parsed_request") or {}
+    files = result.data.get("files") or []
     lines = [
         result.summary,
         "",
         "解析结果",
-        f"- 报表类型: {request.report_type.value if request.report_type else '未指定'}",
-        f"- 开始日期: {request.start_date or '未指定'}",
-        f"- 结束日期: {request.end_date or '未指定'}",
-        f"- 产品型号: {', '.join(request.product_models) if request.product_models else '未指定'}",
-        f"- 用户意图: {request.user_intent or '未指定'}",
+        f"- 报表类型: {request.get('report_type') or '未指定'}",
+        f"- 开始日期: {request.get('start_date') or '未指定'}",
+        f"- 结束日期: {request.get('end_date') or '未指定'}",
+        f"- 产品型号: {_join_values(request.get('product_models'))}",
+        f"- 用户意图: {request.get('user_intent') or '未指定'}",
     ]
-    if request.uncertainty_notes:
-        lines.append(f"- 不确定信息: {request.uncertainty_notes}")
+    if request.get("uncertainty_notes"):
+        lines.append(f"- 不确定信息: {request['uncertainty_notes']}")
 
     lines.extend(["", "下载结果"])
-    for item in result.results:
-        status = "成功" if item.success else "失败"
-        detail = str(item.file_path) if item.success and item.file_path else item.error_message
-        lines.append(f"- {status}: {item.file_description} -> {detail}")
+    for item in files:
+        status = "成功" if item.get("success") else "失败"
+        detail = item.get("file_path") if item.get("success") else item.get("error_message")
+        lines.append(f"- {status}: {item.get('file_description') or '未命名文件'} -> {detail}")
 
     return "\n".join(lines)
+
+
+def _format_analysis_result(result: SkillResult) -> str:
+    request = result.data.get("parsed_request") or {}
+    lines: list[str] = []
+
+    if request:
+        lines.extend(
+            [
+                "解析结果",
+                f"- 数据源类型: {request.get('source_file_type') or '未指定'}",
+                f"- 产品型号: {_join_values(request.get('product_models'))}",
+                f"- 时间范围: {request.get('start_date') or '未指定'} ~ {request.get('end_date') or '未指定'}",
+                f"- 目标指标: {_join_values(request.get('target_metrics'))}",
+                f"- 分析逻辑: {request.get('analysis_logic') or '未指定'}",
+                f"- 用户意图: {request.get('user_intent') or '未指定'}",
+            ]
+        )
+        if request.get("uncertainty_notes"):
+            lines.append(f"- 不确定信息: {request['uncertainty_notes']}")
+
+    lines.extend(
+        [
+            "",
+            "执行结果",
+            f"- 状态: {'成功' if result.success else '失败'}",
+            f"- 策略: {result.data.get('strategy_used') or 'N/A'}",
+            f"- 数据文件: {result.data.get('source_file_path') or 'N/A'}",
+            f"- Memory记录: {result.data.get('memory_record_id') or '未生成'}",
+            "",
+            "分析结论",
+            result.data.get("result_text", "") if result.success else result.error.message if result.error else "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _format_analysis_steps(result: SkillResult) -> str:
+    steps = result.data.get("workflow_steps") or []
+    if not steps:
+        return "暂无步骤信息"
+
+    lines: list[str] = []
+    for index, step in enumerate(steps, start=1):
+        status = {
+            "success": "成功",
+            "warning": "警告",
+            "failed": "失败",
+        }.get(step.get("status"), step.get("status"))
+        lines.append(f"{index}. {step.get('name')} [{status}]")
+        lines.append(f"   {step.get('detail')}")
+    return "\n".join(lines)
+
+
+def _join_values(values: Any) -> str:
+    if not values:
+        return "未指定"
+    if isinstance(values, list):
+        return ", ".join(str(item) for item in values) if values else "未指定"
+    return str(values)
 
 
 def _render_download_tab() -> None:
@@ -131,7 +192,10 @@ def _render_download_tab() -> None:
         else:
             _append_log("download_logs", f"开始处理需求: {query.strip()}")
             try:
-                result = init_download_orchestrator().process_user_query(query.strip())
+                result = report_download_tool.run(
+                    ReportDownloadRequest(user_query=query.strip()),
+                    _new_run_context(),
+                )
                 st.session_state.download_result_text = _format_download_result(result)
                 _append_log("download_logs", result.summary)
             except Exception as exc:
@@ -149,37 +213,99 @@ def _render_download_tab() -> None:
 
 
 def _render_analysis_tab() -> None:
-    st.markdown("#### 需求输入框")
-    query = st.text_area(
-        "数据分析需求",
-        key="analysis_query",
-        height=120,
-        placeholder="请分析M678近一个月日度良率变化趋势",
-    )
+    st.markdown("#### 数据分析")
+    left_col, right_col = st.columns([1.15, 0.85], gap="large")
 
-    if st.button("执行数据分析", type="primary", use_container_width=True):
+    with left_col:
+        st.caption("输入自然语言需求，系统会依次完成需求解析、文件扫描/下载、解密、Schema提取和分析执行。")
+        query = st.text_area(
+            "数据分析需求",
+            key="analysis_query",
+            height=120,
+            placeholder="请分析M678近一周的日度CT良率变化趋势",
+        )
+        run_clicked = st.button("执行数据分析", type="primary", use_container_width=True)
+
+    with right_col:
+        with st.container(border=True):
+            st.markdown("##### 当前链路")
+            st.caption("模块二 Task2 验证路径")
+            st.markdown(
+                "- 需求解析\n"
+                "- Agent-Memory 匹配\n"
+                "- 本地文件扫描/缺失下载\n"
+                "- 解密优先读取\n"
+                "- CT良率趋势分析"
+            )
+
+    if run_clicked:
         if not query.strip():
             st.session_state.analysis_result_text = "请输入数据分析需求。"
+            st.session_state.analysis_step_text = ""
+            st.session_state.analysis_memory_record_id = ""
             _append_log("analysis_logs", "需求为空，未执行。", "WARN")
         else:
             _append_log("analysis_logs", f"开始处理需求: {query.strip()}")
             try:
-                result = init_analysis_orchestrator().analyze(query.strip())
-                st.session_state.analysis_result_text = (
-                    result.result_text if result.success else result.error_message
+                result = data_analysis_tool.run(
+                    DataAnalysisRequest(question=query.strip()),
+                    _new_run_context(),
                 )
-                _append_log("analysis_logs", result.summary())
+                st.session_state.analysis_result_text = _format_analysis_result(result)
+                st.session_state.analysis_step_text = _format_analysis_steps(result)
+                st.session_state.analysis_memory_record_id = (
+                    result.data.get("memory_record_id") or ""
+                )
+                st.session_state.analysis_feedback_text = ""
+                _append_log("analysis_logs", result.summary)
             except Exception as exc:
                 logger.exception("数据分析流程失败")
                 st.session_state.analysis_result_text = f"数据分析失败: {exc}"
+                st.session_state.analysis_step_text = ""
+                st.session_state.analysis_memory_record_id = ""
                 _append_log("analysis_logs", f"数据分析失败: {exc}", "ERROR")
 
-    st.markdown("#### 结果")
-    _render_result_area(
-        "数据分析结果",
-        source_key="analysis_result_text",
-        widget_key="analysis_result_view",
-    )
+    step_col, result_col = st.columns([0.9, 1.3], gap="large")
+    with step_col:
+        st.markdown("#### 执行步骤")
+        _render_result_area(
+            "数据分析步骤",
+            source_key="analysis_step_text",
+            widget_key="analysis_step_view",
+            height=RESULT_AREA_HEIGHT,
+        )
+
+        record_id = st.session_state.get("analysis_memory_record_id", "")
+        if record_id:
+            st.markdown("#### Memory反馈")
+            confirm_col, reject_col = st.columns(2)
+            if confirm_col.button("确认记忆", use_container_width=True):
+                try:
+                    data_analysis_tool.confirm_memory(record_id)
+                    st.session_state.analysis_feedback_text = f"已确认记忆: {record_id}"
+                    _append_log("analysis_logs", st.session_state.analysis_feedback_text)
+                except Exception as exc:
+                    st.session_state.analysis_feedback_text = f"确认失败: {exc}"
+                    _append_log("analysis_logs", st.session_state.analysis_feedback_text, "ERROR")
+            if reject_col.button("拒绝记忆", use_container_width=True):
+                try:
+                    data_analysis_tool.reject_memory(record_id)
+                    st.session_state.analysis_feedback_text = f"已拒绝记忆: {record_id}"
+                    _append_log("analysis_logs", st.session_state.analysis_feedback_text)
+                except Exception as exc:
+                    st.session_state.analysis_feedback_text = f"拒绝失败: {exc}"
+                    _append_log("analysis_logs", st.session_state.analysis_feedback_text, "ERROR")
+            if st.session_state.analysis_feedback_text:
+                st.info(st.session_state.analysis_feedback_text)
+
+    with result_col:
+        st.markdown("#### 结果")
+        _render_result_area(
+            "数据分析结果",
+            source_key="analysis_result_text",
+            widget_key="analysis_result_view",
+            height=420,
+        )
     _render_logs("analysis_logs")
 
 

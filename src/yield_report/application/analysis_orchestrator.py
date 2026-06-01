@@ -11,6 +11,7 @@ from yield_report.core.analysis_query_parser import (
     AnalysisQueryParser,
     AnalysisQueryParserError,
     AnalysisQueryRequest,
+    build_heuristic_analysis_request,
 )
 from yield_report.core.analysis_selector import (
     AnalysisStrategy,
@@ -29,8 +30,21 @@ from yield_report.infrastructure.analysis_memory import (
 )
 from yield_report.infrastructure.code_executor import CodeExecutor
 from yield_report.infrastructure.code_generator import CodeGenerator, extract_schema
+from yield_report.infrastructure.ct_yield_trend_analyzer import (
+    CtYieldTrendAnalysisError,
+    CtYieldTrendAnalyzer,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class AnalysisWorkflowStep:
+    """One observable workflow step for UI diagnostics."""
+
+    name: str
+    status: str
+    detail: str
 
 
 @dataclass
@@ -47,6 +61,7 @@ class AnalysisResult:
     source_file_path: Path | None = None
     memory_record_id: str | None = None
     memory_candidates: list[AnalysisMemoryCandidate] = field(default_factory=list)
+    workflow_steps: list[AnalysisWorkflowStep] = field(default_factory=list)
 
     def summary(self) -> str:
         if not self.success:
@@ -93,6 +108,7 @@ class AnalysisOrchestrator:
         selector: AnalysisStrategySelector | None = None,
         code_generator: CodeGenerator | None = None,
         code_executor: CodeExecutor | None = None,
+        ct_trend_analyzer: CtYieldTrendAnalyzer | None = None,
     ) -> None:
         self._llm_provider = llm_provider or "deepseek"
         self._query_parser = query_parser or AnalysisQueryParser(provider=self._llm_provider)
@@ -101,6 +117,7 @@ class AnalysisOrchestrator:
         self._selector = selector or AnalysisStrategySelector(provider=self._llm_provider)
         self._code_generator = code_generator or CodeGenerator()
         self._code_executor = code_executor or CodeExecutor()
+        self._ct_trend_analyzer = ct_trend_analyzer or CtYieldTrendAnalyzer()
 
     def analyze(
         self,
@@ -109,21 +126,69 @@ class AnalysisOrchestrator:
         file_name: str | None = None,
     ) -> AnalysisResult:
         """Run the complete module-2 analysis workflow."""
+        workflow_steps: list[AnalysisWorkflowStep] = []
         try:
             parsed_request = self._query_parser.parse(
                 user_query,
                 provider=self._llm_provider,
             )
-        except AnalysisQueryParserError as exc:
-            if file_path is None and file_name is None:
-                return AnalysisResult(success=False, error_message=f"需求解析失败: {exc}")
-            logger.warning("Analysis query parsing failed; continuing with explicit file: %s", exc)
-            parsed_request = AnalysisQueryRequest(
-                user_intent=user_query,
-                uncertainty_notes=f"需求解析失败，已使用显式文件继续: {exc}",
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="需求解析",
+                    status="success",
+                    detail=_describe_request(parsed_request),
+                )
             )
+        except AnalysisQueryParserError as exc:
+            parsed_request = build_heuristic_analysis_request(user_query)
+            if parsed_request is not None:
+                workflow_steps.append(
+                    AnalysisWorkflowStep(
+                        name="需求解析",
+                        status="warning",
+                        detail=f"LLM解析失败，已使用启发式解析兜底: {_describe_request(parsed_request)}",
+                    )
+                )
+            elif file_path is not None or file_name is not None:
+                logger.warning("Analysis query parsing failed; continuing with explicit file: %s", exc)
+                parsed_request = AnalysisQueryRequest(
+                    user_intent=user_query,
+                    uncertainty_notes=f"需求解析失败，已使用显式文件继续: {exc}",
+                )
+                workflow_steps.append(
+                    AnalysisWorkflowStep(
+                        name="需求解析",
+                        status="warning",
+                        detail=f"需求解析失败，使用显式文件继续: {exc}",
+                    )
+                )
+            else:
+                workflow_steps.append(
+                    AnalysisWorkflowStep(name="需求解析", status="failed", detail=str(exc))
+                )
+                return AnalysisResult(
+                    success=False,
+                    workflow_steps=workflow_steps,
+                    error_message=f"需求解析失败: {exc}",
+                )
 
         memory_candidates = self._memory_store.find_candidates(parsed_request)
+        if memory_candidates:
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="Agent-Memory",
+                    status="success",
+                    detail=f"命中 {len(memory_candidates)} 条已确认记忆，优先用于文件匹配。",
+                )
+            )
+        else:
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="Agent-Memory",
+                    status="success",
+                    detail="未命中已确认记忆，进入本地文件扫描。",
+                )
+            )
 
         try:
             resolved_file = self._file_resolver.resolve(
@@ -134,25 +199,50 @@ class AnalysisOrchestrator:
                 memory_candidates=memory_candidates,
             )
         except AnalysisFileResolveError as exc:
+            workflow_steps.append(
+                AnalysisWorkflowStep(name="文件扫描/下载/解密", status="failed", detail=str(exc))
+            )
             return AnalysisResult(
                 success=False,
                 parsed_request=parsed_request,
                 memory_candidates=memory_candidates,
+                workflow_steps=workflow_steps,
                 error_message=f"数据文件定位失败: {exc}",
             )
 
         logger.info("Analysis source resolved: %s (%s)", resolved_file.path, resolved_file.source)
+        workflow_steps.append(
+            AnalysisWorkflowStep(
+                name="文件扫描/下载/解密",
+                status="success",
+                detail=(
+                    f"source={resolved_file.source}; file={resolved_file.path}; "
+                    f"decrypted={resolved_file.was_decrypted}"
+                ),
+            )
+        )
 
         try:
-            schema = extract_schema(str(resolved_file.path))
+            schema = extract_schema(resolved_file.path)
         except Exception as exc:
+            workflow_steps.append(
+                AnalysisWorkflowStep(name="Schema提取", status="failed", detail=str(exc))
+            )
             return AnalysisResult(
                 success=False,
                 parsed_request=parsed_request,
                 source_file_path=resolved_file.path,
                 memory_candidates=memory_candidates,
+                workflow_steps=workflow_steps,
                 error_message=f"提取数据表 Schema 失败: {exc}",
             )
+        workflow_steps.append(
+            AnalysisWorkflowStep(
+                name="Schema提取",
+                status="success",
+                detail=f"Schema 长度 {len(schema)} 字符。",
+            )
+        )
 
         try:
             decision = self._selector.decide(
@@ -161,23 +251,78 @@ class AnalysisOrchestrator:
                 provider=self._llm_provider,
             )
         except Exception as exc:
-            return AnalysisResult(
-                success=False,
-                parsed_request=parsed_request,
-                source_file_path=resolved_file.path,
-                memory_candidates=memory_candidates,
-                schema=schema,
-                error_message=f"分析策略判定失败: {exc}",
+            if not self._can_run_ct_trend(user_query, parsed_request):
+                workflow_steps.append(
+                    AnalysisWorkflowStep(name="分析策略判定", status="failed", detail=str(exc))
+                )
+                return AnalysisResult(
+                    success=False,
+                    parsed_request=parsed_request,
+                    source_file_path=resolved_file.path,
+                    memory_candidates=memory_candidates,
+                    workflow_steps=workflow_steps,
+                    schema=schema,
+                    error_message=f"分析策略判定失败: {exc}",
+                )
+            decision = StrategyDecision(
+                strategy=AnalysisStrategy.CODE,
+                confidence=0.75,
+                reasoning=f"LLM策略判定失败，使用项目内 CT 趋势分析兜底: {exc}",
+                suggested_code_approach="读取 CT sheet 的 CT良率/CT产出数行并计算近一周趋势",
+            )
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="分析策略判定",
+                    status="warning",
+                    detail=decision.reasoning,
+                )
+            )
+        else:
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="分析策略判定",
+                    status="success",
+                    detail=f"strategy={decision.strategy}; confidence={decision.confidence:.2f}; {decision.reasoning}",
+                )
             )
 
-        if decision.strategy == AnalysisStrategy.CODE:
+        if self._can_run_ct_trend(user_query, parsed_request):
+            result = self._execute_ct_trend_analysis(
+                request=parsed_request,
+                resolved_file=resolved_file,
+                schema=schema,
+                decision=decision,
+            )
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="数据分析",
+                    status="success" if result.success else "failed",
+                    detail="使用内置 CT 良率趋势分析器。" if result.success else result.error_message,
+                )
+            )
+        elif decision.strategy == AnalysisStrategy.CODE:
             result = self._execute_code_analysis(user_query, resolved_file.path, schema, decision)
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="数据分析",
+                    status="success" if result.success else "failed",
+                    detail="使用 Claude 生成 pandas 代码执行。" if result.success else result.error_message,
+                )
+            )
         else:
             result = self._execute_llm_direct_analysis(user_query, schema, decision)
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="数据分析",
+                    status="success" if result.success else "failed",
+                    detail="使用 LLM 直接分析。" if result.success else result.error_message,
+                )
+            )
 
         result.parsed_request = parsed_request
         result.source_file_path = resolved_file.path
         result.memory_candidates = memory_candidates
+        result.workflow_steps = workflow_steps
 
         if result.success:
             self._record_pending_memory(
@@ -292,6 +437,47 @@ class AnalysisOrchestrator:
             schema=schema,
         )
 
+    def _execute_ct_trend_analysis(
+        self,
+        *,
+        request: AnalysisQueryRequest,
+        resolved_file: ResolvedAnalysisFile,
+        schema: str,
+        decision: StrategyDecision,
+    ) -> AnalysisResult:
+        product_model = (request.product_models or [""])[0]
+        if not product_model:
+            return AnalysisResult(
+                success=False,
+                strategy_used=AnalysisStrategy.CODE,
+                strategy_decision=decision,
+                schema=schema,
+                error_message="未识别到产品型号，无法执行 CT 良率趋势分析。",
+            )
+
+        try:
+            trend = self._ct_trend_analyzer.analyze(
+                file_path=resolved_file.path,
+                product_model=product_model,
+                days=7,
+            )
+        except CtYieldTrendAnalysisError as exc:
+            return AnalysisResult(
+                success=False,
+                strategy_used=AnalysisStrategy.CODE,
+                strategy_decision=decision,
+                schema=schema,
+                error_message=f"CT 良率趋势分析失败: {exc}",
+            )
+
+        return AnalysisResult(
+            success=True,
+            strategy_used=AnalysisStrategy.CODE,
+            strategy_decision=decision,
+            result_text=trend.result_text,
+            schema=schema,
+        )
+
     def _record_pending_memory(
         self,
         *,
@@ -315,3 +501,23 @@ class AnalysisOrchestrator:
             return
 
         result.memory_record_id = record.id
+
+    def _can_run_ct_trend(
+        self,
+        user_query: str,
+        request: AnalysisQueryRequest,
+    ) -> bool:
+        return self._ct_trend_analyzer.can_handle(
+            user_query=user_query,
+            target_metrics=request.target_metrics,
+            analysis_logic=request.analysis_logic,
+        )
+
+
+def _describe_request(request: AnalysisQueryRequest) -> str:
+    source = request.source_file_type.value if request.source_file_type else "未指定"
+    models = ", ".join(request.product_models) if request.product_models else "未指定"
+    metrics = ", ".join(request.target_metrics) if request.target_metrics else "未指定"
+    dates = f"{request.start_date or '未指定'} ~ {request.end_date or '未指定'}"
+    logic = request.analysis_logic or "未指定"
+    return f"source={source}; models={models}; dates={dates}; metrics={metrics}; logic={logic}"

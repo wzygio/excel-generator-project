@@ -10,6 +10,16 @@
 2. **数据分析**：Excel schema 提取、分析策略选择、代码生成执行或 LLM 直接分析。
 3. **日报生成入口**：UI 已保留 tab，完整编排待接入。
 
+当前架构正在从 DDD 倾向的横向分层迁移到 Agent-friendly 的纵向 Skill 结构。迁移目标不是取消现有能力，而是把已稳定的下载、分析和日报生成能力包装为 Codex/Runtime 可调用的工具。
+
+| 业务能力 | 目标 Skill | 说明 |
+|----------|------------|------|
+| 报表下载 / 数据获取 | `report_download` | 根据 Spec 中的报表类型、日期、产品型号和筛选条件下载或定位源表。 |
+| 数据分析 | `data_analysis` | 读取优先解密文件，执行趋势、异常、Gap、排序等分析，并返回结构化结论。 |
+| 日报生成 | `daily_report` | 根据分析结果和模板生成标准 Excel 日报。 |
+
+统一任务契约见 `docs/agent/spec_contract.md`，Skill 工具契约见 `docs/agent/skill_contract.md`。
+
 ## 2. 业务流程
 
 ```text
@@ -133,9 +143,23 @@ V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M
 - `resources/project_files/spotfire.xlsx` 中的产品型号列。
 - 未指定时，FineReport 下载层可以执行全选。
 
-## 4. DDD 分层设计
+## 4. 当前兼容分层与目标 Skill 迁移
 
-### 4.1 Application 层
+现有 `application/core/infrastructure` 仍是当前可运行兼容层。`src/yield_report/agent/` 和 `src/yield_report/skills/` 已新增，并用 Skill Tool 包装现有 orchestrator；后续再逐步迁移实现细节。
+
+目标调用方向：
+
+```text
+TaskSpec
+  -> Agent Runtime
+  -> skills/report_download/tool.py
+  -> skills/data_analysis/tool.py
+  -> skills/daily_report/tool.py
+```
+
+当前分层职责如下。
+
+### 4.1 Application 层（兼容）
 
 路径：`src/yield_report/application/`
 
@@ -146,7 +170,7 @@ V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M
 
 应用层负责“编排”，不放具体浏览器操作、Excel 解析细节或 LLM prompt 细节。
 
-### 4.2 Core 层
+### 4.2 Core 层（兼容）
 
 路径：`src/yield_report/core/`
 
@@ -159,7 +183,7 @@ V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M
 
 Core 层只放领域判断和模型，不直接访问文件系统、浏览器或 FineReport。
 
-### 4.3 Infrastructure 层
+### 4.3 Infrastructure 层（兼容）
 
 路径：`src/yield_report/infrastructure/`
 
@@ -172,6 +196,14 @@ Core 层只放领域判断和模型，不直接访问文件系统、浏览器或
 | `product_models.py` | 产品型号读取 |
 | `code_generator.py` | Excel schema 提取和 pandas 代码生成 |
 | `code_executor.py` | 生成代码执行与结果收集 |
+
+### 4.4 Skill 目标层
+
+| 目标路径 | 迁移来源 | 迁移原则 |
+|----------|----------|----------|
+| `src/yield_report/skills/report_download/` | `DataAcquisitionOrchestrator`、`FinereportClient`、`LocalFileLoader` | 已包装现有下载行为，提供结构化 request/result。 |
+| `src/yield_report/skills/data_analysis/` | `AnalysisOrchestrator`、分析文件解析器、分析器、memory | 已包装 Task1/Task2 数据分析能力，向下游返回可复用结构化数据。 |
+| `src/yield_report/skills/daily_report/` | V1 日报写入经验和新 V2 需求 | 已预留稳定 Skill 接口，具体生成逻辑后续接入。 |
 
 ## 5. FineReport RPA 设计约束
 

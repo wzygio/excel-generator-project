@@ -143,6 +143,16 @@ class DataAcquisitionOrchestrator:
                 summary=f"❌ 查询解析失败: {e}",
             )
 
+        return self.process_request(request)
+
+    def process_request(self, request: ReportQueryRequest) -> UserQueryResult:
+        """
+        Process an already-structured report acquisition request.
+
+        This is the Agent/Skill-friendly interface: Codex or the runtime can
+        produce a `ReportQueryRequest` from a Spec and execute the stable
+        acquisition workflow without forcing another natural-language parse.
+        """
         # Step 2: 根据 report_type 执行获取
         results: list[AcquisitionResult] = []
 

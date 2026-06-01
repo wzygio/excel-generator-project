@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-from yield_report.core.analysis_query_parser import AnalysisQueryParser
+from yield_report.core.analysis_query_parser import (
+    AnalysisQueryParser,
+    build_heuristic_analysis_request,
+)
 from yield_report.core.query_parser import ReportType
 
 
@@ -63,3 +66,13 @@ def test_analysis_query_request_accepts_report_type_alias() -> None:
         result = AnalysisQueryParser(provider="deepseek").parse("query")
 
     assert result.source_file_type == ReportType.DAILY_YIELD
+
+
+def test_heuristic_analysis_request_handles_ct_yield_trend_query() -> None:
+    result = build_heuristic_analysis_request("请分析M678近一周的日度CT良率变化趋势")
+
+    assert result is not None
+    assert result.source_file_type == ReportType.DAILY_YIELD
+    assert result.product_models == ["M678"]
+    assert "CT良率" in result.target_metrics
+    assert result.analysis_logic == "趋势分析"

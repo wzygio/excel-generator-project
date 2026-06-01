@@ -53,6 +53,11 @@ class FakeCodeExecutor:
         return ExecutionResult(success=True, stdout="analysis ok")
 
 
+class FakeCtTrendAnalyzer:
+    def can_handle(self, **kwargs) -> bool:
+        return False
+
+
 def _request() -> AnalysisQueryRequest:
     return AnalysisQueryRequest(
         source_file_type=ReportType.DAILY_YIELD,
@@ -87,6 +92,7 @@ def test_analysis_orchestrator_runs_full_pipeline_and_records_memory(
         selector=FakeSelector(),
         code_generator=FakeCodeGenerator(),
         code_executor=FakeCodeExecutor(),
+        ct_trend_analyzer=FakeCtTrendAnalyzer(),
     )
 
     result = orchestrator.analyze("请分析M678近一周的日度CT良率变化趋势")
@@ -95,6 +101,14 @@ def test_analysis_orchestrator_runs_full_pipeline_and_records_memory(
     assert result.result_text == "analysis ok"
     assert result.source_file_path == source
     assert result.memory_record_id is not None
+    assert [step.name for step in result.workflow_steps] == [
+        "需求解析",
+        "Agent-Memory",
+        "文件扫描/下载/解密",
+        "Schema提取",
+        "分析策略判定",
+        "数据分析",
+    ]
 
     records = memory.list_records()
     assert len(records) == 1

@@ -8,14 +8,62 @@
 2. **数据分析**：基于已下载 Excel 源表，提取 schema，选择代码执行或 LLM 直接分析策略。
 3. **日报生成**：面向最终 Excel 日报输出，当前 UI 已保留入口，完整 V2 编排仍待接入。
 
+2026-06-01 的 Agent 架构重构决策：项目不再以 DDD 横向分层作为第一入口，而是以 **Spec 驱动 + Skill 工具 + Codex Agent 核心** 作为目标架构。当前已新增 `src/yield_report/agent/` 和 `src/yield_report/skills/`，旧 `application/core/infrastructure` 作为兼容实现继续保留，并由 Skill 包装调用。
+
 仓库内同时保留两代实现：
 
 | 代际 | 路径 | 状态 |
 |------|------|------|
 | V2 主线 | `app/`, `src/shared_kernel/`, `src/yield_report/` | 当前开发主线 |
 | V1 兼容 | `src/excel_generator_project/` | 旧版 Excel 日报生成流水线，作为兼容和参考存在 |
+| Agent 主线 | `src/yield_report/agent/`, `src/yield_report/skills/`, `docs/agent/`, `specs/templates/` | Codex/Agent 友好的目标结构 |
 
-## 2. 技术栈
+## 2. Agent 目标架构
+
+目标运行链路：
+
+```text
+用户需求
+  -> TaskSpec / spec.yaml
+  -> Agent Runtime
+  -> Skill Tool
+  -> SkillResult
+  -> Trace / Memory / Output
+```
+
+核心原则：
+
+| 原则 | 说明 |
+|------|------|
+| Codex 作为 Agent 核心 | Codex 负责理解用户需求、维护 Spec、调用本地工具、在失败时修正流程。 |
+| Python Skill 承载稳定能力 | 高频、重复、可测试流程必须沉淀为 Python 工具，而不是让 LLM 每次自由发挥。 |
+| Spec 作为任务契约 | 用户修改流程时优先修改 `spec.yaml`，而不是改 UI 或 orchestrator 代码。 |
+| Trace 与 Memory 可追踪 | 每次运行应记录步骤、产物、错误和已确认的复用经验。 |
+| 渐进迁移 | 先新增 `agent/` 与 `skills/` 外壳，不立即删除旧分层模块。 |
+
+目标文档：
+
+| 文档 | 说明 |
+|------|------|
+| `docs/agent/architecture.md` | Agent/Skill/Spec 目标架构与迁移策略 |
+| `docs/agent/skill_contract.md` | Skill 输入输出、错误、产物、memory 契约 |
+| `docs/agent/spec_contract.md` | Spec 文件字段、workflow、outputs、trace、memory 契约 |
+| `specs/templates/daily_report_spec.yaml` | 日报任务 Spec 模板 |
+
+目标目录：
+
+```text
+src/yield_report/
+├── agent/                # Spec、Router、Runtime、Memory、Trace
+├── skills/               # report_download、data_analysis、daily_report
+├── adapters/             # Task2 后续迁移：FineReport、Excel、LLM 适配器
+├── shared/               # Task2 后续迁移：yield_report 内部共享工具
+├── application/          # 当前兼容层
+├── core/                 # 当前兼容层
+└── infrastructure/       # 当前兼容层
+```
+
+## 3. 技术栈
 
 | 组件 | 技术选型 |
 |------|----------|
@@ -30,8 +78,10 @@
 | 包管理 | uv |
 | 测试 | pytest |
 | 质量工具 | ruff / pyright |
+| 任务契约 | YAML Spec |
+| Agent 核心 | Codex（外部编排），Python 项目提供可调用工具 |
 
-## 3. 当前目录结构
+## 4. 当前目录结构
 
 ```text
 yield-report-generator/
@@ -43,6 +93,11 @@ yield-report-generator/
 │       └── reloader.py                 # 热重载辅助
 ├── config/
 │   └── global.yaml                     # Pydantic V2 配置输入
+├── docs/
+│   └── agent/                          # Agent/Skill/Spec 目标架构与契约
+├── specs/
+│   └── templates/
+│       └── daily_report_spec.yaml      # 日报任务 Spec 模板
 ├── src/
 │   ├── shared_kernel/
 │   │   ├── config.py                   # ConfigLoader
@@ -50,6 +105,8 @@ yield-report-generator/
 │   │   └── infrastructure/
 │   │       └── llm_handler.py          # LLMManager 单例
 │   ├── yield_report/
+│   │   ├── agent/                      # Codex/Runtime 调用契约与轻量运行时
+│   │   ├── skills/                     # 三个业务 Skill 入口
 │   │   ├── application/
 │   │   │   ├── orchestrator.py         # 报表下载/数据获取编排
 │   │   │   └── analysis_orchestrator.py # 数据分析编排
@@ -71,7 +128,7 @@ yield-report-generator/
 └── output/                             # 日报输出
 ```
 
-## 4. UI 架构
+## 5. UI 架构
 
 `app/main.py` 是当前唯一 Streamlit 入口。页面刻意精简为三个 tab：
 
@@ -83,9 +140,20 @@ yield-report-generator/
 
 每个 tab 只保留三类元素：需求输入框、结果框/下载按钮、默认折叠日志。旧版侧边栏、上传区、文件列表、历史记录和智能查询 tab 已从当前主 UI 移除。
 
-## 5. 分层职责
+目标 UI 将从“三个 tab”渐进收敛为 Agent 工作台：
 
-### 5.1 Shared Kernel
+```text
+用户输入
+  -> Spec 查看/修正
+  -> 运行步骤
+  -> 结果与产物
+```
+
+在 Task2 未完成前，当前三 tab UI 继续作为兼容入口。
+
+## 6. 当前分层职责
+
+### 6.1 Shared Kernel
 
 `src/shared_kernel/` 提供跨领域基础能力：
 
@@ -95,7 +163,7 @@ yield-report-generator/
 
 约束：业务模块不得直接创建 OpenAI/Gemini 客户端，必须通过 `llm_manager.chat()`。
 
-### 5.2 Yield Report / Core
+### 6.2 Yield Report / Core
 
 `src/yield_report/core/` 放纯领域判断：
 
@@ -104,7 +172,7 @@ yield-report-generator/
 
 约束：Core 层不直接读写文件、不操作浏览器、不依赖 FineReport RPA。
 
-### 5.3 Yield Report / Application
+### 6.3 Yield Report / Application
 
 `src/yield_report/application/` 是编排层：
 
@@ -119,7 +187,7 @@ yield-report-generator/
   - 调用 `AnalysisStrategySelector`
   - 选择代码生成执行或 LLM 直接分析
 
-### 5.4 Yield Report / Infrastructure
+### 6.4 Yield Report / Infrastructure
 
 `src/yield_report/infrastructure/` 放 IO、浏览器、Excel 和执行环境：
 
@@ -131,7 +199,7 @@ yield-report-generator/
 - `product_models.py`：从 `resources/project_files/spotfire.xlsx` 读取产品型号。
 - `code_generator.py` / `code_executor.py`：为数据分析提供 schema 提取、代码生成和执行能力。
 
-## 6. 报表下载数据流
+## 7. 报表下载数据流
 
 ```text
 用户输入
@@ -162,7 +230,7 @@ FINEREPORT_ENTRY_UUID
 - `FinereportClient` 会将 FineReport host 加入 `NO_PROXY`，避免代理影响内网连接。
 - DeepSeek/OpenAI SDK 在 SOCKS 代理环境下需要 `socksio` 依赖。
 
-## 7. 数据分析数据流
+## 8. 数据分析数据流
 
 ```text
 用户输入
@@ -183,7 +251,7 @@ FINEREPORT_ENTRY_UUID
 | `code` | 筛选、聚合、排序、趋势等明确数据操作 | 先生成 pandas 代码，再执行 |
 | `llm_direct` | 原因分析、异常判断、建议等需要推理的请求 | 直接把 schema/数据摘要交给 LLM 分析 |
 
-## 8. 源表与文件约定
+## 9. 源表与文件约定
 
 | 文件 | 来源 | 当前用途 |
 |------|------|----------|
@@ -194,7 +262,7 @@ FINEREPORT_ENTRY_UUID
 | 日良率Gap分析模板.xlsx | `resources/` | Gap 分析规则和模板 |
 | spotfire.xlsx | `resources/project_files/` | 产品型号来源 |
 
-## 9. 测试与验证
+## 10. 测试与验证
 
 当前关键测试：
 
@@ -204,6 +272,14 @@ uv run pytest tests/unit/test_data_acquisition_orchestrator.py -v --tb=short
 uv run pytest tests/unit/test_yield_download_service.py -v --tb=short
 uv run pytest tests/unit/test_finereport_client.py -v --tb=short
 uv run pytest tests/unit/test_analysis_selector.py tests/unit/test_code_generator.py tests/unit/test_code_executor.py -v --tb=short
+```
+
+Agent 架构迁移后的新增测试目录：
+
+```text
+tests/unit/agent/
+tests/unit/skills/
+tests/integration/
 ```
 
 常用质量检查：
@@ -219,9 +295,10 @@ UI 验证：
 uv run streamlit run app/main.py --server.port 8502
 ```
 
-## 10. 已知边界
+## 11. 已知边界
 
 - 日报生成 tab 当前是 UI 入口和下载按钮占位，完整 V2 日报编排尚未接入。
+- Agent Runtime 与 Skill 目录已接入；日报生成 Skill 当前为稳定占位接口，完整 V2 生成逻辑仍待实现。
 - FineReport RPA 依赖内网、Chrome、`.env` 账号和 `fr_web_automation` 包。
 - `resources/` 中下载文件可能包含筛选条件后缀；后续分析模块应按 `config/global.yaml` 的 pattern 或业务描述匹配，而不是依赖完全固定文件名。
 - 自动同步脚本必须在 pull 前保护本地改动，并且日志不得写入仓库工作区。

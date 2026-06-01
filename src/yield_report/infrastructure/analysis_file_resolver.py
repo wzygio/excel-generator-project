@@ -14,6 +14,7 @@ from yield_report.infrastructure.analysis_memory import AnalysisMemoryCandidate
 from yield_report.infrastructure.file_decryption import decrypt_excel_file
 
 logger = logging.getLogger(__name__)
+XLSX_MAGIC = b"PK\x03\x04"
 
 
 class AnalysisFileResolveError(Exception):
@@ -159,7 +160,14 @@ class AnalysisFileResolver:
                 scored.append((score, path))
 
         if scored:
-            scored.sort(key=lambda item: (item[0], self._path_priority(item[1])), reverse=True)
+            scored.sort(
+                key=lambda item: (
+                    item[0],
+                    self._standard_priority(item[1]),
+                    self._path_priority(item[1]),
+                ),
+                reverse=True,
+            )
             return scored[0][1]
 
         candidates = list(self._iter_excel_files())
@@ -286,6 +294,18 @@ class AnalysisFileResolver:
     def _path_priority(self, path: Path) -> float:
         return 1.0 if self._is_inside_decrypted_dir(path) else 0.0
 
+    @staticmethod
+    def _standard_priority(path: Path) -> float:
+        return 1.0 if _is_standard_xlsx(path) else 0.0
+
 
 def _norm(value: str) -> str:
     return value.lower().replace(" ", "")
+
+
+def _is_standard_xlsx(path: Path) -> bool:
+    try:
+        with Path(path).open("rb") as file:
+            return file.read(4) == XLSX_MAGIC
+    except OSError:
+        return False

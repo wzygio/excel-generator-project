@@ -8,7 +8,10 @@
 
 | 文档（约定路径） | 用途 | 何时阅读 |
 |------------------|------|----------|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 当前系统架构蓝图：UI、Application、Core、Infrastructure、Shared Kernel、V1兼容模块 | 首次进入项目 / 判断模块归属 / 修改跨层流程时 |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 当前系统架构蓝图：Agent目标架构、UI、Application、Core、Infrastructure、Shared Kernel、V1兼容模块 | 首次进入项目 / 判断模块归属 / 修改跨层流程时 |
+| [`docs/agent/architecture.md`](docs/agent/architecture.md) | Agent/Skill/Spec 目标架构：Codex作为Agent核心、Skill纵向切片、Runtime、Memory、Trace | 设计或重构 Agent 工作流 / 修改 `src/yield_report/agent/` 或 `src/yield_report/skills/` 时 |
+| [`docs/agent/skill_contract.md`](docs/agent/skill_contract.md) | Skill 工具契约：统一输入输出、错误码、产物、memory 候选、`SKILL.md` 写法 | 新增或包装 `report_download`、`data_analysis`、`daily_report` skill 时 |
+| [`docs/agent/spec_contract.md`](docs/agent/spec_contract.md) | Spec 文件契约：`specs/templates/`、`specs/runs/`、workflow、outputs、trace、memory | 生成/修改任务 Spec 或实现 Agent Runtime 前 |
 | [`docs/design/shared_kernel.md`](docs/design/shared_kernel.md) | Shared Kernel 设计：配置、LLM、日志 | 修改配置模型、配置加载、LLMManager、日志体系时 |
 | [`docs/design/yield_report_domain.md`](docs/design/yield_report_domain.md) | 良率报告领域设计：数据获取、数据分析、日报生成边界和源表说明 | 修改 `src/yield_report/`、报表下载、分析编排、领域规则时 |
 | [`docs/design/development_framework.md`](docs/design/development_framework.md) | 开发框架约定：EPCC Flow、TDD纪律、红线 | 开始编码前 / 需要了解开发规范时 |
@@ -26,6 +29,8 @@
 | 基础设施层 | [`src/yield_report/infrastructure/`](src/yield_report/infrastructure/) | FineReport RPA、文件加载、产品型号读取、代码生成/执行 |
 | Shared Kernel | [`src/shared_kernel/`](src/shared_kernel/) | Pydantic 配置模型、ConfigLoader、LLMManager |
 | V1兼容模块 | [`src/excel_generator_project/`](src/excel_generator_project/) | 旧版 Excel 日报生成流水线，仍作为参考和兼容实现存在 |
+| Agent目标结构 | [`src/yield_report/agent/`](src/yield_report/agent/) 与 [`src/yield_report/skills/`](src/yield_report/skills/) | Codex/Runtime 调用入口；旧 `application/core/infrastructure` 当前作为兼容实现存在 |
+| Spec模板 | [`specs/templates/daily_report_spec.yaml`](specs/templates/daily_report_spec.yaml) | 日报任务 Spec 模板，后续由 Codex/UI 复制到 `specs/runs/<run_id>/spec.yaml` |
 
 ## 3. 全局红线纪律
 
@@ -42,6 +47,8 @@
 | R07 | **新增依赖必须经过评估** | 必须在 [`pyproject.toml`](pyproject.toml) 中声明，并能说明用途；例如代理环境需要 `socksio` |
 | R08 | **类型标注强制** | 新增函数/方法必须包含类型标注，模块默认使用 `from __future__ import annotations` |
 | R09 | **不要把运行日志写进仓库工作区** | 自动脚本日志应放在仓库外，避免污染 git 状态和阻塞 pull/stash |
+| R10 | **Agent流程优先沉淀为Spec** | 固定或半固定流程不要写死在 UI；应先表达为 `TaskSpec` / `spec.yaml`，再由 Runtime/Skill 执行 |
+| R11 | **Skill必须有稳定工具契约** | 新增 Skill 必须提供结构化 request/result、错误码、产物路径和 Codex 可读 `SKILL.md` |
 
 ## 4. 快速命令
 
@@ -76,7 +83,7 @@ uv add --dev <package-name>
 | Python版本 | >= 3.11 |
 | 包管理器 | uv |
 | 构建工具 | Hatchling |
-| 架构风格 | 分层架构 + DDD 倾向 |
+| 架构风格 | Agent-friendly Skill/Spec 架构；当前兼容分层架构与 DDD 倾向 |
 | 前端 | Streamlit |
 | 报表自动化 | FineReport RPA via `fr_web_automation` |
 | 测试框架 | Pytest |

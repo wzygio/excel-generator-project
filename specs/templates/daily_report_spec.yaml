@@ -1,0 +1,101 @@
+schema_version: 1
+run_id: null
+status: draft
+created_at: null
+updated_at: null
+user_goal: "生成指定产品和日期的良率日报。"
+
+constraints:
+  codex_is_agent_core: true
+  prefer_existing_tools: true
+  require_user_confirmation_for_pending_memory: true
+
+inputs:
+  report_date: null
+  product_models: []
+  date_range:
+    start: null
+    end: null
+  reports:
+    - alias: daily_yield
+      report_type: daily_yield
+      required: true
+      filters:
+        product_models: []
+        end_date: null
+    - alias: batch_yield
+      report_type: batch_yield
+      required: false
+      filters:
+        product_models: []
+        start_date: null
+        end_date: null
+    - alias: ct_exception
+      report_type: ct_exception
+      required: false
+      filters: {}
+    - alias: target_decomposition
+      report_type: target_decomposition
+      required: false
+      filters: {}
+    - alias: gap_template
+      report_type: gap_template
+      required: false
+      filters: {}
+  local_files: []
+
+workflow:
+  - id: download_daily_yield
+    skill: report_download
+    input:
+      report_ref: daily_yield
+    save_as: daily_yield_file
+
+  - id: analyze_ct_trend
+    skill: data_analysis
+    depends_on:
+      - download_daily_yield
+    input:
+      question: "分析指定产品近一周日度 CT 良率变化趋势"
+      report_refs:
+        - daily_yield_file
+      metrics:
+        - CT良率
+      analysis_intent: trend
+    save_as: ct_trend_result
+
+  - id: generate_daily_report
+    skill: daily_report
+    depends_on:
+      - analyze_ct_trend
+    input:
+      sections:
+        - ct_trend
+      analysis_results:
+        - ct_trend_result
+    save_as: daily_report_file
+
+outputs:
+  daily_report:
+    required: true
+    format: xlsx
+    directory: output
+    filename_template: "良率日报_{report_date}_{product_models}.xlsx"
+  analysis_summary:
+    required: true
+    format: markdown
+  trace:
+    required: true
+    format: jsonl
+
+memory:
+  reuse_policy: confirmed_only
+  candidate_policy: record_pending
+  allowed_record_ids: []
+
+trace:
+  level: step
+  include_inputs: true
+  include_outputs: true
+  include_errors: true
+  path: trace.jsonl

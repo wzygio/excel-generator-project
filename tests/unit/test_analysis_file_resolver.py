@@ -43,6 +43,21 @@ def test_resolver_prefers_decrypted_file(tmp_path: Path) -> None:
     assert result.was_decrypted is False
 
 
+def test_resolver_prefers_standard_xlsx_when_multiple_decrypted_candidates(tmp_path: Path) -> None:
+    resources = tmp_path / "resources"
+    decrypted = resources / "decrypted_files"
+    decrypted.mkdir(parents=True)
+    encrypted = decrypted / "V3良率及不良率By月周天汇总报表.xlsx"
+    standard = decrypted / "V3良率及不良率By月周天汇总报表_decrypted.xlsx"
+    encrypted.write_bytes(b"\x00\x00\x00\x00encrypted")
+    standard.write_bytes(b"PK\x03\x04standard")
+
+    resolver = AnalysisFileResolver(resources_dir=resources)
+    result = resolver.resolve(request=_request(), user_query="query")
+
+    assert result.path == standard
+
+
 def test_resolver_decrypts_resource_file_when_needed(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
     resources.mkdir()
