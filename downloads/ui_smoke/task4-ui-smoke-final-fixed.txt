@@ -1,0 +1,42 @@
+Stop
+Deploy
+良率日报工作台
+
+报表下载
+
+数据分析
+
+日报生成
+
+需求输入框
+
+报表下载需求
+
+执行报表下载
+
+结果
+keyboard_arrow_right
+
+日志
+---RESULT---
+TEXTAREA_0: 我想要查询M678这款产品近两个月的良率，结束日期为2026-05-01
+---RESULT---
+TEXTAREA_1: ✅ 成功获取 1/1 份文件
+
+解析结果
+- 报表类型: daily_yield
+- 开始日期: 2026-03-01
+- 结束日期: 2026-05-01
+- 产品型号: M678
+- 用户意图: 查询M678产品近两个月的良率数据
+
+下载结果
+- 成功: V3良率及不良率By月周天汇总报表 -> resources\V3良率及不良率By月周天汇总报表.xlsx
+---RESULT---
+TEXTAREA_2: 
+---RESULT---
+TEXTAREA_3: 
+---RESULT---
+TEXTAREA_4: 
+---RESULT---
+TEXTAREA_5: 

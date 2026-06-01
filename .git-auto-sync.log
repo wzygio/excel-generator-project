@@ -120,3 +120,41 @@
 [2026-05-31 08:00:15] The stash entry is kept in case you need it again.
 [2026-05-31 08:00:15] ======== Auto Sync Completed ========
 [2026-05-31 20:00:09] ======== Auto Sync Started: Action=push, branch=main ========
+[2026-06-01 08:00:14] From https://github.com/wzygio/excel-generator-project
+[2026-06-01 08:00:14]  * branch            main       -> FETCH_HEAD
+[2026-06-01 08:00:15] Already up to date.
+[2026-06-01 08:00:15] Restoring stashed changes...
+[2026-06-01 08:00:15] error: Your local changes to the following files would be overwritten by merge:
+[2026-06-01 08:00:15] 	.git-auto-sync.log
+[2026-06-01 08:00:15] Please commit your changes or stash them before you merge.
+[2026-06-01 08:00:15] Aborting
+[2026-06-01 08:00:15] On branch main
+[2026-06-01 08:00:15] Your branch is up to date with 'origin/main'.
+[2026-06-01 08:00:15] 
+[2026-06-01 08:00:15] Changes not staged for commit:
+[2026-06-01 08:00:15]   (use "git add <file>..." to update what will be committed)
+[2026-06-01 08:00:15]   (use "git restore <file>..." to discard changes in working directory)
+[2026-06-01 08:00:15] 	modified:   .git-auto-sync.log
+[2026-06-01 08:00:15] 
+[2026-06-01 08:00:15] Untracked files:
+[2026-06-01 08:00:15]   (use "git add <file>..." to include in what will be committed)
+[2026-06-01 08:00:15] 	.playwright-mcp/
+[2026-06-01 08:00:15] 	docs/design/business_boundary.md
+[2026-06-01 08:00:15] 	docs/design/development_framework.md
+[2026-06-01 08:00:15] 	docs/design/shared_kernel.md
+[2026-06-01 08:00:15] 	"docs/plans/\350\241\250\347\273\223\346\236\204\346\263\250\345\205\245.md"
+[2026-06-01 08:00:15] 	docs/project_files/ct_sheet_schema.md
+[2026-06-01 08:00:15] 	docs/prompt/design-UI_dev.md
+[2026-06-01 08:00:15] 	docs/prompt/design-fr_rpa.md
+[2026-06-01 08:00:15] 	docs/prompt/install-browser_control.md
+[2026-06-01 08:00:15] 	downloads/fr_test3_retry_multi_enter/
+[2026-06-01 08:00:15] 	downloads/rpa_debug/
+[2026-06-01 08:00:15] 	downloads/ui_smoke/
+[2026-06-01 08:00:15] 	"resources/V3\350\211\257\347\216\207\345\217\212\344\270\215\350\211\257\347\216\207By\346\234\210\345\221\250\345\244\251\346\261\207\346\200\273\346\212\245\350\241\250.xlsx"
+[2026-06-01 08:00:15] 	tests/unit/test_data_acquisition_orchestrator.py
+[2026-06-01 08:00:15] 	tests/unit/test_yield_download_service.py
+[2026-06-01 08:00:15] 	yield-workbench-task3.png
+[2026-06-01 08:00:15] 
+[2026-06-01 08:00:15] no changes added to commit (use "git add" and/or "git commit -a")
+[2026-06-01 08:00:15] The stash entry is kept in case you need it again.
+[2026-06-01 08:00:15] ======== Auto Sync Completed ========
