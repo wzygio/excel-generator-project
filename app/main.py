@@ -12,6 +12,8 @@ import streamlit as st
 
 from app.utils.app_setup import initialize_app, print_startup_banner
 from yield_report.agent.spec_model import RunContext, SkillResult
+from yield_report.skills.daily_report import tool as daily_report_tool
+from yield_report.skills.daily_report.models import DailyReportRequest
 from yield_report.skills.data_analysis import tool as data_analysis_tool
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
 from yield_report.skills.report_download import tool as report_download_tool
@@ -19,6 +21,7 @@ from yield_report.skills.report_download.models import ReportDownloadRequest
 
 logger = logging.getLogger(__name__)
 RESULT_AREA_HEIGHT = 320
+REPORT_OUTPUT_NAME = "daily_report_output.xlsx"
 
 
 st.set_page_config(
@@ -45,6 +48,7 @@ def _init_session_state() -> None:
         "analysis_memory_record_id": "",
         "analysis_feedback_text": "",
         "report_result_text": "",
+        "report_artifact_paths": {},
         "download_logs": [],
         "analysis_logs": [],
         "report_logs": [],
@@ -165,6 +169,41 @@ def _format_analysis_steps(result: SkillResult) -> str:
         }.get(step.get("status"), step.get("status"))
         lines.append(f"{index}. {step.get('name')} [{status}]")
         lines.append(f"   {step.get('detail')}")
+    return "\n".join(lines)
+
+
+def _format_report_result(result: SkillResult) -> str:
+    products = result.data.get("products") or []
+    source_files = result.data.get("source_files") or {}
+    artifacts = result.artifacts or []
+    lines = [
+        result.summary,
+        "",
+        "执行结果",
+        f"- 状态: {'成功' if result.success else '失败'}",
+        f"- 日报日期: {result.data.get('report_date') or 'N/A'}",
+        f"- 当日过货产品数: {len(products)}",
+        "",
+        "源文件",
+    ]
+    if source_files:
+        for alias, path in source_files.items():
+            lines.append(f"- {alias}: {path}")
+    else:
+        lines.append("- 未记录")
+
+    lines.extend(["", "产物"])
+    if artifacts:
+        for artifact in artifacts:
+            lines.append(f"- {artifact.kind}: {artifact.path}")
+    else:
+        lines.append("- 未生成")
+
+    warnings = result.warnings or []
+    if warnings:
+        lines.extend(["", "Warnings"])
+        lines.extend(f"- {warning}" for warning in warnings)
+
     return "\n".join(lines)
 
 
@@ -310,30 +349,84 @@ def _render_analysis_tab() -> None:
 
 
 def _render_report_tab() -> None:
-    st.markdown("#### 需求输入框")
-    request_text = st.text_area(
-        "日报生成需求",
-        key="report_query",
-        height=120,
-        placeholder="根据已下载源表生成今日良率日报",
+    st.markdown("#### 一键生成日报")
+    st.caption(
+        "从 resources/spotfire.xlsx 识别当日过货产品，读取良率、目标和异常源表，生成 Excel 日报。"
     )
 
-    if st.button("生成日报", type="primary", use_container_width=True):
-        _append_log("report_logs", f"收到日报生成需求: {request_text.strip() or '未填写'}")
-        st.session_state.report_result_text = "日报生成流程尚未接入 V2 编排器。"
-        _append_log("report_logs", "日报生成流程尚未接入 V2 编排器。", "WARN")
+    left_col, right_col = st.columns([1.1, 0.9], gap="large")
+    with left_col:
+        request_text = st.text_area(
+            "日报生成需求",
+            key="report_query",
+            height=120,
+            placeholder="可选：填写备注。直接点击“一键生成日报”即可执行默认日报流程。",
+        )
+        run_clicked = st.button("一键生成日报", type="primary", use_container_width=True)
+
+    with right_col:
+        with st.container(border=True):
+            st.markdown("##### 默认流程")
+            st.markdown(
+                "- 读取 `resources/spotfire.xlsx`\n"
+                "- 提取当日过货产品\n"
+                "- 执行 Gap / 趋势 / 异常分析\n"
+                "- 输出 Excel + JSON + Markdown"
+            )
+
+    if run_clicked:
+        _append_log("report_logs", f"收到日报生成需求: {request_text.strip() or '默认日报流程'}")
+        try:
+            result = daily_report_tool.run(
+                DailyReportRequest(
+                    output_name=REPORT_OUTPUT_NAME,
+                    output_dir=Path(APP_CONFIG.paths.output_dir),
+                    emit_intermediate_artifacts=True,
+                ),
+                _new_run_context(),
+            )
+            st.session_state.report_result_text = _format_report_result(result)
+            st.session_state.report_artifact_paths = {
+                artifact.kind: str(artifact.path)
+                for artifact in result.artifacts
+            }
+            _append_log("report_logs", result.summary)
+            if not result.success and result.error:
+                _append_log("report_logs", result.error.message, "ERROR")
+        except Exception as exc:
+            logger.exception("日报生成流程失败")
+            st.session_state.report_result_text = f"日报生成失败: {exc}"
+            st.session_state.report_artifact_paths = {}
+            _append_log("report_logs", f"日报生成失败: {exc}", "ERROR")
 
     st.markdown("#### 结果")
-    output_path = Path(APP_CONFIG.paths.output_dir) / APP_CONFIG.paths.output_file
-    if output_path.exists():
-        with output_path.open("rb") as file:
+    artifact_paths = st.session_state.get("report_artifact_paths", {})
+    excel_path_text = artifact_paths.get("excel")
+    excel_path = Path(excel_path_text) if excel_path_text else None
+    if excel_path is not None and excel_path.exists():
+        with excel_path.open("rb") as file:
             st.download_button(
-                "下载日报",
+                "下载日报 Excel",
                 data=file,
-                file_name=APP_CONFIG.paths.output_file,
+                file_name=APP_CONFIG.paths.output_file or excel_path.name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
+    sidecar_cols = st.columns(2)
+    for index, kind in enumerate(["json", "markdown"]):
+        path_text = artifact_paths.get(kind)
+        if not path_text:
+            continue
+        path = Path(path_text)
+        if path.exists():
+            with path.open("rb") as file:
+                sidecar_cols[index].download_button(
+                    f"下载{kind.upper()}",
+                    data=file,
+                    file_name=path.name,
+                    mime="application/octet-stream",
+                    use_container_width=True,
+                )
     _render_result_area(
         "日报生成结果",
         source_key="report_result_text",

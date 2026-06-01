@@ -12,6 +12,6 @@ request_model = DailyReportRequest
 
 
 def run(request: DailyReportRequest, context: RunContext) -> SkillResult:
-    result = execute_daily_report(request)
+    result = execute_daily_report(request, context=context)
     context.remember("last_daily_report", result)
     return result

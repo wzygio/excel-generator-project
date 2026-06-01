@@ -1,27 +1,55 @@
-# 虚拟环境
+# 浏览器自动化产物：/.playwright-cli/、/.playwright-mcp/
+# Python/工具缓存：__pycache__/、/.pytest_cache/、/.ruff_cache/
+# 本地环境：/.venv/
+# 日志：logs/、*.log、/.git-auto-sync.log
+# 运行输出：/output/、/downloads/、/daily_reports/
+# 解密产物：/resources/decrypted_files/
+# 本地数据/临时运行：/data/、/specs/runs/
+# 根目录 smoke 截图：/*-smoke*.png、/task*-*.png
+# IDE/密钥/系统文件：/.vscode/、/.idea/、.env、Thumbs.db、.DS_Store
+
+# Python virtual environments
+/.venv/
 /excel-generator-project/
-.venv/
 
-# 日志和输出
-logs/
-.output/
-
-# Python 缓存
+# Python caches and test/tool caches
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+/.pytest_cache/
+/.ruff_cache/
 
-# IDE 配置文件
-.vscode/
-.idea/
+# Browser automation artifacts
+/.playwright-cli/
+/.playwright-mcp/
 
-# 敏感信息
+# Logs
+logs/
+*.log
+/.git-auto-sync.log
+
+# Runtime outputs and generated reports
+/output/
+/downloads/
+/daily_reports/
+/resources/decrypted_files/
+
+# Temporary or local data
+/data/
+/data/temp/
+/specs/runs/
+
+# Smoke-test screenshots generated at the project root
+/*-smoke*.png
+/task*-*.png
+
+# IDE and local agent configuration
+/.vscode/
+/.idea/
+
+# Secrets
 .env
 
-# 临时数据
-data/temp/
-data/
-specs/runs/
-
-# 操作系统文件
+# Operating system files
 Thumbs.db
 .DS_Store

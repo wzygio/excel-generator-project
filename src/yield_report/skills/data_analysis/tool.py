@@ -14,7 +14,7 @@ request_model = DataAnalysisRequest
 
 
 def run(request: DataAnalysisRequest, context: RunContext) -> SkillResult:
-    result = implementation.execute_data_analysis(request)
+    result = implementation.execute_data_analysis(request, context=context)
     context.remember("last_data_analysis", result)
     return result
 

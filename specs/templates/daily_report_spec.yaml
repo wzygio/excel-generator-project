@@ -42,37 +42,32 @@ inputs:
       report_type: gap_template
       required: false
       filters: {}
-  local_files: []
+  local_files:
+    - alias: spotfire
+      path: resources/spotfire.xlsx
+    - alias: daily_yield
+      path: resources/V3良率及不良率By月周天汇总报表.xlsx
+    - alias: target_decomposition
+      path: resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx
+    - alias: ct_exception
+      path: resources/CT良率异常波动管理表.xlsx
+    - alias: code_mapping
+      path: resources/大数据值班当日新增不良HL模板.xlsx
 
 workflow:
-  - id: download_daily_yield
-    skill: report_download
-    input:
-      report_ref: daily_yield
-    save_as: daily_yield_file
-
-  - id: analyze_ct_trend
-    skill: data_analysis
-    depends_on:
-      - download_daily_yield
-    input:
-      question: "分析指定产品近一周日度 CT 良率变化趋势"
-      report_refs:
-        - daily_yield_file
-      metrics:
-        - CT良率
-      analysis_intent: trend
-    save_as: ct_trend_result
-
   - id: generate_daily_report
     skill: daily_report
-    depends_on:
-      - analyze_ct_trend
     input:
+      report_date: null
+      product_models: []
+      template_ref: docs/project_files/V3良率日报每日异常填报表.xlsx
       sections:
-        - ct_trend
-      analysis_results:
-        - ct_trend_result
+        - gap
+        - trend
+        - known_exception
+        - new_exception
+      output_name: null
+      emit_intermediate_artifacts: true
     save_as: daily_report_file
 
 outputs:

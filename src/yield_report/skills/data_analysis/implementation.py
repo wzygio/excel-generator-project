@@ -8,10 +8,12 @@ from typing import Any
 from yield_report.agent.spec_model import (
     ArtifactRef,
     MemoryCandidate,
+    RunContext,
     SkillError,
     SkillResult,
 )
 from yield_report.application.analysis_orchestrator import AnalysisOrchestrator
+from yield_report.skills.data_analysis.daily_report_analysis import run_daily_report_analysis
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
 
 TOOL_NAME = "data_analysis"
@@ -20,8 +22,12 @@ TOOL_NAME = "data_analysis"
 def execute_data_analysis(
     request: DataAnalysisRequest,
     orchestrator: AnalysisOrchestrator | None = None,
+    context: RunContext | None = None,
 ) -> SkillResult:
     """Run data analysis through the existing module-2 orchestrator."""
+    if request.analysis_kind == "daily_report":
+        return run_daily_report_analysis(request, context=context)
+
     orchestrator = orchestrator or AnalysisOrchestrator()
     file_path = request.file_path or _first_report_path(request.report_refs)
     question = _compose_question(request)

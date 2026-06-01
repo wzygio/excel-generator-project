@@ -12,6 +12,11 @@ class DataAnalysisRequest(BaseModel):
     """Structured request for module-2 data analysis."""
 
     question: str = ""
+    analysis_kind: str = ""
+    report_date: str | None = None
+    sections: list[str] = Field(default_factory=list)
+    source_files: dict[str, Path] = Field(default_factory=dict)
+    daily_report_products: list[dict[str, Any]] = Field(default_factory=list)
     report_refs: list[Any] = Field(default_factory=list)
     file_path: Path | None = None
     file_name: str | None = None
