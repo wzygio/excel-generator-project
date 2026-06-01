@@ -1,5 +1,16 @@
 [
   "tests/test_regex_patterns.py::test_regex_patterns",
+  "tests/unit/test_analysis_file_resolver.py::test_resolver_calls_acquisition_when_no_local_file",
+  "tests/unit/test_analysis_file_resolver.py::test_resolver_decrypts_resource_file_when_needed",
+  "tests/unit/test_analysis_file_resolver.py::test_resolver_does_not_treat_decrypted_priority_as_match",
+  "tests/unit/test_analysis_file_resolver.py::test_resolver_prefers_decrypted_file",
+  "tests/unit/test_analysis_file_resolver.py::test_resolver_uses_memory_candidate_before_fuzzy_search",
+  "tests/unit/test_analysis_memory.py::test_analysis_memory_records_pending_and_confirms",
+  "tests/unit/test_analysis_memory.py::test_analysis_memory_reject_excludes_from_candidates",
+  "tests/unit/test_analysis_orchestrator.py::test_analysis_orchestrator_runs_full_pipeline_and_records_memory",
+  "tests/unit/test_analysis_query_parser.py::test_analysis_query_parser_cleans_markdown_code_block",
+  "tests/unit/test_analysis_query_parser.py::test_analysis_query_parser_extracts_task2_style_query",
+  "tests/unit/test_analysis_query_parser.py::test_analysis_query_request_accepts_report_type_alias",
   "tests/unit/test_analysis_selector.py::TestAnalysisStrategySelector::test_clean_response_removes_markdown",
   "tests/unit/test_analysis_selector.py::TestAnalysisStrategySelector::test_clean_response_strips_whitespace",
   "tests/unit/test_analysis_selector.py::TestAnalysisStrategySelector::test_decide_code_strategy_for_clear_query",
@@ -69,6 +80,11 @@
   "tests/unit/test_config_loader.py::TestLoadYamlFile::test_load_nonexistent_file",
   "tests/unit/test_config_loader.py::TestLoadYamlFile::test_load_valid_yaml",
   "tests/unit/test_config_loader.py::TestProductConfigOverride::test_product_config_merge",
+  "tests/unit/test_data_acquisition_orchestrator.py::test_task2_query_injected_into_report_download_interface",
+  "tests/unit/test_file_decryption.py::test_decrypt_excel_file_copies_standard_xlsx_to_output_dir",
+  "tests/unit/test_finereport_client.py::test_batch_report_filename_appends_multiple_filter_conditions",
+  "tests/unit/test_finereport_client.py::test_daily_report_filename_appends_filter_conditions",
+  "tests/unit/test_finereport_client.py::test_filter_filename_uses_all_when_product_models_are_unspecified",
   "tests/unit/test_query_parser.py::TestCleanResponse::test_clean_json_no_codeblock",
   "tests/unit/test_query_parser.py::TestCleanResponse::test_clean_json_with_codeblock",
   "tests/unit/test_query_parser.py::TestCleanResponse::test_clean_json_with_lang_prefix",
@@ -95,5 +111,7 @@
   "tests/unit/test_query_parser.py::TestReportQueryRequest::test_valid_request_minimal",
   "tests/unit/test_query_parser.py::TestReportType::test_all_report_types_have_meta",
   "tests/unit/test_query_parser.py::TestReportType::test_report_type_str",
-  "tests/unit/test_query_parser.py::TestReportType::test_report_type_values"
+  "tests/unit/test_query_parser.py::TestReportType::test_report_type_values",
+  "tests/unit/test_yield_download_service.py::test_download_batch_yield_passes_product_models",
+  "tests/unit/test_yield_download_service.py::test_download_daily_yield_passes_product_models"
 ]

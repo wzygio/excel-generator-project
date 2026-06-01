@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from fr_web_automation.application.download_service import DownloadService
 from fr_web_automation.config import WebAutomationConfig
+
 from yield_report.infrastructure.yield_portal_adapter import (
     YieldPortalAdapter,
 )
@@ -32,15 +33,16 @@ logger = logging.getLogger("YieldDownloadService")
 # 报表名称（必须与 FineReport 门户中的名称精确匹配）
 DAILY_YIELD_REPORT_NAME = "V3良率及不良率By月周天汇总报表"
 BATCH_YIELD_REPORT_NAME = "V3良率及不良率By批次汇总报表"
+YIELD_REPORT_DIRECTORY = "目录/良率监控/综合良率"
 
 # 默认保存文件名
 DAILY_YIELD_FILENAME = "V3良率及不良率By月周天汇总报表.xlsx"
 BATCH_YIELD_FILENAME = "V3良率及不良率By批次汇总报表.xlsx"
 
 # 参数面板标签文本（可通过此处调整以适配实际 UI）
-LABEL_END_DATE = "结束日期:"
-LABEL_START_DATE = "开始日期:"
-LABEL_PRODUCT_MODEL = "产品型号:"
+LABEL_END_DATE = "结束日期："
+LABEL_START_DATE = "开始日期："
+LABEL_PRODUCT_MODEL = "产品型号："
 
 # 等待超时（毫秒）
 WAIT_FOR_REPORT_TIMEOUT = 180000  # 3 分钟，大数据量报表可能需要较长时间
@@ -114,11 +116,14 @@ class YieldDownloadService(DownloadService):
         adapter = self._get_adapter()
 
         try:
-            self._navigate_to_report(DAILY_YIELD_REPORT_NAME)
+            self._navigate_to_report(
+                DAILY_YIELD_REPORT_NAME,
+                report_path=YIELD_REPORT_DIRECTORY,
+            )
 
             # 设置参数
-            adapter.set_end_date(end_date)
-            self._handle_product_models()
+            adapter.set_date(end_date, LABEL_END_DATE)
+            self._handle_product_models(product_models)
 
             # 查询并导出
             self._query_and_export(
@@ -130,6 +135,7 @@ class YieldDownloadService(DownloadService):
             return save_path
 
         except Exception as e:
+            self._capture_debug_artifacts("daily_yield_failed")
             logger.error("❌ 月周天报表下载失败: %s", e)
             self._get_adapter().reset_search_state()
             raise
@@ -164,11 +170,14 @@ class YieldDownloadService(DownloadService):
         adapter = self._get_adapter()
 
         try:
-            self._navigate_to_report(BATCH_YIELD_REPORT_NAME)
+            self._navigate_to_report(
+                BATCH_YIELD_REPORT_NAME,
+                report_path=YIELD_REPORT_DIRECTORY,
+            )
 
             # 设置参数
-            adapter.set_start_date(start_date)
-            adapter.set_end_date(end_date)
+            adapter.set_date(start_date, LABEL_START_DATE)
+            adapter.set_date(end_date, LABEL_END_DATE)
             self._handle_product_models(product_models)
 
             # 查询并导出
@@ -181,6 +190,7 @@ class YieldDownloadService(DownloadService):
             return save_path
 
         except Exception as e:
+            self._capture_debug_artifacts("batch_yield_failed")
             logger.error("❌ 批次报表下载失败: %s", e)
             self._get_adapter().reset_search_state()
             raise
@@ -237,18 +247,18 @@ class YieldDownloadService(DownloadService):
     # 内部方法：报表导航
     # ================================================================
 
-    def _navigate_to_report(self, report_name: str) -> None:
+    def _navigate_to_report(self, report_name: str, report_path: str = "") -> None:
         """
         搜索并进入指定报表。
 
         先重置搜索状态，再执行搜索导航，确保每次导航都是干净的。
         导航后等待参数面板的 iframe 完全加载，确保日期/下拉框等 UI 组件可用。
         """
-        logger.info("搜索并进入报表: %s", report_name)
+        logger.info("搜索并进入报表: %s | 路径: %s", report_name, report_path or "未指定")
         adapter = self._get_adapter()
         adapter.reset_search_state()
         time.sleep(0.5)
-        adapter.search_and_enter_report(report_name)
+        adapter.search_and_enter_report(report_name, report_path=report_path)
         # 显式等待参数面板加载，而非盲等
         adapter.wait_for_report_frame(timeout=BROWSER_TIMEOUT)
 
@@ -327,6 +337,34 @@ class YieldDownloadService(DownloadService):
     # ================================================================
     # 辅助方法
     # ================================================================
+
+    def _capture_debug_artifacts(self, name: str) -> None:
+        """保存 RPA 失败时的页面截图和可见 iframe 文本，便于定位帆软页面状态。"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            debug_dir = Path("downloads/rpa_debug")
+            debug_dir.mkdir(parents=True, exist_ok=True)
+
+            screenshot_path = debug_dir / f"{timestamp}_{name}.png"
+            text_path = debug_dir / f"{timestamp}_{name}.txt"
+
+            adapter = self._get_adapter()
+            adapter.page.screenshot(path=str(screenshot_path), full_page=True)
+
+            lines = [f"url={adapter.page.url}", ""]
+            for index, frame in enumerate(adapter.page.frames):
+                try:
+                    text = frame.locator("body").inner_text(timeout=1000)
+                except Exception as exc:
+                    text = f"<无法读取 frame 文本: {exc}>"
+                lines.append(f"--- frame {index}: {frame.url} ---")
+                lines.append(text[:5000])
+                lines.append("")
+
+            text_path.write_text("\n".join(lines), encoding="utf-8")
+            logger.info("RPA 调试文件已保存: %s, %s", screenshot_path, text_path)
+        except Exception as exc:
+            logger.warning("保存 RPA 调试文件失败: %s", exc)
 
     def _resolve_save_path(
         self,

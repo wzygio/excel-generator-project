@@ -1,3 +1,7 @@
+【Background】
+为了从一个特殊的系统中下载报表，我们需要开啊一个专门的skills。
+
+【Task1】
 谢谢。是的，我们必须升级这个skill，按照如下模式：
 
 1. 让其优先复用fr_web_automation。
@@ -8,6 +12,7 @@
 
 -------------
 
+【Task2】
 谢谢。但是不要将web_automation 架构审查结论写入skill 的 Architecture Notes中，这不是skill该了解的东西。
 
 【Goal】

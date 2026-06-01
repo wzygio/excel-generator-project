@@ -1,89 +1,84 @@
 # ============================================================
-# 🧭 AGENTS.md — 总路由 (Progressive Disclosure)
+# AGENTS.md — 总路由 (Progressive Disclosure)
 # ============================================================
-# 本文件是 Roo Code 的导航入口，定义项目的文档映射、红线纪律和快速命令。
-# 遵循 OpenAI AGENTS.md 约定，实现渐进式信息披露。
+# 本文件是 Roo Code / Codex 的导航入口，定义项目文档映射、红线纪律和快速命令。
+# 目标是让智能体先读少量路由，再按任务需要渐进式打开更细文档。
 
 ## 1. 文档映射表 (Progressive Disclosure)
 
 | 文档（约定路径） | 用途 | 何时阅读 |
 |------------------|------|----------|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 系统架构蓝图（技术栈、DDD结构、数据流、缓存、容灾） | 首次进入项目 / 需要理解整体架构时 |
-| [`docs/design/shared_kernel.md`](docs/design/shared_kernel.md) | Shared Kernel 设计（配置、LLM、日志） | 需要修改配置体系或 LLM 调用逻辑时 |
-| [`docs/design/yield_report_domain.md`](docs/design/yield_report_domain.md) | 良率报告领域设计（Gap分析、异常分析、趋势分析） | 需要修改良率分析逻辑时 |
-| [`docs/design/development_framework.md`](docs/design/development_framework.md) | 开发框架约定（EPCC Flow、TDD纪律、红线） | 开始编码前 / 需要了解开发规范时 |
-| [`docs/design/business_boundary.md`](docs/design/business_boundary.md) | 业务边界（IN Scope / OUT of Scope） | 需要新增功能 / 判断需求范围时 |
-| [`skills/README.md`](skills/README.md) | 技能库索引（专项解决方案） | 遇到已知技术问题时 |
-| [`docs/prompt/`](docs/prompt/) | AI Prompt 模板（开发时使用） | 需要 AI 辅助生成代码或文档时 |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | 当前系统架构蓝图：UI、Application、Core、Infrastructure、Shared Kernel、V1兼容模块 | 首次进入项目 / 判断模块归属 / 修改跨层流程时 |
+| [`docs/design/shared_kernel.md`](docs/design/shared_kernel.md) | Shared Kernel 设计：配置、LLM、日志 | 修改配置模型、配置加载、LLMManager、日志体系时 |
+| [`docs/design/yield_report_domain.md`](docs/design/yield_report_domain.md) | 良率报告领域设计：数据获取、数据分析、日报生成边界和源表说明 | 修改 `src/yield_report/`、报表下载、分析编排、领域规则时 |
+| [`docs/design/development_framework.md`](docs/design/development_framework.md) | 开发框架约定：EPCC Flow、TDD纪律、红线 | 开始编码前 / 需要了解开发规范时 |
+| [`docs/design/business_boundary.md`](docs/design/business_boundary.md) | 业务边界：IN Scope / OUT of Scope | 新增功能 / 判断需求范围时 |
+| [`docs/prompt/`](docs/prompt/) | 项目任务 Prompt 和专项说明 | 执行具体 Task 或恢复任务上下文时 |
+| [`docs/prompt/skill-fr_rpa.md`](docs/prompt/skill-fr_rpa.md) | FineReport RPA 项目经验文档 | 修改帆软下载、筛选条件、导出流程时 |
 
-## 2. 全局红线纪律
+## 2. 当前代码入口
+
+| 层级 | 路径 | 说明 |
+|------|------|------|
+| UI | [`app/main.py`](app/main.py) | Streamlit 三标签工作台：报表下载、数据分析、日报生成 |
+| 应用层 | [`src/yield_report/application/`](src/yield_report/application/) | `DataAcquisitionOrchestrator` 与 `AnalysisOrchestrator` |
+| 核心层 | [`src/yield_report/core/`](src/yield_report/core/) | 自然语言解析、分析策略选择 |
+| 基础设施层 | [`src/yield_report/infrastructure/`](src/yield_report/infrastructure/) | FineReport RPA、文件加载、产品型号读取、代码生成/执行 |
+| Shared Kernel | [`src/shared_kernel/`](src/shared_kernel/) | Pydantic 配置模型、ConfigLoader、LLMManager |
+| V1兼容模块 | [`src/excel_generator_project/`](src/excel_generator_project/) | 旧版 Excel 日报生成流水线，仍作为参考和兼容实现存在 |
+
+## 3. 全局红线纪律
 
 以下红线为硬性约束，任何代码修改不得违反：
 
 | 编号 | 红线 | 说明 |
 |------|------|------|
-| R01 | **禁止修改 `global.yaml` 结构** | 配置结构由 Pydantic V2 [`AppConfig`](src/yield_report/shared_kernel/config_model.py:133) 校验，如需新增配置项必须先在 model 中定义 |
-| R02 | **Shared Kernel 使用单例模式** | [`ConfigLoader`](src/yield_report/shared_kernel/config.py:96) 和 [`LLMManager`](src/yield_report/shared_kernel/infrastructure/llm_handler.py:64) 均为单例，禁止重新实例化 |
-| R03 | **Core 层严禁直接依赖 Infrastructure** | Core 层通过接口依赖倒置，禁止直接 import openpyxl、pandas 等 IO 库 |
-| R04 | **测试必须 100% PASS 才能提交** | 运行 `uv run pytest tests/ -v --tb=short` |
-| R05 | **LLM 调用必须使用 LLMManager** | 禁止直接实例化 OpenAI/gemini 客户端，统一通过 [`llm_manager.chat()`](src/yield_report/shared_kernel/infrastructure/llm_handler.py:157) 调用 |
-| R06 | **新增依赖必须经过评估** | 禁止随意添加第三方库，必须在 [`pyproject.toml`](pyproject.toml) 中声明并说明用途 |
-| R07 | **类型标注强制** | 所有函数/方法必须包含完整类型标注，使用 `from __future__ import annotations` |
-| R08 | **禁止修改 `.roorules` 自身结构** | 本文件的文档映射表和红线纪律结构固定，仅允许更新内容 |
+| R01 | **禁止随意修改 `global.yaml` 结构** | 配置结构由 Pydantic V2 [`AppConfig`](src/shared_kernel/config_model.py) 校验；新增配置项必须先更新模型 |
+| R02 | **Shared Kernel 使用单例模式** | [`ConfigLoader`](src/shared_kernel/config.py) 和 [`LLMManager`](src/shared_kernel/infrastructure/llm_handler.py) 均按单例/全局实例使用 |
+| R03 | **Core 层严禁直接依赖 Infrastructure** | Core 层只放参数解析、策略选择等纯领域判断；文件、浏览器、Excel IO 放到 Infrastructure |
+| R04 | **FineReport 自动化优先复用 `fr_web_automation`** | 项目层只放报表名称、路径、标签、业务编排；通用帆软控件能力应来自 `D:\wzy\Python\packages\web_automation` |
+| R05 | **LLM 调用必须使用 LLMManager** | 禁止在业务代码里直接实例化 OpenAI/Gemini 客户端，统一通过 `llm_manager.chat()` |
+| R06 | **测试必须覆盖关键行为** | 修改下载、解析、分析策略、文件命名时，优先补 `tests/unit/` 中的聚焦测试 |
+| R07 | **新增依赖必须经过评估** | 必须在 [`pyproject.toml`](pyproject.toml) 中声明，并能说明用途；例如代理环境需要 `socksio` |
+| R08 | **类型标注强制** | 新增函数/方法必须包含类型标注，模块默认使用 `from __future__ import annotations` |
+| R09 | **不要把运行日志写进仓库工作区** | 自动脚本日志应放在仓库外，避免污染 git 状态和阻塞 pull/stash |
 
-## 3. 快速命令
+## 4. 快速命令
 
 ```bash
 # ---- 开发环境 ----
 # 启动 Streamlit UI
 uv run streamlit run app/main.py --server.port 8502
 
-# 或通过批处理文件启动
-start_streamlit.bat
-
 # ---- 测试命令 ----
 # 运行全部测试
 uv run pytest tests/ -v --tb=short
 
-# 运行单元测试
-uv run pytest tests/unit/ -v --tb=short
-
-# 运行集成测试
-uv run pytest tests/integration/ -v --tb=short
-
-# 测试带覆盖率
-uv run pytest tests/ -v --tb=short --cov=src
+# 运行当前核心单测
+uv run pytest tests/unit/test_query_parser.py tests/unit/test_data_acquisition_orchestrator.py tests/unit/test_yield_download_service.py tests/unit/test_finereport_client.py -v --tb=short
 
 # ---- 代码质量 ----
-# 类型检查
+uv run ruff check .
+uv run ruff format .
 uv run pyright
 
-# Lint 检查
-uv run ruff check .
-
-# 格式化
-uv run ruff format .
-
 # ---- 依赖管理 ----
-# 安装项目依赖
 uv sync
-
-# 添加新依赖
 uv add <package-name>
-
-# 添加开发依赖
 uv add --dev <package-name>
 ```
 
-## 4. 项目元信息
+## 5. 项目元信息
 
 | 属性 | 值 |
 |------|-----|
 | 项目名称 | yield-report-generator |
-| Python版本 | ≥ 3.11 |
+| Python版本 | >= 3.11 |
 | 包管理器 | uv |
 | 构建工具 | Hatchling |
-| 架构风格 | DDD (Domain-Driven Design) |
+| 架构风格 | 分层架构 + DDD 倾向 |
+| 前端 | Streamlit |
+| 报表自动化 | FineReport RPA via `fr_web_automation` |
 | 测试框架 | Pytest |
 | Lint | Ruff |
 | 类型检查 | Pyright |

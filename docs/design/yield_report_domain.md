@@ -1,108 +1,277 @@
-# Yield Report 领域设计 (Yield Report Domain)
+# Yield Report 领域设计
 
-## 1. 业务架构分析
+## 1. 领域目标
 
-根据业务架构图，`yield_report` 模块的核心流程分为三个阶段：数据获取、数据分析（核心业务）、报告输出。
+`yield_report` 是良率日报 V2 主线领域包，负责把“报表下载、数据分析、日报生成”三段流程逐步收拢到清晰的应用架构中。
 
-### 1.1 顶层流程 (日报生成)
-1. **数据获取: 自动下载报表**
-2. **数据分析 (By 产品)**
-3. **报告输出: Excel 输出**
+当前已经落地：
 
-### 1.2 数据获取层
-系统需要从以下五份源表中获取数据：
-1. **V3良率及不良率By月周天汇总报表**: 用于 Gap 计算。
-数据来源：FineReport报表（查看Skills“finereport-crawler”了解如何获取数据）
-筛选条件：
-“结束日期”：选择“今天”
-“产品型号”：从resource文件夹下的《spotfire.xlsx》文件中的“Sheet1”页的第一列获取
+1. **报表下载 / 数据获取**：自然语言解析、FineReport RPA 下载、本地源表加载。
+2. **数据分析**：Excel schema 提取、分析策略选择、代码生成执行或 LLM 直接分析。
+3. **日报生成入口**：UI 已保留 tab，完整编排待接入。
 
-2. **V3良率及不良率By批次汇总报表**: 用于判断最新批次（产出率大于30%）是否恶化。
-数据来源：FineReport报表（查看Skills“finereport-crawler”了解如何获取数据）
-筛选条件：
-“开始日期”：选择三个月之前的月份的1月1日
-“结束日期”：选择“今天”
-“产品型号”：从resource文件夹下的《spotfire.xlsx》文件中的“Sheet1”页的第一列获取
+## 2. 业务流程
 
-3. **CT异常管理表**: 用于搜索当日异常及已知异常。
-本地文件：“\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项\02 量产良率\02 良率异常闭环管理\CT良率异常波动管理表.xlsx”
+```text
+报表下载
+  -> 数据分析
+  -> 日报生成
+```
 
-4. **良率目标拆解表**: 用于良率目标获取。
-本地文件：resource文件夹下的《2026年良率目标拆解-1017版V05 - 无公式版.xlsx》
+### 2.1 报表下载
 
-5. **日良率Gap分析**: 提供规则与模板。
-本地文件：resource文件夹下的《日良率Gap分析模板.xlsx》
+目标：用户用自然语言描述要下载的报表和筛选条件，系统解析后自动获取源表。
 
-以下是本层的开发要求：
-1. 期望形式：支持用户在UI中的自然语言查询（example：“报表名称”和“筛选条件”作为参数。从用户在UI输入的语句中通过大模型提取出关键词给参数赋值，来进行查询）
+示例：
 
-2. 期望结果：resources文件下出现所有文件
+```text
+我想要查询M678这款产品近两个月的良率，结束日期为2026-05-01
+```
 
-3. 账密：所有相关账密都存储于.env文件中
+解析结果应包含：
 
-4. 要点：因为涉及大语言模型的处理，请先确定技术栈，比如我们是否需要引入LangChain架构等
+- `report_type`: `daily_yield`
+- `start_date`: 可选
+- `end_date`: `2026-05-01`
+- `product_models`: `["M678"]`
+- `user_intent`: 用户意图摘要
 
-5. 开发范围：本次开发仅针对“数据获取层”进行开发，暂不涉及后续两层。但要搭建从后端到前端的完整业务模块。
+下载成功后，文件保存到 `resources/`，并在文件名后追加筛选条件，便于智能体快速理解文件内容，例如：
 
-### 1.3 数据分析层 (核心领域模型)
-数据分析按**产品 (By 产品)** 进行，分为三个核心分析模块：
+```text
+V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M678.xlsx
+```
 
-#### 1.3.1 Gap分析 (Gap Analysis)
-*   **数据分析：日良率Gap分析**
-    *   **日良率Gap计算** (依赖: V3良率及不良率By月周天, 良率目标拆解表)
-        *   当日Group不良率锁定
-        *   对应Group目标不良率锁定
-        *   Gap计算: 找出 TOP3 Gap 对应的 Group
-    *   **批次良率分析：判断是否有批次恶化**
-        *   **有批次恶化**: 找出该批次、该Group下影响最大的Code对应的不良 (依赖: V3良率及不良率By批次, CT异常管理表)
-        *   **无批次恶化**: 集中过货影响 (依赖: 良率目标拆解表)
-*   **数据输出**: 固定句式
+### 2.2 数据分析
 
-#### 1.3.2 异常分析 (Exception Analysis)
-*   **异常分析** (依赖: CT异常管理表)
-    *   **新增异常**: 
-    *   **影响当日良率的已知异常**: 每个 Group 下的 Top3 Code
-*   **数据输出**: 
-    *   回复精简
-    *   颜色标识: html代码
+目标：用户对已下载源表提出自然语言分析需求，系统选择合适执行方式：
 
-#### 1.3.3 趋势分析 (Trend Analysis)
-*   **数据分析**: 连续三日或三周良率下降或上升
-*   **数据输出**: 固定句式
+| 策略 | 适用需求 |
+|------|----------|
+| `code` | 明确筛选、排序、聚合、趋势计算 |
+| `llm_direct` | 原因分析、异常判断、建议、模糊探索 |
 
-### 1.4 报告输出层
-最终输出为 Excel 报告，包含三大模块：
-1. **当日Gap解释** (来源于 Gap 分析)
-2. **当日异常** (来源于 异常分析 - 新增异常)
-3. **已知异常** (来源于 异常分析 - 已知异常)
+执行流程：
 
----
+```text
+定位 Excel 文件
+  -> extract_schema()
+  -> AnalysisStrategySelector.decide()
+  -> CodeGenerator/CodeExecutor 或 LLM direct
+  -> AnalysisResult
+```
 
-## 2. 领域架构设计 (DDD)
+### 2.3 日报生成
 
-> 以下部分待后续详细设计补充，当前基于架构图提供初步框架。
+目标：把 Gap 分析、异常分析、趋势分析等结果写入标准 Excel 日报。
 
-### 2.1 应用层 (`application/`)
-负责编排整个生成流程，串联数据加载、大模型分析和报告写入。
+当前状态：
 
-*   **编排器 (Orchestrator)**: `ReportOrchestrator`
-    *   `run_generation_flow()`: 协调加载、分析、输出。
+- UI 已有“日报生成”tab。
+- `config/global.yaml` 已定义输出目录和输出文件名。
+- 完整 V2 编排器尚未接入，仍需后续实现。
+- V1 实现位于 `src/excel_generator_project/`，可作为日报写入和样式处理参考。
 
-### 2.2 核心领域层 (`core/`)
-包含基于大模型的智能分析逻辑。
+## 3. 源表清单
 
-*   **Gap 分析模块 (`gap_analysis.py`)**
-    *   计算 Gap (Top 3 Group)
-    *   批次恶化判定逻辑
-*   **异常分析模块 (`exception_analysis.py`)**
-    *   新增异常识别
-    *   已知异常筛选 (Group 下 Top3 Code)
-    *   文本精简与颜色高亮 (HTML)
-*   **趋势分析模块 (`trend_analysis.py`)**
-    *   连续升降判定
+### 3.1 V3良率及不良率By月周天汇总报表
 
-### 2.3 基础设施层 (`infrastructure/`)
-负责底层的数据读取、LLM 交互和文件生成。
+| 属性 | 说明 |
+|------|------|
+| 报表类型 | `daily_yield` |
+| 来源 | FineReport |
+| 用途 | 日/月/周维度良率和不良率数据，支撑 Gap 计算和趋势分析 |
+| 报表目录 | `目录/良率监控/综合良率` |
+| 关键筛选 | `结束日期：`、`产品型号：` |
+| 默认日期 | 今天 |
+| 默认产品型号 | 未指定时走全选；也可从 `spotfire.xlsx` 解析后传入 |
 
-*   **数据适配器**: 封装对 5 种源表的读取和初步解析。
-*   **报告写入器**: 将分析生成的固定句式和 HTML 文本写入 Excel 模板。
+### 3.2 V3良率及不良率By批次汇总报表
+
+| 属性 | 说明 |
+|------|------|
+| 报表类型 | `batch_yield` |
+| 来源 | FineReport |
+| 用途 | 判断最新批次是否恶化、支撑批次维度分析 |
+| 报表目录 | `目录/良率监控/综合良率` |
+| 关键筛选 | `开始日期：`、`结束日期：`、`产品型号：` |
+| 默认开始日期 | 三个月前月份的第 1 天 |
+| 默认结束日期 | 今天 |
+
+### 3.3 CT良率异常波动管理表
+
+| 属性 | 说明 |
+|------|------|
+| 报表类型 | `ct_exception` |
+| 来源 | 网络共享路径 / 本地缓存 |
+| 用途 | 当日异常、已知异常、Code 维度异常追踪 |
+| 当前加载器 | `LocalFileLoader.ensure_ct_exception_file()` |
+
+### 3.4 良率目标拆解表
+
+| 属性 | 说明 |
+|------|------|
+| 报表类型 | `target_decomposition` |
+| 来源 | `resources/` |
+| 用途 | 产品/Group 良率目标获取 |
+| 文件名 | `2026年良率目标拆解-1017版V05 - 无公式版.xlsx` |
+
+### 3.5 日良率Gap分析模板
+
+| 属性 | 说明 |
+|------|------|
+| 报表类型 | `gap_template` |
+| 来源 | `resources/` |
+| 用途 | Gap 分析规则和模板 |
+| 文件名 | `日良率Gap分析模板.xlsx` |
+
+### 3.6 产品型号来源
+
+产品型号可来自：
+
+- 用户自然语言显式指定，如 `M678`。
+- `resources/project_files/spotfire.xlsx` 中的产品型号列。
+- 未指定时，FineReport 下载层可以执行全选。
+
+## 4. DDD 分层设计
+
+### 4.1 Application 层
+
+路径：`src/yield_report/application/`
+
+| 类/模块 | 职责 |
+|---------|------|
+| `DataAcquisitionOrchestrator` | 报表下载/数据获取总控；解析自然语言并分发到 FineReport 或本地加载器 |
+| `AnalysisOrchestrator` | 数据分析总控；定位文件、提取 schema、选择策略、执行分析 |
+
+应用层负责“编排”，不放具体浏览器操作、Excel 解析细节或 LLM prompt 细节。
+
+### 4.2 Core 层
+
+路径：`src/yield_report/core/`
+
+| 类/模块 | 职责 |
+|---------|------|
+| `ReportQueryRequest` | 报表下载结构化请求模型 |
+| `ReportType` | 五类源表枚举 |
+| `QueryParser` | 使用 LLM 将自然语言转换为 `ReportQueryRequest` |
+| `AnalysisStrategySelector` | 判断数据分析需求走 `code` 还是 `llm_direct` |
+
+Core 层只放领域判断和模型，不直接访问文件系统、浏览器或 FineReport。
+
+### 4.3 Infrastructure 层
+
+路径：`src/yield_report/infrastructure/`
+
+| 类/模块 | 职责 |
+|---------|------|
+| `FinereportClient` | FineReport 下载门面；保持旧接口兼容；负责文件名追加筛选条件 |
+| `YieldDownloadService` | 良率报表 RPA 编排：报表导航、参数设置、查询、导出 |
+| `YieldPortalAdapter` | FineReport 页面原子操作，继承 `fr_web_automation` 的 `OLEDPortalAdapter` |
+| `LocalFileLoader` | 网络/本地源表加载 |
+| `product_models.py` | 产品型号读取 |
+| `code_generator.py` | Excel schema 提取和 pandas 代码生成 |
+| `code_executor.py` | 生成代码执行与结果收集 |
+
+## 5. FineReport RPA 设计约束
+
+FineReport 自动化优先复用独立包：
+
+```text
+D:\wzy\Python\packages\web_automation
+import fr_web_automation
+```
+
+项目层只维护良率报表相关信息：
+
+- 报表名称
+- 报表目录
+- 参数标签
+- 日期默认值
+- 产品型号业务规则
+- 下载文件命名规则
+
+当前关键常量位于 `yield_download_service.py`：
+
+```text
+DAILY_YIELD_REPORT_NAME = "V3良率及不良率By月周天汇总报表"
+BATCH_YIELD_REPORT_NAME = "V3良率及不良率By批次汇总报表"
+YIELD_REPORT_DIRECTORY = "目录/良率监控/综合良率"
+LABEL_END_DATE = "结束日期："
+LABEL_START_DATE = "开始日期："
+LABEL_PRODUCT_MODEL = "产品型号："
+```
+
+失败定位：
+
+- RPA 下载失败时会保存截图和 iframe 文本到 `downloads/rpa_debug/`。
+- 这些调试文件不属于业务源表，不应作为日报输入。
+
+## 6. 文件命名规则
+
+FineReport 原始导出文件名较难表达筛选条件，因此 `FinereportClient` 会在下载后重命名：
+
+| 场景 | 示例 |
+|------|------|
+| 日报 + 单型号 | `V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M678.xlsx` |
+| 批次 + 多型号 | `V3良率及不良率By批次汇总报表_开始日期2026-03-01_结束日期2026-05-01_产品型号M626+M673.xlsx` |
+| 未指定型号 | `..._产品型号全部.xlsx` |
+
+文件名清理规则：
+
+- Windows 非法字符会被替换为 `_`。
+- 多型号最多展示前 5 项，超过后追加 `等N项`。
+- 后缀长度有限制，避免路径过长。
+
+## 7. 领域分析规划
+
+后续日报生成需要沉淀以下领域能力：
+
+### 7.1 Gap 分析
+
+- 从月周天报表读取日良率/不良率。
+- 从目标拆解表读取目标不良率。
+- 计算 Group 维度 Top N Gap。
+- 判断 Gap 来源是否与批次恶化、集中出货或已知异常相关。
+
+### 7.2 批次分析
+
+- 从批次汇总报表筛选产品和日期范围。
+- 根据 `batch_analysis.min_yield_rate` 过滤有效批次。
+- 对比最近若干批次，识别恶化趋势。
+
+### 7.3 异常分析
+
+- 从 CT 异常管理表识别当日新增异常。
+- 对已知异常按 Group / Code 聚合。
+- 输出日报可用的精简文本。
+
+### 7.4 趋势分析
+
+- 判断连续三日或三周良率上升/下降。
+- 支撑日报中的趋势说明和风险提示。
+
+## 8. 当前测试覆盖
+
+| 测试 | 覆盖内容 |
+|------|----------|
+| `test_query_parser.py` | 自然语言解析模型、JSON 清理、日期校验 |
+| `test_data_acquisition_orchestrator.py` | 用户语句注入项目入口后路由到对应下载接口 |
+| `test_yield_download_service.py` | RPA 服务是否传递产品型号和报表目录 |
+| `test_finereport_client.py` | 下载后文件名是否追加筛选条件 |
+| `test_analysis_selector.py` | 分析策略选择 |
+| `test_code_generator.py` | schema 提取与代码生成辅助 |
+| `test_code_executor.py` | 生成代码执行 |
+
+推荐快速验证：
+
+```bash
+uv run pytest tests/unit/test_query_parser.py tests/unit/test_data_acquisition_orchestrator.py tests/unit/test_yield_download_service.py tests/unit/test_finereport_client.py -v --tb=short
+```
+
+## 9. 待办边界
+
+- 日报生成 V2 编排器尚未接入。
+- 数据分析默认文件定位仍需要继续增强，应优先使用 `config/global.yaml` 中的 source file pattern。
+- FineReport RPA 依赖内网和真实账号，单元测试应通过 fake service/mock 避免真实浏览器。
+- 自动同步脚本已修复为 pull 前 WIP commit，但项目提交前仍应主动 commit 关键成果。

@@ -41,3 +41,11 @@ FINEREPORT_PASSWORD
 --------------------
 【Task4】
 1. 请在 UI 上执行冒烟测试，完成从需求解析到报表下载的全套流程（测试内容可参考 Task2）。你可以调用 browser-use 或 Playwright 等 MCP 来操控 UI 模拟需求输入。报表下载则调用“Finereport Rpa”。
+
+--------------------
+【Task5】
+1. 文件名后缀：在下载的报表文件名称后，加上筛选条件，便于智能体迅速理解其中内容。
+
+--------------------
+【Task6】
+1. 文件下载成功后，请调用文件解密skill“file_decryption”将其输出到如下路径“resources\decrypted_files”，方便后续模块调用。

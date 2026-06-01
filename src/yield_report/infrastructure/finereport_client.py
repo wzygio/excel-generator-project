@@ -24,14 +24,19 @@ from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
-
 from fr_web_automation.config import BrowserConfig, WebAutomationConfig
+
 from shared_kernel.config import ConfigLoader
+from yield_report.infrastructure.file_decryption import (
+    FileDecryptionError,
+    decrypt_excel_file,
+)
 from yield_report.infrastructure.yield_download_service import (
     YieldDownloadService as _YieldDownloadService,
 )
 
 logger = logging.getLogger("FinereportClient")
+MAX_FILTER_SUFFIX_LENGTH = 120
 
 
 # ================================================================
@@ -138,11 +143,19 @@ class FinereportClient:
         end_date_str = self._normalize_date(end_date)
 
         service = self._get_rpa_service()
-        return service.download_daily_yield(
+        downloaded_path = service.download_daily_yield(
             end_date=end_date_str,
             product_models=product_models,
             save_dir=save_dir,
         )
+        filtered_path = self._rename_with_filter_suffix(
+            downloaded_path,
+            filters={
+                "结束日期": end_date_str,
+                "产品型号": self._format_product_models(product_models),
+            },
+        )
+        return self._decrypt_downloaded_file(filtered_path)
 
     def download_batch_yield_report(
         self,
@@ -167,16 +180,29 @@ class FinereportClient:
             FineReportDownloadError: 下载失败
         """
         save_dir = Path(save_dir) if save_dir else self._resources_dir
-        start_date_str = self._normalize_date(start_date) if start_date else None
+        start_date_str = (
+            self._normalize_date(start_date)
+            if start_date
+            else self._default_batch_start_date()
+        )
         end_date_str = self._normalize_date(end_date)
 
         service = self._get_rpa_service()
-        return service.download_batch_yield(
+        downloaded_path = service.download_batch_yield(
             start_date=start_date_str,
             end_date=end_date_str,
             product_models=product_models,
             save_dir=save_dir,
         )
+        filtered_path = self._rename_with_filter_suffix(
+            downloaded_path,
+            filters={
+                "开始日期": start_date_str,
+                "结束日期": end_date_str,
+                "产品型号": self._format_product_models(product_models),
+            },
+        )
+        return self._decrypt_downloaded_file(filtered_path)
 
     # ================================================================
     # 内部方法：RPA 服务管理
@@ -235,3 +261,75 @@ class FinereportClient:
         if isinstance(d, date):
             return d.isoformat()
         return str(d)
+
+    @staticmethod
+    def _default_batch_start_date() -> str:
+        """批次报表默认开始日期：三个月前月份的第 1 天。"""
+        today = date.today()
+        start_month = today.month - 3
+        start_year = today.year
+        if start_month <= 0:
+            start_month += 12
+            start_year -= 1
+        return date(start_year, start_month, 1).isoformat()
+
+    @staticmethod
+    def _format_product_models(product_models: list[str] | None) -> str:
+        """将产品型号列表压缩为适合文件名阅读的筛选值。"""
+        if not product_models:
+            return "全部"
+
+        cleaned_models = [str(model).strip() for model in product_models if str(model).strip()]
+        if not cleaned_models:
+            return "全部"
+
+        visible_models = cleaned_models[:5]
+        suffix = "+".join(visible_models)
+        if len(cleaned_models) > len(visible_models):
+            suffix = f"{suffix}+等{len(cleaned_models)}项"
+        return suffix
+
+    @classmethod
+    def _rename_with_filter_suffix(
+        cls,
+        file_path: Path,
+        filters: dict[str, str],
+    ) -> Path:
+        """在下载文件名后追加筛选条件信息，并返回重命名后的路径。"""
+        if not file_path.exists():
+            logger.warning("待重命名的报表文件不存在: %s", file_path)
+            return file_path
+
+        suffix = "_".join(
+            cls._safe_filename_part(f"{key}{value}")
+            for key, value in filters.items()
+            if value
+        )
+        suffix = suffix[:MAX_FILTER_SUFFIX_LENGTH].rstrip("._-")
+        if not suffix:
+            return file_path
+
+        target_path = file_path.with_name(f"{file_path.stem}_{suffix}{file_path.suffix}")
+        if target_path == file_path:
+            return file_path
+
+        if target_path.exists():
+            target_path.unlink()
+        file_path.rename(target_path)
+        logger.info("已追加筛选条件到报表文件名: %s", target_path)
+        return target_path
+
+    def _decrypt_downloaded_file(self, file_path: Path) -> Path:
+        """将下载文件解密到 resources/decrypted_files，并返回解密后的路径。"""
+        output_dir = self._resources_dir / "decrypted_files"
+        try:
+            return decrypt_excel_file(file_path, output_dir)
+        except FileDecryptionError as exc:
+            raise FineReportDownloadError(f"报表已下载但自动解密失败: {exc}") from exc
+
+    @staticmethod
+    def _safe_filename_part(value: str) -> str:
+        """清理 Windows 文件名非法字符，保留可读的业务信息。"""
+        safe_value = _re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", value)
+        safe_value = _re.sub(r"\s+", "", safe_value)
+        return safe_value.strip("._ ") or "未指定"

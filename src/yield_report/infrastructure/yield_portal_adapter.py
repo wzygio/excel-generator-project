@@ -6,7 +6,7 @@ yield_portal_adapter.py: 良率报表领域 PortalAdapter
 
 【红线】
     - 只包含 UI 交互逻辑，不含业务流程编排
-    - 标签文本（如 "结束日期:"、"产品型号:"）作为可配置参数，方便调试时调整
+    - 标签文本（如 "结束日期："、"产品型号："）作为可配置参数，方便调试时调整
 """
 
 from __future__ import annotations
@@ -36,25 +36,25 @@ class YieldPortalAdapter(OLEDPortalAdapter):
     def set_date(
         self,
         date_str: str,
-        label_text: str = "结束日期:",
+        label_text: str = "结束日期：",
     ) -> None:
         """
         设置报表参数面板中的日期选择器。
 
         Args:
             date_str: 日期字符串，格式 "YYYY-MM-DD"
-            label_text: 日期标签文本，如 "开始日期:" / "结束日期:"
+            label_text: 日期标签文本，如 "开始日期：" / "结束日期："
         """
         logger.info("设置日期 [%s] = %s", label_text, date_str)
         self.fr_fill_date_by_label(label_text, date_str)
 
     def set_end_date(self, date_str: str) -> None:
         """快捷设置结束日期。"""
-        self.set_date(date_str, "结束日期:")
+        self.set_date(date_str, "结束日期：")
 
     def set_start_date(self, date_str: str) -> None:
         """快捷设置开始日期。"""
-        self.set_date(date_str, "开始日期:")
+        self.set_date(date_str, "开始日期：")
 
     # ================================================================
     # 下拉复选框操作（产品型号、Group 等）
@@ -63,7 +63,7 @@ class YieldPortalAdapter(OLEDPortalAdapter):
     def select_dropdown_options(
         self,
         options: list[str],
-        label_text: str = "产品型号:",
+        label_text: str = "产品型号：",
     ) -> None:
         """
         在指定的下拉复选框中精准勾选特定选项。
@@ -78,7 +78,7 @@ class YieldPortalAdapter(OLEDPortalAdapter):
         logger.info("设置下拉框 [%s] 勾选 %d 个选项", label_text, len(options))
         self.fr_dropdown_select_specific(label_text, options)
 
-    def select_all_dropdown_options(self, label_text: str = "产品型号:") -> None:
+    def select_all_dropdown_options(self, label_text: str = "产品型号：") -> None:
         """将指定的下拉复选框设为「全选」状态。"""
         logger.info("设置下拉框 [%s] 为全选", label_text)
         self.fr_dropdown_select_all(label_text)

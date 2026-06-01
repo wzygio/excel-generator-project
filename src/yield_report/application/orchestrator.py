@@ -234,6 +234,15 @@ class DataAcquisitionOrchestrator:
                     error_message=f"产品型号提取失败: {e}",
                 )
             )
+        except Exception as e:
+            logger.exception("月周天汇总报表获取失败")
+            results.append(
+                AcquisitionResult(
+                    success=False,
+                    file_description="V3良率及不良率By月周天汇总报表",
+                    error_message=f"获取失败: {e}",
+                )
+            )
 
         return results
 
@@ -294,6 +303,15 @@ class DataAcquisitionOrchestrator:
                     success=False,
                     file_description="V3良率及不良率By批次汇总报表",
                     error_message=f"产品型号提取失败: {e}",
+                )
+            )
+        except Exception as e:
+            logger.exception("批次汇总报表获取失败")
+            results.append(
+                AcquisitionResult(
+                    success=False,
+                    file_description="V3良率及不良率By批次汇总报表",
+                    error_message=f"获取失败: {e}",
                 )
             )
 

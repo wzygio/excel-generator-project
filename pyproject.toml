@@ -21,6 +21,7 @@ dependencies = [
     "playwright>=1.59.0",
     "xlsxwriter>=3.2.9",
     "fr-web-automation",
+    "socksio>=1.0.0",
 ]
 
 [project.optional-dependencies]
