@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from yield_report.agent.spec_model import RunContext, SkillError, SkillResult
 from yield_report.skills.data_analysis import tool
+from yield_report.skills.data_analysis.daily_report_analysis import (
+    _read_worksheet_rows,
+    select_product_rows,
+)
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
 
 
@@ -20,6 +26,22 @@ def _save_workbook(path: Path, sheets: dict[str, list[list[object]]]) -> Path:
     workbook.save(path)
     workbook.close()
     return path
+
+
+def _force_stale_dimension(path: Path, dimension: str = "A1:A1") -> None:
+    temp_path = path.with_suffix(".tmp.xlsx")
+    with ZipFile(path, "r") as source, ZipFile(temp_path, "w", ZIP_DEFLATED) as target:
+        for item in source.infolist():
+            data = source.read(item.filename)
+            if item.filename == "xl/worksheets/sheet1.xml":
+                data = re.sub(
+                    rb'<dimension ref="[^"]+"',
+                    f'<dimension ref="{dimension}"'.encode(),
+                    data,
+                    count=1,
+                )
+            target.writestr(item, data)
+    temp_path.replace(path)
 
 
 def _daily_yield(path: Path) -> Path:
@@ -78,6 +100,29 @@ def _product() -> dict[str, object]:
         "is_qualified": False,
         "daily_gap": -0.07,
     }
+
+
+def test_read_worksheet_rows_resets_stale_read_only_dimension(tmp_path: Path) -> None:
+    daily_yield = _save_workbook(
+        tmp_path / "daily_yield.xlsx",
+        {
+            "CT": [
+                ["", "ProductCode", "Operation", "DefectGroup"],
+                ["", "M678", "CT", "CT output"],
+                ["", "", "", "CT yield"],
+            ]
+        },
+    )
+    _force_stale_dimension(daily_yield)
+
+    workbook = load_workbook(daily_yield, read_only=True, data_only=True)
+    try:
+        rows = _read_worksheet_rows(workbook["CT"])
+    finally:
+        workbook.close()
+
+    assert len(rows[0]) == 4
+    assert len(select_product_rows(rows, "M678")) == 3
 
 
 def test_data_analysis_daily_report_returns_four_sections(tmp_path: Path) -> None:

@@ -13,6 +13,7 @@
   "tests/unit/skills/test_daily_report_skill.py::test_target_rates_use_requested_month",
   "tests/unit/skills/test_data_analysis_daily_report.py::test_data_analysis_daily_report_calls_report_download_when_sources_missing",
   "tests/unit/skills/test_data_analysis_daily_report.py::test_data_analysis_daily_report_returns_four_sections",
+  "tests/unit/skills/test_data_analysis_daily_report.py::test_read_worksheet_rows_resets_stale_read_only_dimension",
   "tests/unit/skills/test_data_analysis_skill.py::test_data_analysis_skill_returns_structured_error",
   "tests/unit/skills/test_data_analysis_skill.py::test_data_analysis_skill_uses_upstream_artifact",
   "tests/unit/skills/test_report_download_skill.py::test_report_download_skill_accepts_spec_report_ref",

@@ -309,7 +309,7 @@ class DailyReportStructuredAnalyzer:
                 self.warnings.append(f"源文件 {alias} 缺少 Sheet: {sheet_name}")
                 return None
             worksheet = workbook[actual_sheet]
-            rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
+            rows = _read_worksheet_rows(worksheet)
             data = SheetData(path=path, sheet_name=actual_sheet, rows=rows)
             self._sheet_cache[key] = data
             return data
@@ -794,6 +794,18 @@ def _resolve_sheet_name(sheet_names: list[str], requested: str) -> str | None:
         if sheet_name.lower() == requested_norm:
             return sheet_name
     return None
+
+
+def _read_worksheet_rows(worksheet: Any) -> list[list[Any]]:
+    # FineReport/Excel-COM exports can keep a stale A1:A1 sheet dimension.
+    # In openpyxl read-only mode that hides every real data column unless reset first.
+    reset_dimensions = getattr(worksheet, "reset_dimensions", None)
+    if callable(reset_dimensions):
+        try:
+            reset_dimensions()
+        except Exception:
+            logger.debug("Unable to reset worksheet dimensions", exc_info=True)
+    return [list(row) for row in worksheet.iter_rows(values_only=True)]
 
 
 def _get_cell(row: list[Any], index: int | None) -> Any:
