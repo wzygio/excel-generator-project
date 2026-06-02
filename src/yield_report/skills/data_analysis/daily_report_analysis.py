@@ -12,6 +12,7 @@ from typing import Any
 from openpyxl import load_workbook
 
 from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
+from yield_report.core.business_time import effective_daily_yield_end_date
 from yield_report.core.query_parser import ReportType
 from yield_report.infrastructure.file_decryption import decrypt_excel_file
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
@@ -232,7 +233,7 @@ class DailyReportStructuredAnalyzer:
             return None
         request = ReportDownloadRequest(report_type=report_type)
         if alias == "daily_yield":
-            request.end_date = self.report_date
+            request.end_date = effective_daily_yield_end_date(self.report_date).isoformat()
             request.product_models = product_models or None
 
         result = report_download_tool.run(request, self.context)

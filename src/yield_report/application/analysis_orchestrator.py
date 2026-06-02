@@ -34,6 +34,10 @@ from yield_report.infrastructure.ct_yield_trend_analyzer import (
     CtYieldTrendAnalysisError,
     CtYieldTrendAnalyzer,
 )
+from yield_report.infrastructure.daily_yield_trend_analyzer import (
+    DailyYieldTrendAnalysisError,
+    DailyYieldTrendAnalyzer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +113,7 @@ class AnalysisOrchestrator:
         code_generator: CodeGenerator | None = None,
         code_executor: CodeExecutor | None = None,
         ct_trend_analyzer: CtYieldTrendAnalyzer | None = None,
+        daily_yield_trend_analyzer: DailyYieldTrendAnalyzer | None = None,
     ) -> None:
         self._llm_provider = llm_provider or "deepseek"
         self._query_parser = query_parser or AnalysisQueryParser(provider=self._llm_provider)
@@ -118,6 +123,9 @@ class AnalysisOrchestrator:
         self._code_generator = code_generator or CodeGenerator()
         self._code_executor = code_executor or CodeExecutor()
         self._ct_trend_analyzer = ct_trend_analyzer or CtYieldTrendAnalyzer()
+        self._daily_yield_trend_analyzer = (
+            daily_yield_trend_analyzer or DailyYieldTrendAnalyzer()
+        )
 
     def analyze(
         self,
@@ -251,7 +259,9 @@ class AnalysisOrchestrator:
                 provider=self._llm_provider,
             )
         except Exception as exc:
-            if not self._can_run_ct_trend(user_query, parsed_request):
+            if not self._can_run_ct_trend(user_query, parsed_request) and not self._can_run_daily_yield_trend(
+                user_query, parsed_request
+            ):
                 workflow_steps.append(
                     AnalysisWorkflowStep(name="分析策略判定", status="failed", detail=str(exc))
                 )
@@ -300,13 +310,27 @@ class AnalysisOrchestrator:
                     detail="使用内置 CT 良率趋势分析器。" if result.success else result.error_message,
                 )
             )
+        elif self._can_run_daily_yield_trend(user_query, parsed_request):
+            result = self._execute_daily_yield_trend_analysis(
+                request=parsed_request,
+                resolved_file=resolved_file,
+                schema=schema,
+                decision=decision,
+            )
+            workflow_steps.append(
+                AnalysisWorkflowStep(
+                    name="数据分析",
+                    status="success" if result.success else "failed",
+                    detail="使用内置日度良率趋势分析器。" if result.success else result.error_message,
+                )
+            )
         elif decision.strategy == AnalysisStrategy.CODE:
             result = self._execute_code_analysis(user_query, resolved_file.path, schema, decision)
             workflow_steps.append(
                 AnalysisWorkflowStep(
                     name="数据分析",
                     status="success" if result.success else "failed",
-                    detail="使用 Claude 生成 pandas 代码执行。" if result.success else result.error_message,
+                    detail="生成 pandas 代码并执行。" if result.success else result.error_message,
                 )
             )
         else:
@@ -478,6 +502,47 @@ class AnalysisOrchestrator:
             schema=schema,
         )
 
+    def _execute_daily_yield_trend_analysis(
+        self,
+        *,
+        request: AnalysisQueryRequest,
+        resolved_file: ResolvedAnalysisFile,
+        schema: str,
+        decision: StrategyDecision,
+    ) -> AnalysisResult:
+        product_model = (request.product_models or [""])[0]
+        if not product_model:
+            return AnalysisResult(
+                success=False,
+                strategy_used=AnalysisStrategy.CODE,
+                strategy_decision=decision,
+                schema=schema,
+                error_message="未识别到产品型号，无法执行日度良率趋势分析。",
+            )
+
+        try:
+            trend = self._daily_yield_trend_analyzer.analyze(
+                file_path=resolved_file.path,
+                product_model=product_model,
+                days=7,
+            )
+        except DailyYieldTrendAnalysisError as exc:
+            return AnalysisResult(
+                success=False,
+                strategy_used=AnalysisStrategy.CODE,
+                strategy_decision=decision,
+                schema=schema,
+                error_message=f"日度良率趋势分析失败: {exc}",
+            )
+
+        return AnalysisResult(
+            success=True,
+            strategy_used=AnalysisStrategy.CODE,
+            strategy_decision=decision,
+            result_text=trend.result_text,
+            schema=schema,
+        )
+
     def _record_pending_memory(
         self,
         *,
@@ -508,6 +573,17 @@ class AnalysisOrchestrator:
         request: AnalysisQueryRequest,
     ) -> bool:
         return self._ct_trend_analyzer.can_handle(
+            user_query=user_query,
+            target_metrics=request.target_metrics,
+            analysis_logic=request.analysis_logic,
+        )
+
+    def _can_run_daily_yield_trend(
+        self,
+        user_query: str,
+        request: AnalysisQueryRequest,
+    ) -> bool:
+        return self._daily_yield_trend_analyzer.can_handle(
             user_query=user_query,
             target_metrics=request.target_metrics,
             analysis_logic=request.analysis_logic,

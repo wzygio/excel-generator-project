@@ -23,10 +23,16 @@ DataAcquisitionOrchestrator 是"数据获取层"的总控模块。
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import datetime
 from pathlib import Path
 
+from yield_report.core.business_time import (
+    default_batch_start_date,
+    effective_report_end_date,
+)
 from yield_report.core.query_parser import (
     QueryParser,
     QueryParserError,
@@ -98,12 +104,14 @@ class DataAcquisitionOrchestrator:
     def __init__(
         self,
         llm_provider: str | None = None,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         """
         Args:
             llm_provider: LLM 供应商 ("deepseek" / "gemini")，默认从 config 读取
         """
         self._query_parser = QueryParser(provider=llm_provider)
+        self._clock = clock
         self._finereport_client: FinereportClient | None = None
         self._local_file_loader = LocalFileLoader()
 
@@ -167,8 +175,8 @@ class DataAcquisitionOrchestrator:
         elif request.report_type == ReportType.GAP_TEMPLATE:
             results = self._acquire_gap_template()
         else:
-            # report_type 未指定或不确定 - 尝试获取所有文件
-            results = self._acquire_all_files()
+            # report_type 未指定或不确定 - 不能盲目下载所有文件，先搜索 FineReport。
+            results = self._search_unknown_report(request)
 
         # Step 3: 汇总结果
         success_count = sum(1 for r in results if r.success)
@@ -204,8 +212,8 @@ class DataAcquisitionOrchestrator:
             # 获取产品型号列表
             product_models = self._resolve_product_models(request.product_models)
 
-            # 解析日期
-            end_date = request.end_date or date.today().isoformat()
+            # 解析日期。上午十点前日度数据仍截止到昨日。
+            end_date = request.end_date or effective_report_end_date(self._clock).isoformat()
 
             # 下载
             client = self._get_finereport_client()
@@ -267,15 +275,9 @@ class DataAcquisitionOrchestrator:
             # 获取产品型号列表
             product_models = self._resolve_product_models(request.product_models)
 
-            # 解析日期
-            if request.start_date:
-                start_date = request.start_date
-            else:
-                # 默认三个月前月初
-                three_months_ago = date.today() - timedelta(days=90)
-                start_date = date(three_months_ago.year, three_months_ago.month, 1).isoformat()
-
-            end_date = request.end_date or date.today().isoformat()
+            # 批次良率默认查询最近 90 天；十点前结束日期仍为昨日。
+            start_date = request.start_date or default_batch_start_date(self._clock).isoformat()
+            end_date = request.end_date or effective_report_end_date(self._clock).isoformat()
 
             # 下载
             client = self._get_finereport_client()
@@ -411,7 +413,7 @@ class DataAcquisitionOrchestrator:
         try:
             client = self._get_finereport_client()
             product_models = self._resolve_product_models(None)
-            today = date.today().isoformat()
+            today = effective_report_end_date(self._clock).isoformat()
 
             fr_results_daily = client.download_daily_yield_report(
                 end_date=today,
@@ -436,9 +438,8 @@ class DataAcquisitionOrchestrator:
         try:
             client = self._get_finereport_client()
             product_models = self._resolve_product_models(None)
-            three_months_ago = date.today() - timedelta(days=90)
-            start_date = date(three_months_ago.year, three_months_ago.month, 1).isoformat()
-            today = date.today().isoformat()
+            start_date = default_batch_start_date(self._clock).isoformat()
+            today = effective_report_end_date(self._clock).isoformat()
 
             fr_results_batch = client.download_batch_yield_report(
                 start_date=start_date,
@@ -467,6 +468,55 @@ class DataAcquisitionOrchestrator:
         all_results.extend(self._acquire_gap_template())
 
         return all_results
+
+    def _search_unknown_report(self, request: ReportQueryRequest) -> list[AcquisitionResult]:
+        """Search FineReport when the report type cannot be determined."""
+        keyword = _extract_report_search_keyword(request)
+        if not keyword:
+            return [
+                AcquisitionResult(
+                    success=False,
+                    file_description="FineReport 报表搜索",
+                    error_message="无法判断报表类型，且未能从需求中提取可用于帆软搜索的关键词。",
+                )
+            ]
+
+        try:
+            client = self._get_finereport_client()
+            matches = client.search_reports(keyword)
+        except (FineReportConnectionError, FineReportDownloadError) as e:
+            return [
+                AcquisitionResult(
+                    success=False,
+                    file_description="FineReport 报表搜索",
+                    error_message=f"无法判断报表类型；已尝试用关键词「{keyword}」搜索帆软，但搜索失败: {e}",
+                )
+            ]
+        except Exception as e:
+            logger.exception("FineReport 报表搜索失败")
+            return [
+                AcquisitionResult(
+                    success=False,
+                    file_description="FineReport 报表搜索",
+                    error_message=f"无法判断报表类型；已尝试用关键词「{keyword}」搜索帆软，但搜索失败: {e}",
+                )
+            ]
+
+        if matches:
+            preview = "；".join(matches[:5])
+            message = (
+                f"无法判断要下载的具体报表；已用关键词「{keyword}」搜索帆软，"
+                f"候选结果: {preview}。请指定其中一个报表名称后重试。"
+            )
+        else:
+            message = f"无法判断要下载的具体报表；已用关键词「{keyword}」搜索帆软，但未找到候选结果。"
+        return [
+            AcquisitionResult(
+                success=False,
+                file_description="FineReport 报表搜索",
+                error_message=message,
+            )
+        ]
 
     # ================================================================
     # 辅助方法
@@ -500,3 +550,36 @@ class DataAcquisitionOrchestrator:
             logger.warning("自动读取产品型号失败: %s", e)
 
         return None
+
+
+def _extract_report_search_keyword(request: ReportQueryRequest) -> str:
+    """Choose one exact keyword for FineReport's non-fuzzy search box."""
+    text_parts = [request.user_intent or "", request.uncertainty_notes or ""]
+    if request.product_models:
+        text_parts.extend(request.product_models)
+    text = " ".join(part for part in text_parts if part).strip()
+    if not text:
+        return ""
+
+    for keyword in ["批次", "月周天", "CT异常", "异常", "目标", "拆解", "Gap", "良率"]:
+        if keyword.lower() in text.lower():
+            return keyword
+
+    stopwords = {
+        "查询",
+        "下载",
+        "报表",
+        "数据",
+        "帮我",
+        "用于",
+        "分析",
+        "无法",
+        "判断",
+        "具体",
+        "用户",
+        "需求",
+    }
+    for token in re.findall(r"[A-Za-z0-9_\-\u4e00-\u9fff]{2,}", text):
+        if token not in stopwords:
+            return token
+    return ""

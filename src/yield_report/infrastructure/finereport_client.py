@@ -27,6 +27,10 @@ from dotenv import load_dotenv
 from fr_web_automation.config import BrowserConfig, WebAutomationConfig
 
 from shared_kernel.config import ConfigLoader
+from yield_report.core.business_time import (
+    default_batch_start_date,
+    effective_report_end_date,
+)
 from yield_report.infrastructure.file_decryption import (
     FileDecryptionError,
     decrypt_excel_file,
@@ -204,6 +208,13 @@ class FinereportClient:
         )
         return self._decrypt_downloaded_file(filtered_path)
 
+    def search_reports(self, keyword: str, limit: int = 10) -> list[str]:
+        """Search FineReport portal report titles/snippets by one exact keyword."""
+        try:
+            return self._get_rpa_service().search_reports(keyword, limit=limit)
+        except Exception as exc:
+            raise FineReportDownloadError(f"FineReport 报表搜索失败: {exc}") from exc
+
     # ================================================================
     # 内部方法：RPA 服务管理
     # ================================================================
@@ -257,21 +268,15 @@ class FinereportClient:
     def _normalize_date(d: str | date | None) -> str:
         """将日期参数统一为 "YYYY-MM-DD" 字符串。"""
         if d is None:
-            return date.today().isoformat()
+            return effective_report_end_date().isoformat()
         if isinstance(d, date):
             return d.isoformat()
         return str(d)
 
     @staticmethod
     def _default_batch_start_date() -> str:
-        """批次报表默认开始日期：三个月前月份的第 1 天。"""
-        today = date.today()
-        start_month = today.month - 3
-        start_year = today.year
-        if start_month <= 0:
-            start_month += 12
-            start_year -= 1
-        return date(start_year, start_month, 1).isoformat()
+        """批次报表默认开始日期：今天往前 90 天。"""
+        return default_batch_start_date().isoformat()
 
     @staticmethod
     def _format_product_models(product_models: list[str] | None) -> str:

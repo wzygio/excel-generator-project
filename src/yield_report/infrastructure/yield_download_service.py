@@ -14,12 +14,16 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
 from fr_web_automation.application.download_service import DownloadService
 from fr_web_automation.config import WebAutomationConfig
 
+from yield_report.core.business_time import (
+    default_batch_start_date,
+    effective_report_end_date,
+)
 from yield_report.infrastructure.yield_portal_adapter import (
     YieldPortalAdapter,
 )
@@ -106,7 +110,7 @@ class YieldDownloadService(DownloadService):
         Returns:
             下载文件的完整路径
         """
-        end_date = end_date or date.today().isoformat()
+        end_date = end_date or effective_report_end_date().isoformat()
         save_path = self._resolve_save_path(save_dir, DAILY_YIELD_FILENAME)
 
         logger.info(">>> 开始下载月周天汇总报表 <<<")
@@ -160,7 +164,7 @@ class YieldDownloadService(DownloadService):
             下载文件的完整路径
         """
         start_date = start_date or self._default_start_date()
-        end_date = end_date or date.today().isoformat()
+        end_date = end_date or effective_report_end_date().isoformat()
         save_path = self._resolve_save_path(save_dir, BATCH_YIELD_FILENAME)
 
         logger.info(">>> 开始下载批次汇总报表 <<<")
@@ -204,6 +208,11 @@ class YieldDownloadService(DownloadService):
         logger.info("正在关闭 RPA 下载服务...")
         self._handle_shutdown()
         self._browser_initialized = False
+
+    def search_reports(self, keyword: str, limit: int = 10) -> list[str]:
+        """Search the FineReport portal when a report name cannot be inferred."""
+        self._ensure_browser_ready()
+        return self._get_adapter().search_report_titles(keyword, limit=limit)
 
     # ================================================================
     # 内部方法：浏览器生命周期
@@ -378,11 +387,5 @@ class YieldDownloadService(DownloadService):
 
     @staticmethod
     def _default_start_date() -> str:
-        """默认开始日期：三个月前月份的第1天。"""
-        today = date.today()
-        start_month = today.month - 3
-        start_year = today.year
-        if start_month <= 0:
-            start_month += 12
-            start_year -= 1
-        return date(start_year, start_month, 1).isoformat()
+        """默认开始日期：今天往前 90 天。"""
+        return default_batch_start_date().isoformat()

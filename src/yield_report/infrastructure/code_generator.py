@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
-import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
+
+from shared_kernel.infrastructure.codex_cli_client import CodexCLIClient, CodexCLIError
 
 logger = logging.getLogger(__name__)
 
@@ -300,9 +302,6 @@ def _build_encrypted_hint(file_path: Path) -> str:
 # 静态 Schema 注册表（用于加密文件的 LLM Prompt 注入）
 # =====================================================================
 
-from dataclasses import dataclass, field
-
-
 @dataclass
 class ColumnInfo:
     """单列信息。"""
@@ -424,14 +423,14 @@ def _static_schema_to_markdown(info: SchemaInfo) -> str:
         格式化的 Markdown 文本，可直接注入 LLM Prompt
     """
     lines: list[str] = []
-    lines.append(f"【数据表元数据与高保真 Schema 结构 - 静态注入】")
+    lines.append("【数据表元数据与高保真 Schema 结构 - 静态注入】")
     lines.append(f"- Sheet: {info.sheet_name}")
     lines.append(f"- 描述: {info.description}")
     lines.append(f"- 总行数: {info.total_rows}")
     lines.append(f"- 总列数: {info.total_cols}")
     lines.append(f"- 表头行: Row {info.header_row}")
     lines.append(f"- 数据起始行: Row {info.data_start_row}")
-    lines.append(f"- 数据来源: 人工校验的静态 Schema（文件受企业加密保护）")
+    lines.append("- 数据来源: 人工校验的静态 Schema（文件受企业加密保护）")
     lines.append("")
     lines.append("【字段定义（已人工修正）】")
     lines.append("| 列索引 | 表头显示 | 实际语义 | 数据类型 | 说明 |")
@@ -598,7 +597,7 @@ def extract_schema(file_path: Path, nrows: int = 20) -> str:
     return "\n".join(md_lines)
 
 
-CLAUDE_SYSTEM_PROMPT = """你是一个精密的自动化数据分析助手。
+CODE_GENERATION_SYSTEM_PROMPT = """你是一个精密的自动化数据分析助手。
 
 用户会提供:
 1. 一个 Excel 文件的绝对路径
@@ -618,7 +617,7 @@ CLAUDE_SYSTEM_PROMPT = """你是一个精密的自动化数据分析助手。
 
 
 def build_prompt(schema: str, user_demand: str, file_path: str) -> str:
-    """构建发送给 Claude CLI 的完整 prompt。
+    """Build the user prompt for pandas analysis code generation.
 
     Args:
         schema: Excel 文件的表头和抽样数据
@@ -639,14 +638,10 @@ def build_prompt(schema: str, user_demand: str, file_path: str) -> str:
 
 
 class CodeGenerator:
-    """通过 Claude CLI 驱动 pandas 代码生成的生成器。
+    """Generate pandas analysis code through Codex CLI."""
 
-    使用 subprocess 调用 claude -p 进行非交互式代码生成。
-    Claude 的代码生成质量优于普通 LLM API 调用。
-    """
-
-    def __init__(self, claude_bin: str = "claude") -> None:
-        self._claude_bin = claude_bin
+    def __init__(self, codex_client: CodexCLIClient | None = None) -> None:
+        self._codex_client = codex_client or CodexCLIClient()
 
     def generate_code(
         self,
@@ -665,31 +660,31 @@ class CodeGenerator:
             清理后的纯 Python 代码字符串
 
         Raises:
-            RuntimeError: Claude CLI 返回空代码或非零退出码
+            RuntimeError: Codex CLI returns empty code or fails
         """
         user_prompt = build_prompt(schema, user_demand, file_path)
-        full_prompt = CLAUDE_SYSTEM_PROMPT + "\n\n" + user_prompt
-
-        proc = subprocess.run(
-            [self._claude_bin, "-p", full_prompt],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-
-        if proc.returncode != 0:
-            raise RuntimeError(
-                f"Claude CLI 返回非零退出码 {proc.returncode}: {proc.stderr}"
+        try:
+            response_text = self._codex_client.chat(
+                messages=[{"role": "user", "content": user_prompt}],
+                system_prompt=CODE_GENERATION_SYSTEM_PROMPT,
+                temperature=0.1,
+                max_tokens=4096,
+                output_contract=(
+                    "Return only executable Python code. Do not include markdown, "
+                    "commentary, explanations, or file modifications."
+                ),
             )
+        except CodexCLIError as exc:
+            raise RuntimeError(f"Codex CLI code generation failed: {exc}") from exc
 
-        cleaned = self._clean_code(proc.stdout)
+        cleaned = self._clean_code(response_text)
         if not cleaned.strip():
-            raise RuntimeError("Claude CLI 返回了空代码")
+            raise RuntimeError("Codex CLI returned empty code")
         return cleaned
 
     @staticmethod
     def _clean_code(text: str) -> str:
-        """清理 Claude 响应中的 Markdown 标记和前后空白。"""
+        """Strip markdown fences and surrounding whitespace."""
         text = text.strip()
         if text.startswith("```"):
             first_nl = text.find("\n")

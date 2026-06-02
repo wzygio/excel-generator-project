@@ -68,6 +68,39 @@ def test_analysis_query_request_accepts_report_type_alias() -> None:
     assert result.source_file_type == ReportType.DAILY_YIELD
 
 
+def test_analysis_query_parser_fills_null_fields_from_heuristic() -> None:
+    response = json.dumps(
+        {
+            "source_file_type": "daily_yield",
+            "file_keywords": ["良率"],
+            "product_models": ["M626"],
+            "start_date": None,
+            "end_date": None,
+            "target_metrics": None,
+            "filter_conditions": {},
+            "analysis_logic": None,
+            "user_intent": "分析M626最近一周的日度良率变化趋势",
+            "uncertainty_notes": None,
+        },
+        ensure_ascii=False,
+    )
+
+    with patch(
+        "yield_report.core.analysis_query_parser.llm_manager.chat",
+        return_value=response,
+    ):
+        result = AnalysisQueryParser(provider="codex").parse(
+            "请分析M626最近一周的日度良率变化趋势"
+        )
+
+    assert result.source_file_type == ReportType.DAILY_YIELD
+    assert result.product_models == ["M626"]
+    assert result.target_metrics == ["日度良率"]
+    assert result.analysis_logic == "趋势分析"
+    assert result.start_date is not None
+    assert result.end_date is not None
+
+
 def test_heuristic_analysis_request_handles_ct_yield_trend_query() -> None:
     result = build_heuristic_analysis_request("请分析M678近一周的日度CT良率变化趋势")
 

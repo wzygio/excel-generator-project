@@ -140,6 +140,12 @@ class CtYieldTrendAnalyzer:
             if sheet_name not in workbook.sheetnames:
                 raise CtYieldTrendAnalysisError(f"Sheet not found: {sheet_name}")
             worksheet = workbook[sheet_name]
+            reset_dimensions = getattr(worksheet, "reset_dimensions", None)
+            if callable(reset_dimensions):
+                try:
+                    reset_dimensions()
+                except Exception:
+                    logger.debug("Unable to reset worksheet dimensions", exc_info=True)
             return [list(row) for row in worksheet.iter_rows(values_only=True)]
         finally:
             workbook.close()

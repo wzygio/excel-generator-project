@@ -12,6 +12,7 @@ yield_portal_adapter.py: 良率报表领域 PortalAdapter
 from __future__ import annotations
 
 import logging
+import re
 
 from fr_web_automation.infrastructure.playwright_adapter import OLEDPortalAdapter
 
@@ -46,7 +47,32 @@ class YieldPortalAdapter(OLEDPortalAdapter):
             label_text: 日期标签文本，如 "开始日期：" / "结束日期："
         """
         logger.info("设置日期 [%s] = %s", label_text, date_str)
-        self.fr_fill_date_by_label(label_text, date_str)
+        self._fill_date_by_label_without_query(label_text, date_str)
+
+    def _fill_date_by_label_without_query(self, label_text: str, date_str: str) -> None:
+        """
+        填写日期控件并用 Tab 触发校验。
+
+        FineReport 批次报表中，在开始日期输入框按 Enter 会触发默认查询动作；
+        此处用 Tab 只更新日期绑定值，保证结束日期和产品型号全部设置后再查询。
+        """
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+            raise ValueError(f"日期参数错误: '{date_str}' 不符合 'YYYY-MM-DD' 格式要求")
+
+        frame = self.get_active_frame()
+        xpath = (
+            f"//div[.//pre[contains(@class, 'fr-label') and contains(text(), '{label_text}')]]"
+            f"/following-sibling::div[contains(@class, 'fr-trigger-editor')][1]"
+            f"//input[contains(@class, 'fr-trigger-texteditor') or @type='text']"
+        )
+        date_input = frame.locator(xpath).first
+        date_input.wait_for(state="visible", timeout=self.default_timeout)
+        date_input.click()
+        date_input.fill("")
+        date_input.fill(date_str)
+        date_input.press("Tab")
+        self.page.wait_for_timeout(300)
+        logger.info("成功将日期组件 [%s] 设置为: %s", label_text, date_str)
 
     def set_end_date(self, date_str: str) -> None:
         """快捷设置结束日期。"""
@@ -109,6 +135,37 @@ class YieldPortalAdapter(OLEDPortalAdapter):
         """触发帆软原样导出操作。"""
         logger.info("触发 Excel 原样导出...")
         self.fr_export_excel_original()
+
+    def search_report_titles(self, keyword: str, limit: int = 10) -> list[str]:
+        """Search FineReport's portal and return visible result text snippets."""
+        keyword = keyword.strip()
+        if not keyword:
+            return []
+
+        logger.info("搜索帆软报表关键词: %s", keyword)
+        self.reset_search_state()
+        self.page.click(self.SELECTOR_SEARCH_ICON)
+        self.page.wait_for_selector(
+            self.SELECTOR_SEARCH_INPUT,
+            state="visible",
+            timeout=self.default_timeout,
+        )
+        self.page.fill(self.SELECTOR_SEARCH_INPUT, "")
+        self.page.type(self.SELECTOR_SEARCH_INPUT, keyword, delay=80)
+        self.page.wait_for_timeout(1200)
+
+        snippets: list[str] = []
+        seen: set[str] = set()
+        candidates = self.page.locator("div:visible").filter(has_text=keyword)
+        for text in candidates.all_inner_texts()[: limit * 3]:
+            cleaned = " ".join(line.strip() for line in text.splitlines() if line.strip())
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            snippets.append(cleaned)
+            if len(snippets) >= limit:
+                break
+        return snippets
 
     # ================================================================
     # 调试辅助

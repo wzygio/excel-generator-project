@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from shared_kernel.infrastructure.codex_cli_client import CodexCLIError
 from yield_report.infrastructure.code_generator import (
     CodeGenerator,
-    build_prompt,
-    extract_schema,
-    _is_header_row,
     _detect_header_depth,
     _flatten_multi_header,
+    _is_header_row,
+    build_prompt,
+    extract_schema,
 )
 
 
@@ -266,75 +266,55 @@ class TestBuildPrompt:
         assert "print" in prompt.lower()
 
 
+class FakeCodexClient:
+    def __init__(self, response: str = "print('ok')", error: Exception | None = None) -> None:
+        self.response = response
+        self.error = error
+        self.calls: list[dict] = []
+
+    def chat(self, **kwargs):
+        self.calls.append(kwargs)
+        if self.error:
+            raise self.error
+        return self.response
+
+
 class TestGenerateCode:
-    """测试通过 Claude CLI 生成代码。"""
+    """Test code generation through Codex CLI."""
 
-    @pytest.fixture
-    def gen(self) -> CodeGenerator:
-        return CodeGenerator()
-
-    def test_generate_code_returns_string(self, gen: CodeGenerator, monkeypatch):
-        """generate_code 应返回非空字符串。"""
-        def mock_run(*args, **kwargs):
-            return subprocess.CompletedProcess(
-                args=args, returncode=0, stdout="print(df.describe())", stderr=""
-            )
-
-        monkeypatch.setattr(
-            "yield_report.infrastructure.code_generator.subprocess.run",
-            mock_run,
-        )
+    def test_generate_code_returns_string(self):
+        fake = FakeCodexClient("print(df.describe())")
+        gen = CodeGenerator(codex_client=fake)
 
         result = gen.generate_code(
             schema="col1\n1\n2",
             user_demand="统计col1",
             file_path="/data/test.xlsx",
         )
+
         assert "print" in result
+        assert fake.calls
+        assert fake.calls[0]["system_prompt"]
 
-    def test_generate_code_cleans_markdown(self, gen: CodeGenerator, monkeypatch):
-        """应清理 Claude 返回中的 ```python 标记。"""
-        def mock_run(*args, **kwargs):
-            return subprocess.CompletedProcess(
-                args=args, returncode=0,
-                stdout="```python\nprint(df.head())\n```", stderr=""
-            )
-
-        monkeypatch.setattr(
-            "yield_report.infrastructure.code_generator.subprocess.run",
-            mock_run,
-        )
+    def test_generate_code_cleans_markdown(self):
+        fake = FakeCodexClient("```python\nprint(df.head())\n```")
+        gen = CodeGenerator(codex_client=fake)
 
         result = gen.generate_code("schema", "demand", "file.xlsx")
+
         assert "```" not in result
         assert result.strip() == "print(df.head())"
 
-    def test_generate_code_claude_failure_raises(self, gen: CodeGenerator, monkeypatch):
-        """Claude CLI 非零退出码时抛出 RuntimeError。"""
-        def mock_run(*args, **kwargs):
-            return subprocess.CompletedProcess(
-                args=args, returncode=1, stdout="", stderr="Claude error"
-            )
+    def test_generate_code_codex_failure_raises(self):
+        fake = FakeCodexClient(error=CodexCLIError("Codex error"))
+        gen = CodeGenerator(codex_client=fake)
 
-        monkeypatch.setattr(
-            "yield_report.infrastructure.code_generator.subprocess.run",
-            mock_run,
-        )
-
-        with pytest.raises(RuntimeError, match="Claude CLI 返回非零退出码"):
+        with pytest.raises(RuntimeError, match="Codex CLI code generation failed"):
             gen.generate_code("schema", "demand", "file.xlsx")
 
-    def test_generate_code_empty_response_raises(self, gen: CodeGenerator, monkeypatch):
-        """Claude 返回空字符串时抛出 RuntimeError。"""
-        def mock_run(*args, **kwargs):
-            return subprocess.CompletedProcess(
-                args=args, returncode=0, stdout="", stderr=""
-            )
+    def test_generate_code_empty_response_raises(self):
+        fake = FakeCodexClient("")
+        gen = CodeGenerator(codex_client=fake)
 
-        monkeypatch.setattr(
-            "yield_report.infrastructure.code_generator.subprocess.run",
-            mock_run,
-        )
-
-        with pytest.raises(RuntimeError, match="Claude CLI 返回了空代码"):
+        with pytest.raises(RuntimeError, match="Codex CLI returned empty code"):
             gen.generate_code("schema", "demand", "file.xlsx")

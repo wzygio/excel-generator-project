@@ -58,6 +58,19 @@ class FakeCtTrendAnalyzer:
         return False
 
 
+class FakeDailyYieldTrendAnalyzer:
+    def __init__(self, can_handle: bool = False) -> None:
+        self._can_handle = can_handle
+        self.calls: list[dict] = []
+
+    def can_handle(self, **kwargs) -> bool:
+        return self._can_handle
+
+    def analyze(self, **kwargs):
+        self.calls.append(kwargs)
+        return type("DailyTrend", (), {"result_text": "daily trend ok"})()
+
+
 def _request() -> AnalysisQueryRequest:
     return AnalysisQueryRequest(
         source_file_type=ReportType.DAILY_YIELD,
@@ -93,6 +106,7 @@ def test_analysis_orchestrator_runs_full_pipeline_and_records_memory(
         code_generator=FakeCodeGenerator(),
         code_executor=FakeCodeExecutor(),
         ct_trend_analyzer=FakeCtTrendAnalyzer(),
+        daily_yield_trend_analyzer=FakeDailyYieldTrendAnalyzer(),
     )
 
     result = orchestrator.analyze("请分析M678近一周的日度CT良率变化趋势")
@@ -120,3 +134,99 @@ def test_analysis_orchestrator_runs_full_pipeline_and_records_memory(
     assert confirmed.status == "confirmed"
     rejected = orchestrator.reject_memory(result.memory_record_id)
     assert rejected.status == "rejected"
+
+
+def test_analysis_orchestrator_generates_code_with_codex_cli(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "daily.xlsx"
+    source.write_bytes(b"PK\x03\x04")
+    memory = AnalysisMemoryStore(tmp_path / "memory.json")
+
+    monkeypatch.setattr(
+        "yield_report.application.analysis_orchestrator.extract_schema",
+        lambda path: "schema with 日期 产品 日度良率",
+    )
+
+    codex_calls: list[dict] = []
+
+    def codex_chat(self, **kwargs):
+        codex_calls.append(kwargs)
+        return "print('M626 最近一周日度良率趋势: codex ok')"
+
+    monkeypatch.setattr(
+        "shared_kernel.infrastructure.codex_cli_client.CodexCLIClient.chat",
+        codex_chat,
+    )
+
+    orchestrator = AnalysisOrchestrator(
+        query_parser=FakeParser(
+            AnalysisQueryRequest(
+                source_file_type=ReportType.DAILY_YIELD,
+                file_keywords=["月周天"],
+                product_models=["M626"],
+                start_date="2026-05-26",
+                end_date="2026-06-01",
+                target_metrics=["日度良率"],
+                analysis_logic="趋势分析",
+                user_intent="分析M626最近一周的日度良率变化趋势",
+            )
+        ),
+        file_resolver=FakeResolver(source),
+        memory_store=memory,
+        selector=FakeSelector(),
+        code_executor=FakeCodeExecutor(),
+        ct_trend_analyzer=FakeCtTrendAnalyzer(),
+        daily_yield_trend_analyzer=FakeDailyYieldTrendAnalyzer(),
+    )
+
+    result = orchestrator.analyze("请分析M626最近一周的日度良率变化趋势")
+
+    assert result.success is True
+    assert codex_calls
+    assert result.result_text == "analysis ok"
+    assert result.source_file_path == source
+
+
+def test_analysis_orchestrator_uses_daily_yield_trend_analyzer(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "daily.xlsx"
+    source.write_bytes(b"PK\x03\x04")
+    memory = AnalysisMemoryStore(tmp_path / "memory.json")
+    daily_analyzer = FakeDailyYieldTrendAnalyzer(can_handle=True)
+
+    monkeypatch.setattr(
+        "yield_report.application.analysis_orchestrator.extract_schema",
+        lambda path: "schema with 日期 产品 日度良率",
+    )
+
+    orchestrator = AnalysisOrchestrator(
+        query_parser=FakeParser(
+            AnalysisQueryRequest(
+                source_file_type=ReportType.DAILY_YIELD,
+                file_keywords=["月周天"],
+                product_models=["M626"],
+                start_date="2026-05-26",
+                end_date="2026-06-01",
+                target_metrics=["日度良率"],
+                analysis_logic="趋势分析",
+                user_intent="分析M626最近一周的日度良率变化趋势",
+            )
+        ),
+        file_resolver=FakeResolver(source),
+        memory_store=memory,
+        selector=FakeSelector(),
+        code_generator=FakeCodeGenerator(),
+        code_executor=FakeCodeExecutor(),
+        ct_trend_analyzer=FakeCtTrendAnalyzer(),
+        daily_yield_trend_analyzer=daily_analyzer,
+    )
+
+    result = orchestrator.analyze("请分析M626最近一周的日度良率变化趋势")
+
+    assert result.success is True
+    assert result.result_text == "daily trend ok"
+    assert daily_analyzer.calls

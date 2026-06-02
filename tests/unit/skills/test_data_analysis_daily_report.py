@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -188,3 +189,45 @@ def test_data_analysis_daily_report_calls_report_download_when_sources_missing(
     assert result.error.code == "data_analysis.daily_report.blocked"
     assert calls
     assert result.data["daily_report_facts"]["downstream_results"]
+
+
+def test_daily_report_analysis_passes_effective_daily_yield_end_date(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    calls = []
+
+    monkeypatch.setattr(
+        "yield_report.skills.data_analysis.daily_report_analysis.effective_daily_yield_end_date",
+        lambda report_date: date(2026, 6, 1),
+    )
+
+    def fake_download(request, context):
+        calls.append(request)
+        return SkillResult(
+            skill_name="report_download",
+            success=False,
+            summary="download failed",
+            error=SkillError(
+                code="report_download.execution.failed",
+                message="download failed",
+                recoverable=True,
+            ),
+        )
+
+    monkeypatch.setattr(
+        "yield_report.skills.data_analysis.daily_report_analysis.report_download_tool.run",
+        fake_download,
+    )
+
+    tool.run(
+        DataAnalysisRequest(
+            analysis_kind="daily_report",
+            report_date="2026-06-02",
+            daily_report_products=[_product()],
+        ),
+        RunContext(run_id="run-1", workspace=tmp_path, output_dir=tmp_path / "output"),
+    )
+
+    daily_yield_call = next(call for call in calls if call.report_type == "daily_yield")
+    assert daily_yield_call.end_date == "2026-06-01"

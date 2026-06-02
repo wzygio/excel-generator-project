@@ -50,6 +50,9 @@ class FakeYieldDownloadService:
         path.write_bytes(b"PK\x03\x04batch")
         return path
 
+    def search_reports(self, keyword: str, limit: int = 10) -> list[str]:
+        return [f"{keyword}-candidate"]
+
 
 def _build_client(tmp_path: Path, service: FakeYieldDownloadService) -> FinereportClient:
     """绕过真实 FineReport 初始化，注入假的下载服务。"""
@@ -126,3 +129,10 @@ def test_filter_filename_uses_all_when_product_models_are_unspecified(
         / "decrypted_files"
         / "V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号全部.xlsx"
     )
+
+
+def test_client_delegates_unknown_report_search_to_rpa_service(tmp_path: Path) -> None:
+    service = FakeYieldDownloadService()
+    client = _build_client(tmp_path, service)
+
+    assert client.search_reports("批次") == ["批次-candidate"]

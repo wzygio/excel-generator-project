@@ -4,4 +4,5 @@
 
 包含:
 - llm_handler.py: LLMManager (DeepSeek / Gemini API 调用单例)
+- codex_cli_client.py: Codex CLI non-interactive adapter
 """
