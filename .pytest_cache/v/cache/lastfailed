@@ -1,4 +1,0 @@
-{
-  "tests/unit/test_query_parser.py::TestParseErrors::test_json_missing_required_field": true,
-  "tests/unit/skills/test_daily_report_skill.py::test_daily_report_skill_degrades_to_spotfire_when_optional_sources_missing": true
-}
