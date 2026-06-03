@@ -351,7 +351,7 @@ class YieldDownloadService(DownloadService):
         """保存 RPA 失败时的页面截图和可见 iframe 文本，便于定位帆软页面状态。"""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            debug_dir = Path("downloads/rpa_debug")
+            debug_dir = self.download_dir.parent / "rpa_debug"
             debug_dir.mkdir(parents=True, exist_ok=True)
 
             screenshot_path = debug_dir / f"{timestamp}_{name}.png"

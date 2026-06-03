@@ -1,3 +1,15 @@
+# .gitignore 编写规则速查：
+# - 每行一个忽略模式；空行仅用于分组；以 # 开头的是注释。
+# - / 写在最前面表示从本 .gitignore 所在目录开始匹配，例如 /output/ 只忽略项目根目录的 output 目录。
+# - / 写在最后面表示只匹配目录，例如 downloads/ 会忽略名为 downloads 的目录及其内容，不匹配同名普通文件。
+# - / 写在中间表示路径层级，例如 resources/decrypted_files/ 只匹配 resources 下面的 decrypted_files 目录。
+# - 不以 / 开头的模式会在任意层级匹配，例如 logs/ 会匹配 logs/、app/logs/ 等目录。
+# - . 没有特殊通配含义，只是文件名中的普通字符；例如 .env 表示名为 .env 的文件，*.log 表示以 .log 结尾的文件。
+# - * 表示匹配任意字符但不跨目录分隔符 /；例如 *.log 匹配 app.log，*-smoke*.png 匹配 xxx-smoke-1.png。
+# - ** 可跨目录层级匹配；例如 **/cache/ 可匹配任意深度的 cache 目录。
+# - ! 写在最前面表示取消忽略；例如 !important.log 可以把前面规则忽略掉的 important.log 加回来。
+# - 已经被 Git 跟踪的文件不会因为加入 .gitignore 自动停止跟踪，需要执行 git rm --cached <path>。
+
 # 浏览器自动化产物：/.playwright-cli/、/.playwright-mcp/
 # Python/工具缓存：__pycache__/、/.pytest_cache/、/.ruff_cache/
 # 本地环境：/.venv/
@@ -33,6 +45,7 @@ logs/
 /downloads/
 /daily_reports/
 /resources/decrypted_files/
+/resources/.rpa_downloads/
 
 # Temporary or local data
 /data/
@@ -54,4 +67,5 @@ logs/
 Thumbs.db
 .DS_Store
 
-ouput/
+output/
+others/

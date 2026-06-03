@@ -27,9 +27,9 @@ def _request() -> AnalysisQueryRequest:
 
 def test_resolver_prefers_decrypted_file(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = resources / "decrypted_files"
+    decrypted = tmp_path / "output" / "decrypted_files"
     resources.mkdir()
-    decrypted.mkdir()
+    decrypted.mkdir(parents=True)
     plain = resources / "V3良率及不良率By月周天汇总报表.xlsx"
     normalized = decrypted / plain.name
     plain.write_bytes(b"raw")
@@ -45,7 +45,7 @@ def test_resolver_prefers_decrypted_file(tmp_path: Path) -> None:
 
 def test_resolver_prefers_standard_xlsx_when_multiple_decrypted_candidates(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = resources / "decrypted_files"
+    decrypted = tmp_path / "output" / "decrypted_files"
     decrypted.mkdir(parents=True)
     encrypted = decrypted / "V3良率及不良率By月周天汇总报表.xlsx"
     standard = decrypted / "V3良率及不良率By月周天汇总报表_decrypted.xlsx"
@@ -77,7 +77,7 @@ def test_resolver_decrypts_resource_file_when_needed(tmp_path: Path) -> None:
     result = resolver.resolve(request=_request(), user_query="query")
 
     assert calls == [source]
-    assert result.path == resources / "decrypted_files" / source.name
+    assert result.path == tmp_path / "output" / "decrypted_files" / source.name
     assert result.was_decrypted is True
 
 
@@ -145,12 +145,12 @@ def test_resolver_calls_acquisition_when_no_local_file(tmp_path: Path) -> None:
 
     assert calls
     assert result.source == "download"
-    assert result.path == resources / "decrypted_files" / downloaded.name
+    assert result.path == tmp_path / "output" / "decrypted_files" / downloaded.name
 
 
 def test_resolver_does_not_treat_decrypted_priority_as_match(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = resources / "decrypted_files"
+    decrypted = tmp_path / "output" / "decrypted_files"
     decrypted.mkdir(parents=True)
     unrelated = decrypted / "unrelated_target_file.xlsx"
     unrelated.write_bytes(b"PK\x03\x04")

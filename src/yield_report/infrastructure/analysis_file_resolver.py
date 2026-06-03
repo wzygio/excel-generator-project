@@ -48,12 +48,14 @@ class AnalysisFileResolver:
     def __init__(
         self,
         resources_dir: Path | None = None,
+        output_dir: Path | None = None,
         decrypted_dir: Path | None = None,
         decrypt_func: DecryptFunc = decrypt_excel_file,
         acquisition_orchestrator: Any | None = None,
     ) -> None:
         self._resources_dir = resources_dir or Path("resources")
-        self._decrypted_dir = decrypted_dir or self._resources_dir / "decrypted_files"
+        self._output_dir = output_dir or _default_output_dir(self._resources_dir)
+        self._decrypted_dir = decrypted_dir or self._output_dir / "decrypted_files"
         self._decrypt_func = decrypt_func
         self._acquisition_orchestrator = acquisition_orchestrator
 
@@ -64,6 +66,10 @@ class AnalysisFileResolver:
     @property
     def decrypted_dir(self) -> Path:
         return self._decrypted_dir
+
+    @property
+    def output_dir(self) -> Path:
+        return self._output_dir
 
     def resolve(
         self,
@@ -301,6 +307,13 @@ class AnalysisFileResolver:
 
 def _norm(value: str) -> str:
     return value.lower().replace(" ", "")
+
+
+def _default_output_dir(resources_dir: Path) -> Path:
+    resources = Path(resources_dir)
+    if resources.name == "resources":
+        return resources.parent / "output"
+    return Path("output")
 
 
 def _is_standard_xlsx(path: Path) -> bool:

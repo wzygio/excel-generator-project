@@ -57,7 +57,8 @@ class FakeYieldDownloadService:
 def _build_client(tmp_path: Path, service: FakeYieldDownloadService) -> FinereportClient:
     """绕过真实 FineReport 初始化，注入假的下载服务。"""
     client = FinereportClient.__new__(FinereportClient)
-    client._resources_dir = tmp_path  # type: ignore[attr-defined]
+    client._resources_dir = tmp_path / "resources"  # type: ignore[attr-defined]
+    client._output_dir = tmp_path / "output"  # type: ignore[attr-defined]
     client._get_rpa_service = lambda: service  # type: ignore[method-assign]
     return client
 
@@ -72,15 +73,16 @@ def test_daily_report_filename_appends_filter_conditions(tmp_path: Path) -> None
     )
 
     expected_name = "V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M678.xlsx"
-    assert result == tmp_path / "decrypted_files" / expected_name
+    download_dir = tmp_path / "output" / "downloads"
+    assert result == tmp_path / "output" / "decrypted_files" / expected_name
     assert result.exists()
-    assert (tmp_path / expected_name).exists()
-    assert not (tmp_path / "V3良率及不良率By月周天汇总报表.xlsx").exists()
+    assert (download_dir / expected_name).exists()
+    assert not (download_dir / "V3良率及不良率By月周天汇总报表.xlsx").exists()
     assert service.daily_calls == [
         {
             "end_date": "2026-05-01",
             "product_models": ["M678"],
-            "save_dir": tmp_path,
+            "save_dir": download_dir,
         }
     ]
 
@@ -99,16 +101,17 @@ def test_batch_report_filename_appends_multiple_filter_conditions(tmp_path: Path
         "V3良率及不良率By批次汇总报表_开始日期2026-03-01_"
         "结束日期2026-05-01_产品型号M626+M673.xlsx"
     )
-    assert result == tmp_path / "decrypted_files" / expected_name
+    download_dir = tmp_path / "output" / "downloads"
+    assert result == tmp_path / "output" / "decrypted_files" / expected_name
     assert result.exists()
-    assert (tmp_path / expected_name).exists()
-    assert not (tmp_path / "V3良率及不良率By批次汇总报表.xlsx").exists()
+    assert (download_dir / expected_name).exists()
+    assert not (download_dir / "V3良率及不良率By批次汇总报表.xlsx").exists()
     assert service.batch_calls == [
         {
             "start_date": "2026-03-01",
             "end_date": "2026-05-01",
             "product_models": ["M626", "M673"],
-            "save_dir": tmp_path,
+            "save_dir": download_dir,
         }
     ]
 
@@ -126,6 +129,7 @@ def test_filter_filename_uses_all_when_product_models_are_unspecified(
 
     assert result == (
         tmp_path
+        / "output"
         / "decrypted_files"
         / "V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号全部.xlsx"
     )

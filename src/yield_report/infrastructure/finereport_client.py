@@ -114,6 +114,7 @@ class FinereportClient:
             )
 
         self._resources_dir: Path = self._resolve_resources_dir()
+        self._output_dir: Path = self._resolve_output_dir()
 
         # RPA 下载服务（懒加载）
         self._rpa_service: _YieldDownloadService | None = None
@@ -135,7 +136,7 @@ class FinereportClient:
         Args:
             end_date: 结束日期 (默认今天)
             product_models: 产品型号列表 (默认全部)
-            save_dir: 保存目录 (默认 resources/)
+            save_dir: 保存目录 (默认 output/downloads/)
 
         Returns:
             Path: 下载文件的完整路径
@@ -143,7 +144,7 @@ class FinereportClient:
         Raises:
             FineReportDownloadError: 下载失败
         """
-        save_dir = Path(save_dir) if save_dir else self._resources_dir
+        save_dir = self._resolve_report_download_dir(save_dir)
         end_date_str = self._normalize_date(end_date)
 
         service = self._get_rpa_service()
@@ -175,7 +176,7 @@ class FinereportClient:
             start_date: 开始日期 (默认三个月前月初)
             end_date: 结束日期 (默认今天)
             product_models: 产品型号列表 (默认全部)
-            save_dir: 保存目录 (默认 resources/)
+            save_dir: 保存目录 (默认 output/downloads/)
 
         Returns:
             Path: 下载文件的完整路径
@@ -183,7 +184,7 @@ class FinereportClient:
         Raises:
             FineReportDownloadError: 下载失败
         """
-        save_dir = Path(save_dir) if save_dir else self._resources_dir
+        save_dir = self._resolve_report_download_dir(save_dir)
         start_date_str = (
             self._normalize_date(start_date)
             if start_date
@@ -227,8 +228,8 @@ class FinereportClient:
                 f"{self._host}/webroot/decision#directory"
             )
 
-            # 配置 RPA 下载目录（使用临时子目录，避免污染 resources/）
-            self._rpa_download_dir = self._resources_dir / ".rpa_downloads"
+            # 配置 RPA 下载目录（生成物统一进入 output/）
+            self._rpa_download_dir = self._output_dir / "rpa_downloads"
             self._rpa_download_dir.mkdir(parents=True, exist_ok=True)
 
             rpa_config = WebAutomationConfig(
@@ -263,6 +264,22 @@ class FinereportClient:
             return Path(app_config.paths.resources_dir)
         except Exception:
             return Path("resources")
+
+    @staticmethod
+    def _resolve_output_dir() -> Path:
+        """解析 output 目录路径。"""
+        try:
+            config_loader = ConfigLoader()
+            app_config = config_loader.get()
+            return Path(app_config.paths.output_dir)
+        except Exception:
+            return Path("output")
+
+    def _resolve_report_download_dir(self, save_dir: str | Path | None) -> Path:
+        """解析原始报表下载保存目录。"""
+        directory = Path(save_dir) if save_dir else self._output_dir / "downloads"
+        directory.mkdir(parents=True, exist_ok=True)
+        return directory
 
     @staticmethod
     def _normalize_date(d: str | date | None) -> str:
@@ -325,8 +342,8 @@ class FinereportClient:
         return target_path
 
     def _decrypt_downloaded_file(self, file_path: Path) -> Path:
-        """将下载文件解密到 resources/decrypted_files，并返回解密后的路径。"""
-        output_dir = self._resources_dir / "decrypted_files"
+        """将下载文件解密到 output/decrypted_files，并返回解密后的路径。"""
+        output_dir = self._output_dir / "decrypted_files"
         try:
             return decrypt_excel_file(file_path, output_dir)
         except FileDecryptionError as exc:
