@@ -107,6 +107,17 @@ class DailyReportStructuredAnalyzer:
 
     def run(self) -> SkillResult:
         product_models = [_string_cell(product.get("product_type")) for product in self.products]
+        logger.info(
+            "Daily report structured analysis started: report_date=%s product_count=%d",
+            self.report_date,
+            len(product_models),
+            extra={
+                "event": "start",
+                "purpose": "business",
+                "run_id": self.context.run_id,
+                "task_id": TOOL_NAME,
+            },
+        )
         self._resolve_sources(product_models)
 
         target_rates = self._load_target_rates()
@@ -149,6 +160,22 @@ class DailyReportStructuredAnalyzer:
             "warnings": self.warnings,
         }
         if blocked_sections:
+            logger.error(
+                "Daily report structured analysis blocked: report_date=%s product_count=%d "
+                "blocked_sections=%d warnings=%s source_files=%s",
+                self.report_date,
+                len(product_results),
+                len(blocked_sections),
+                self.warnings,
+                {alias: str(path) for alias, path in self.source_files.items()},
+                extra={
+                    "event": "failure",
+                    "purpose": "business",
+                    "run_id": self.context.run_id,
+                    "task_id": TOOL_NAME,
+                    "error_code": "data_analysis.daily_report.blocked",
+                },
+            )
             return SkillResult(
                 skill_name=TOOL_NAME,
                 success=False,
@@ -173,6 +200,19 @@ class DailyReportStructuredAnalyzer:
             for alias, path in self.source_files.items()
             if path.exists()
         ]
+        logger.info(
+            "Daily report structured analysis completed: report_date=%s product_count=%d artifacts=%d warnings=%s",
+            self.report_date,
+            len(product_results),
+            len(artifacts),
+            self.warnings,
+            extra={
+                "event": "success",
+                "purpose": "business",
+                "run_id": self.context.run_id,
+                "task_id": TOOL_NAME,
+            },
+        )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=True,
@@ -290,6 +330,16 @@ class DailyReportStructuredAnalyzer:
         ]
         if missing:
             self.warnings.append(f"daily_yield 缺少产品 CT 数据，将尝试下载: {', '.join(missing)}")
+            logger.warning(
+                "daily_yield missing product CT data; downloading missing models: %s",
+                ", ".join(missing),
+                extra={
+                    "event": "fallback",
+                    "purpose": "business",
+                    "run_id": self.context.run_id,
+                    "task_id": TOOL_NAME,
+                },
+            )
         return missing
 
     def _read_sheet(self, alias: str, sheet_name: str) -> SheetData | None:

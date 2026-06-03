@@ -16,7 +16,7 @@ import re
 
 from fr_web_automation.infrastructure.playwright_adapter import OLEDPortalAdapter
 
-logger = logging.getLogger("YieldPortalAdapter")
+logger = logging.getLogger(__name__)
 
 
 class YieldPortalAdapter(OLEDPortalAdapter):

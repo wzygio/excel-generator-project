@@ -134,8 +134,8 @@ class TestConfigLoaderLoading:
         # base_dir 应该是一个非空的有效路径字符串
         assert isinstance(cfg.paths.base_dir, str)
         assert len(cfg.paths.base_dir) > 0
-        # log_dir 应该以 base_dir 为基础
-        assert cfg.paths.log_dir.endswith("logs")
+        # log_dir 应该归一到标准输出目录下
+        assert Path(cfg.paths.log_dir).parts[-2:] == ("output", "logs")
 
     def test_llm_config(self, temp_config_dir: Path):
         """验证 LLM 配置正确加载。"""

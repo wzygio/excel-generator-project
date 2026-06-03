@@ -5,7 +5,7 @@ paths:
   base_dir: 'D:/wzy/Python/excel-generator-project'  # 项目根目录（相对路径）
   resources_dir: 'resources'  # 数据文件夹路径
   temp_dir: 'data/temp'  # 临时文件夹路径
-  log_dir: 'logs'  # 日志文件夹路径
+  log_dir: 'output/logs'  # 日志文件夹路径（生成物统一进入 output/）
   output_dir: 'output'  # 输出文件夹路径
   template_file: 'V3屏体良率日报-A版.xlsx'  # 模板文件路径
   temp_file: 'V3屏体良率日报-temp.xlsx'  # 临时文件路径

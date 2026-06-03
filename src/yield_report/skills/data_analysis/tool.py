@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from yield_report.agent.spec_model import RunContext, SkillResult
+from yield_report.infrastructure.logging_config import configure_yield_report_logging_for_context
 from yield_report.skills.data_analysis import implementation
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
 
@@ -14,6 +15,7 @@ request_model = DataAnalysisRequest
 
 
 def run(request: DataAnalysisRequest, context: RunContext) -> SkillResult:
+    configure_yield_report_logging_for_context(context)
     result = implementation.execute_data_analysis(request, context=context)
     context.remember("last_data_analysis", result)
     return result

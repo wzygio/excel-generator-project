@@ -38,6 +38,7 @@ from yield_report.infrastructure.daily_yield_trend_analyzer import (
     DailyYieldTrendAnalysisError,
     DailyYieldTrendAnalyzer,
 )
+from yield_report.infrastructure.logging_config import configure_yield_report_logging
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,7 @@ class AnalysisOrchestrator:
         ct_trend_analyzer: CtYieldTrendAnalyzer | None = None,
         daily_yield_trend_analyzer: DailyYieldTrendAnalyzer | None = None,
     ) -> None:
+        configure_yield_report_logging()
         self._llm_provider = llm_provider or "deepseek"
         self._query_parser = query_parser or AnalysisQueryParser(provider=self._llm_provider)
         self._memory_store = memory_store or AnalysisMemoryStore()

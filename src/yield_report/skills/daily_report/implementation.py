@@ -239,9 +239,39 @@ class DailyReportGenerator:
                 details={"report_date": report_date},
             )
 
+        logger.info(
+            "Daily report generation started: report_date=%s product_count=%d source_files=%s",
+            report_date,
+            len(products),
+            {key: str(path) for key, path in self.source_files.items()},
+            extra={
+                "event": "start",
+                "purpose": "business",
+                "run_id": self.context.run_id,
+                "task_id": TOOL_NAME,
+            },
+        )
         analysis_result = self._run_data_analysis(report_date, products)
         if not analysis_result.success:
             facts = analysis_result.data.get("daily_report_facts") or {}
+            warnings = list(self.warnings) + list(analysis_result.warnings)
+            blocked_sections = facts.get("blocked_sections", [])
+            logger.error(
+                "Daily report generation blocked: report_date=%s product_count=%d "
+                "blocked_sections=%d warnings=%s source_files=%s",
+                report_date,
+                len(products),
+                len(blocked_sections),
+                warnings,
+                {key: str(path) for key, path in self.source_files.items()},
+                extra={
+                    "event": "failure",
+                    "purpose": "business",
+                    "run_id": self.context.run_id,
+                    "task_id": TOOL_NAME,
+                    "error_code": "daily_report.analysis.blocked",
+                },
+            )
             return SkillResult(
                 skill_name=TOOL_NAME,
                 success=False,
@@ -254,7 +284,7 @@ class DailyReportGenerator:
                     "downstream_results": facts.get("downstream_results", []),
                     "blocked_sections": facts.get("blocked_sections", []),
                 },
-                warnings=list(self.warnings) + list(analysis_result.warnings),
+                warnings=warnings,
                 error=SkillError(
                     code="daily_report.analysis.blocked",
                     message=analysis_result.error.message if analysis_result.error else analysis_result.summary,
@@ -280,6 +310,20 @@ class DailyReportGenerator:
         artifacts = self._write_outputs(payload)
         payload.output_file = str(artifacts[0].path) if artifacts else ""
 
+        logger.info(
+            "Daily report generation completed: report_date=%s product_count=%d output=%s warnings=%s",
+            report_date,
+            len(product_reports),
+            payload.output_file,
+            payload.warnings,
+            extra={
+                "event": "success",
+                "purpose": "business",
+                "run_id": self.context.run_id,
+                "task_id": TOOL_NAME,
+                "output_path": payload.output_file,
+            },
+        )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=True,
@@ -710,6 +754,17 @@ def execute_daily_report(
     try:
         return DailyReportGenerator(request, context).run()
     except DailyReportGenerationError as exc:
+        logger.error(
+            "Daily report generation failed: %s",
+            exc.message,
+            extra={
+                "event": "failure",
+                "purpose": "business",
+                "run_id": context.run_id,
+                "task_id": TOOL_NAME,
+                "error_code": exc.code,
+            },
+        )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=False,
@@ -727,7 +782,16 @@ def execute_daily_report(
             ),
         )
     except Exception as exc:
-        logger.exception("Daily report generation failed")
+        logger.exception(
+            "Daily report generation failed",
+            extra={
+                "event": "failure",
+                "purpose": "business",
+                "run_id": context.run_id,
+                "task_id": TOOL_NAME,
+                "error_code": "daily_report.execution.failed",
+            },
+        )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=False,

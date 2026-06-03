@@ -49,6 +49,7 @@ from yield_report.infrastructure.local_file_loader import (
     LocalFileNotFoundError,
     NetworkFileCopyError,
 )
+from yield_report.infrastructure.logging_config import configure_yield_report_logging
 from yield_report.infrastructure.product_models import (
     ProductModelExtractionError,
     extract_product_models,
@@ -110,6 +111,7 @@ class DataAcquisitionOrchestrator:
         Args:
             llm_provider: LLM 供应商 ("deepseek" / "gemini")，默认从 config 读取
         """
+        configure_yield_report_logging()
         self._query_parser = QueryParser(provider=llm_provider)
         self._clock = clock
         self._finereport_client: FinereportClient | None = None
@@ -138,6 +140,11 @@ class DataAcquisitionOrchestrator:
         try:
             request = self._query_parser.parse(user_input)
         except QueryParserError as e:
+            logger.warning(
+                "Data acquisition query parsing failed: %s",
+                e,
+                extra={"event": "failure", "purpose": "business"},
+            )
             return UserQueryResult(
                 success=False,
                 parsed_request=ReportQueryRequest(user_intent="解析失败"),
@@ -161,6 +168,11 @@ class DataAcquisitionOrchestrator:
         produce a `ReportQueryRequest` from a Spec and execute the stable
         acquisition workflow without forcing another natural-language parse.
         """
+        logger.info(
+            "Data acquisition request started: report_type=%s",
+            request.report_type,
+            extra={"event": "start", "purpose": "business"},
+        )
         # Step 2: 根据 report_type 执行获取
         results: list[AcquisitionResult] = []
 
@@ -190,6 +202,16 @@ class DataAcquisitionOrchestrator:
         else:
             summary = f"❌ 所有文件获取失败 ({total_count}/{total_count})"
 
+        logger.log(
+            logging.INFO if all_success else logging.WARNING if success_count else logging.ERROR,
+            "Data acquisition request completed: success_count=%d total_count=%d",
+            success_count,
+            total_count,
+            extra={
+                "event": "success" if all_success else "failure",
+                "purpose": "business",
+            },
+        )
         return UserQueryResult(
             success=all_success,
             parsed_request=request,

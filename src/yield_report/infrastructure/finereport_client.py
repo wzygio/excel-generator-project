@@ -39,7 +39,7 @@ from yield_report.infrastructure.yield_download_service import (
     YieldDownloadService as _YieldDownloadService,
 )
 
-logger = logging.getLogger("FinereportClient")
+logger = logging.getLogger(__name__)
 MAX_FILTER_SUFFIX_LENGTH = 120
 
 

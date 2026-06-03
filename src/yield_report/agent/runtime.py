@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -10,8 +11,10 @@ from pydantic import BaseModel, ConfigDict
 
 from yield_report.agent.spec_model import RunContext, SkillCall, SkillResult, TaskSpec
 from yield_report.agent.trace import TraceEvent, TraceWriter
+from yield_report.infrastructure.logging_config import configure_yield_report_logging_for_context
 
 SkillRunFunc = Callable[[BaseModel, RunContext], SkillResult]
+logger = logging.getLogger(__name__)
 
 
 class SkillRegistration(BaseModel):
@@ -49,6 +52,7 @@ class AgentRuntime:
     ) -> list[SkillResult]:
         run_id = spec.run_id or "manual-run"
         context = context or RunContext(run_id=run_id, workspace=Path.cwd())
+        configure_yield_report_logging_for_context(context)
         self._seed_spec_inputs(spec, context)
         if context.trace is None and spec.trace.get("path"):
             trace_path = Path(spec.trace["path"])
@@ -77,10 +81,30 @@ class AgentRuntime:
     def run_call(self, call: SkillCall, context: RunContext) -> SkillResult:
         registration = self._skills.get(call.skill)
         if registration is None:
+            logger.error(
+                "Skill is not registered: %s",
+                call.skill,
+                extra={
+                    "event": "failure",
+                    "purpose": "operation",
+                    "run_id": context.run_id,
+                    "task_id": call.id,
+                },
+            )
             raise AgentRuntimeError(f"Skill is not registered: {call.skill}")
 
         request_data = self._resolve_references(call.input, context)
         request = registration.request_model(**request_data)
+        logger.info(
+            "Skill call started: %s",
+            call.skill,
+            extra={
+                "event": "start",
+                "purpose": "operation",
+                "run_id": context.run_id,
+                "task_id": call.id,
+            },
+        )
         self._write_trace(
             context=context,
             call=call,
@@ -88,6 +112,18 @@ class AgentRuntime:
             input_summary=str(request_data)[:500],
         )
         result = registration.run(request, context)
+        logger.log(
+            logging.INFO if result.success else logging.ERROR,
+            "Skill call completed: %s success=%s",
+            call.skill,
+            result.success,
+            extra={
+                "event": "success" if result.success else "failure",
+                "purpose": "operation",
+                "run_id": context.run_id,
+                "task_id": call.id,
+            },
+        )
         self._write_trace(
             context=context,
             call=call,

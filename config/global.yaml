@@ -14,7 +14,7 @@ paths:
   base_dir: "."                     # 项目根目录
   resources_dir: "resources"        # 源表和模板存放目录
   temp_dir: "data/temp"             # 临时文件目录
-  log_dir: "logs"                   # 日志文件目录
+  log_dir: "output/logs"            # 日志文件目录（生成物统一进入 output/）
   output_dir: "output"              # 输出文件目录
   template_file: "V3屏体良率日报-A版.xlsx"  # 日报模板文件名
   temp_file: "temp_output.xlsx"     # 临时输出文件名

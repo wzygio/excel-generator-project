@@ -28,7 +28,7 @@ from yield_report.infrastructure.yield_portal_adapter import (
     YieldPortalAdapter,
 )
 
-logger = logging.getLogger("YieldDownloadService")
+logger = logging.getLogger(__name__)
 
 # ================================================================
 # 报表常量定义（集中管理，方便调整）

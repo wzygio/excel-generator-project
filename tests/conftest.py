@@ -56,7 +56,7 @@ def temp_config_dir(tmp_path: Path) -> Generator[Path, None, None]:
             "base_dir": str(tmp_path),
             "resources_dir": str(tmp_path / "resources"),
             "temp_dir": str(tmp_path / "temp"),
-            "log_dir": str(tmp_path / "logs"),
+            "log_dir": str(tmp_path / "output" / "logs"),
             "output_dir": str(tmp_path / "output"),
         },
         "llm": {

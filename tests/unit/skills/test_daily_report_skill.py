@@ -304,3 +304,10 @@ def test_daily_report_skill_blocks_when_analysis_sources_missing(
     assert result.data["blocked_sections"]
     assert result.data["downstream_results"]
     assert not (output_dir / "daily_report.xlsx").exists()
+
+    all_log = output_dir / "logs" / "all.log"
+    daily_report_error_log = output_dir / "logs" / "skills_daily_report" / "error.log"
+    assert "Daily report generation blocked" in all_log.read_text(encoding="utf-8")
+    error_log_content = daily_report_error_log.read_text(encoding="utf-8")
+    assert "Daily report generation blocked" in error_log_content
+    assert "error_code=daily_report.analysis.blocked" in error_log_content

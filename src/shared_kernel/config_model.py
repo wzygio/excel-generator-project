@@ -31,7 +31,7 @@ class PathsConfig(BaseModel):
     base_dir: str = Field(default=".", description="项目根目录")
     resources_dir: str = Field(default="resources", description="资源文件目录")
     temp_dir: str = Field(default="data/temp", description="临时文件目录")
-    log_dir: str = Field(default="logs", description="日志文件目录")
+    log_dir: str = Field(default="output/logs", description="日志文件目录")
     output_dir: str = Field(default="output", description="输出文件目录")
     template_file: str = Field(default="template.xlsx", description="模板文件名称")
     temp_file: str = Field(default="temp_output.xlsx", description="临时输出文件")
