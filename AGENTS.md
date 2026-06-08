@@ -79,6 +79,12 @@ uv run pytest tests/unit/test_query_parser.py tests/unit/test_data_acquisition_o
 # Run Agent / Skill tests
 uv run pytest tests/unit/agent tests/unit/skills -v --tb=short
 
+# Create a daily-report TaskSpec from a natural-language goal
+uv run python scripts/create_daily_report_spec.py --goal "生成 M678 今天良率日报" --print-path
+
+# Execute a TaskSpec and write trace/artifacts under specs/runs/<run_id>/
+uv run python scripts/run_task_spec.py --spec specs/runs/<run_id>/spec.yaml
+
 # Quality checks
 uv run ruff check .
 uv run pyright

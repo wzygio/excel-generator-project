@@ -100,6 +100,17 @@ class DailyReportStructuredAnalyzer:
         self.sections = request.sections or DEFAULT_SECTIONS
         self.products = list(request.daily_report_products)
         self.report_date = _normalize_date(request.report_date or _first_product_date(self.products))
+        if not self.products and request.product_models:
+            self.products = [
+                {
+                    "product_type": product_model,
+                    "product": product_model,
+                    "report_date": self.report_date,
+                    "is_qualified": False,
+                }
+                for product_model in request.product_models
+                if product_model
+            ]
         self.source_files: dict[str, Path] = {}
         self.downstream_results: list[dict[str, Any]] = []
         self.warnings: list[str] = []

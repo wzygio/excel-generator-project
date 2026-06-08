@@ -151,6 +151,27 @@ def test_data_analysis_daily_report_returns_four_sections(tmp_path: Path) -> Non
     assert sections["new_exception"]["status"] == "emitted"
 
 
+def test_data_analysis_daily_report_uses_product_models_without_product_rows(tmp_path: Path) -> None:
+    result = tool.run(
+        DataAnalysisRequest(
+            analysis_kind="daily_report",
+            report_date="2026-06-01",
+            product_models=["M678"],
+            source_files={
+                "daily_yield": _daily_yield(tmp_path / "daily_yield.xlsx"),
+                "target_decomposition": _target(tmp_path / "target.xlsx"),
+                "ct_exception": _ct_exception(tmp_path / "ct_exception.xlsx"),
+            },
+        ),
+        RunContext(run_id="run-1", workspace=tmp_path, output_dir=tmp_path / "output"),
+    )
+
+    assert result.success is True
+    products = result.data["daily_report_facts"]["products"]
+    assert products[0]["product"]["product_type"] == "M678"
+    assert products[0]["sections"]["gap"]["status"] == "emitted"
+
+
 def test_data_analysis_daily_report_calls_report_download_when_sources_missing(
     monkeypatch,
     tmp_path: Path,
