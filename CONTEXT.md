@@ -24,6 +24,22 @@ _Avoid_: Prompt-only module
 A user-editable task contract that records goals, inputs, selected rules, and output expectations for a yield-report run. A Spec is only executable when its fields map to supported Skill contracts or code-backed rule parameters.
 _Avoid_: Free-form requirements document
 
+**Harness**:
+The project support structure that lets Codex understand intent, find the right context, execute safely, and verify its work. A Harness is a map and feedback system around the codebase, not a single prompt file.
+_Avoid_: Prompt pack, documentation dump
+
+**Knowledge System**:
+The progressive-disclosure part of the Harness that points Codex from a short entry file to architecture, design, plans, specs, references, and generated facts.
+_Avoid_: One giant AGENTS file, project encyclopedia
+
+**Mechanical Constraint System**:
+The executable rules that keep Codex work inside project boundaries, such as tests, type checks, lint checks, schemas, and structural checks.
+_Avoid_: Style advice, informal preference
+
+**Feedback and Garbage Collection System**:
+The Harness mechanism for turning review findings, failures, stale docs, generated artifacts, and recurring cleanup needs into durable project updates.
+_Avoid_: One-off cleanup note, forgotten TODO
+
 ## Example Dialogue
 
 Developer: "Can the user change the daily report rule without editing code?"
