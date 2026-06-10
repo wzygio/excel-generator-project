@@ -1,10 +1,23 @@
-谢谢。
+# Task1
+你好，我正在开发一个智能体项目。但我不知道如何构建一个Memory系统，所以我想引入一个已有框架。
+1. 请在github上搜索agent-memroy和mempalace这两个项目。
+2. 并告诉我哪个适合作为Agent Runtime的memory？
 
-【Task】
-1. 请你从github上搜索并了解一下CopilotKit这个项目。它是一个快速搭建Agent UI的项目。
-2. 请问类似于CopilotKit一样，但是是面向Agent后端开发的快速搭建框架？ 
-3. 我期待的就是类似ChatGPT的Web端，我上传一个Excel表格，向它询问一些问题，它可以直接给出回答，这个过程中根本不需要skill或Code。 
-4. 我们可以直接在项目后端调用Codex CLI来实现这一点吗？ 
+## Requirements
+衡量标准如下：
+1. 它应该是针对一个智能体项目的memory框架，而不是优化Codex这种通用智能体。
+2. 它应该尽可能的轻量化，适合部署给当前项目。
 
-【Context】
-因为根据我的需求，我重新用LangChain或LangGraph这种框架从零开发一整套Agent架构（特别是任务状态机）有点太浪费时间了，毕竟我只是想要让AI来帮助我分析数据。
+## Hint
+如果你搜索后判断这两个框架都不适合部署给当前项目，请再给出一两个建议、
+
+
+---
+
+# Task2
+为了当前智能体项目稳定运行和未来拓展，我们都必须引入一个专业框架来作为Runtime框架。请您搜索并给出推荐。
+## Context
+- 最为标准的毫无疑问是LangChain或LangGraph。
+- 但我想知道有没有更为轻量级，但同样性能稳定、便于拓展的框架？
+- 还是说即便我们使用LangChain或LangGraph，依旧可以直搭建一个较为轻量的框架。
+
