@@ -1,6 +1,6 @@
 # Harness Audit
 
-Project: `D:\wzy\Python\excel-generator-project-harness-worktree`
+Project: `D:\wzy\Python\excel-generator-project`
 
 ## Present
 
@@ -10,8 +10,12 @@ Project: `D:\wzy\Python\excel-generator-project-harness-worktree`
 - `CONTEXT.md`
 - `docs/design/`
 - `docs/plans/`
+- `docs/exec-plans/active/`
+- `docs/exec-plans/completed/`
+- `docs/observability.md`
 - `docs/references/`
 - `docs/generated/`
+- `docs/generated/harness-garbage-collection.md`
 - `specs/`
 - `tests/`
 

@@ -12,19 +12,22 @@ Agent-friendly Spec / Skill / Runtime architecture.
 This is not a generic BI platform. Prefer explicit, testable, traceable report workflows over
 broad automatic inference.
 
-## Architecture Map
+## Harness Map
 
-- `app/main.py`: Streamlit UI entrypoint for report download, data analysis, and daily report work.
-- `src/yield_report/agent/`: TaskSpec, router, runtime, trace, and memory contracts.
-- `src/yield_report/skills/`: agent-facing tools: `report_download`, `data_analysis`, `daily_report`.
-- `src/yield_report/application/`, `core/`, `infrastructure/`: current compatible implementation used by skills.
-- `src/shared_kernel/`: config models/loading and shared LLM access.
-- `src/excel_generator_project/`: V1 compatibility pipeline; edit only when maintaining legacy behavior.
-- `specs/templates/`: reusable task specs. `specs/runs/` is runtime output and should stay ignored.
+Keep this root file stable. Do not encode business-module details here when they may change with
+implementation work; route to the lower Harness documents instead.
+
+- `ARCHITECTURE.md`: current system shape, module boundaries, runtime flow, and architecture decisions.
 - `docs/agent/`: Agent / Skill / Spec contracts.
-- `docs/design/`: architecture, domain, and development discipline.
-- `.roo/rules-architect/` and `.roo/rules-code/`: RooCode mode-specific harness rules.
-- `tests/unit/`: current test suite, including `agent/` and `skills/` subdirectories.
+- `docs/design/index.md`: entrypoint for domain, UI, infrastructure, and architecture design notes.
+- `docs/plans/index.md`: long-lived project plans and planning conventions.
+- `docs/exec-plans/active/`: current execution plans awaiting or undergoing implementation.
+- `docs/exec-plans/completed/`: completed execution plans kept for history.
+- `docs/observability.md`: trace, log, test, smoke, and diagnostics entrypoint.
+- `docs/generated/`: rebuildable scans, audits, and Harness cleanup reports.
+- `specs/`: user-maintainable task specs, templates, and rule contracts; runtime runs stay ignored.
+- `.roo/rules-architect/` and `.roo/rules-code/`: RooCode mode-specific Harness rules.
+- `tests/`: validation entrypoint.
 
 ## Task Routing
 
@@ -32,12 +35,16 @@ broad automatic inference.
 - For Agent runtime changes, read `docs/agent/architecture.md` and inspect `src/yield_report/agent/`.
 - For Skill changes, read `docs/agent/skill_contract.md`, the target `src/yield_report/skills/*/SKILL.md`, and the related tests under `tests/unit/skills/`.
 - For Spec or workflow-template changes, read `docs/agent/spec_contract.md` and `specs/templates/daily_report_spec.yaml`.
-- For yield-report business behavior, read `docs/design/yield_report_domain.md`.
-- For CT sheet parsing or trend logic, read `specs/ct_sheet_schema.md`.
+- For domain or design behavior, start from `docs/design/index.md` and then read the linked lower-level document.
 - For config, LLM, or logging changes, read `docs/design/shared_kernel.md`.
 - For FineReport RPA changes, read `docs/prompt/skill-fr_rpa.md` and reuse `fr_web_automation` before writing project-local browser logic.
 - For Harness / planning behavior, read `.roo/rules-architect/harness-architecture.md`.
-- After coding work, follow `.roo/rules-code/knowledge-summarization.md`.
+- After coding work, follow `.roo/rules-code/knowledge-summarization.md` and `docs/observability.md`.
+
+## Planning And Architecture Updates
+
+- After drafting a non-trivial plan, ask the user to confirm it. Once accepted, update the plan under `docs/plans/`, using `docs/exec-plans/active/` for current execution plans.
+- After code changes, ask the user to confirm whether the resulting architecture is accepted. Once accepted, update `ARCHITECTURE.md` when module ownership, contracts, runtime flow, or cross-layer behavior changed.
 
 ## Rules Boundary
 

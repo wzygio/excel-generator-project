@@ -17,6 +17,8 @@
 
 当前仓库没有稳定的 `tests/integration/` 目录；不要把它作为固定必跑项。若新增集成测试，再同步更新本文件和 `.roorules`。
 
+可观测性入口统一从 `docs/observability.md` 进入。涉及 trace、日志、run 目录、smoke 流程或诊断命令变化时，同步更新该文件。
+
 ## 2. 架构变更检测
 
 实现后检查是否涉及以下内容：
@@ -32,6 +34,8 @@
 
 如果只是局部 bugfix 且契约、目录、数据流不变，明确说明“无架构文档需同步”。
 
+执行代码变更后，先请用户确认新架构或行为是否被接受；确认通过后，只有在模块职责、公共契约、数据流、Runtime 流程或跨层边界变化时更新 `ARCHITECTURE.md`。
+
 ## 3. 新解决方案检测
 
 遇到可复用方案时，优先沉淀到合适位置：
@@ -42,6 +46,7 @@
 | Agent/Skill/Spec 契约经验 | `docs/agent/*.md` |
 | 可执行且跨项目复用的流程 | Codex 全局 skill，必要时附脚本和 `agents/openai.yaml` |
 | 仅一次性诊断脚本 | 不留在仓库根目录；若必须保留，放 `scripts/` 并说明用途 |
+| Harness 清理发现 | `docs/generated/harness-garbage-collection.md` |
 
 不要因为一次偶发问题就创建新 skill；只有确定性、重复性、值得固化的流程才脚本化或 skill 化。
 
@@ -52,6 +57,7 @@
 - 改了哪些 Harness / 代码 / 文档。
 - 跑了哪些验证；没跑的说明原因。
 - 是否有架构或新方案需要继续沉淀。
+- 是否需要移动 `docs/exec-plans/active/` 中已完成的计划到 `docs/exec-plans/completed/`。
 - 若有运行产物或忽略文件状态异常，指出但不要擅自清理无关文件。
 
 ## 5. 用户决策后的操作

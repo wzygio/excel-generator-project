@@ -15,7 +15,12 @@ excel-generator-project/
 ├── docs/
 │   ├── agent/                             # Agent / Skill / Spec 契约
 │   ├── design/                            # 领域设计、边界、开发纪律
-│   ├── plans/                             # 功能计划和历史方案
+│   ├── plans/                             # 长期计划和计划索引
+│   ├── exec-plans/
+│   │   ├── active/                        # 当前执行计划
+│   │   └── completed/                     # 历史执行计划
+│   ├── generated/                         # 可重建审计、Harness 清理记录
+│   ├── observability.md                   # trace / log / smoke / diagnostics 入口
 │   └── prompt/                            # 专项 prompt / skill 经验
 ├── specs/
 │   ├── templates/daily_report_spec.yaml   # Spec 模板
@@ -39,21 +44,27 @@ excel-generator-project/
 
 1. 必读：`.roorules`、`ARCHITECTURE.md`、`CONTEXT.md`。
 2. Agent / Skill / Spec 相关：读 `docs/agent/architecture.md`、`skill_contract.md`、`spec_contract.md`。
-3. 领域流程相关：读 `docs/design/yield_report_domain.md` 和必要的 `docs/plans/feat-*.md`。
-4. 开发纪律或红线相关：读 `docs/design/development_framework.md`。
-5. FineReport / RPA 相关：读 `docs/prompt/skill-fr_rpa.md`，并优先复用 `fr_web_automation`。
+3. 领域或设计相关：从 `docs/design/index.md` 进入，不在根入口硬编码业务文件。
+4. 计划相关：先读 `docs/plans/index.md`，当前执行计划进入 `docs/exec-plans/active/`。
+5. 可观测性或验证相关：读 `docs/observability.md`。
+6. FineReport / RPA 相关：读 `docs/prompt/skill-fr_rpa.md`，并优先复用 `fr_web_automation`。
 
 ## 3. 规划输出规则
 
 | 输出类型 | 目标位置 | 说明 |
 |----------|----------|------|
-| 功能计划 | `docs/plans/feat-<name>.md` | 新功能、重构或阶段计划 |
+| 长期计划 | `docs/plans/<name>.md` | 产品、架构或阶段性长期计划 |
+| 当前执行计划 | `docs/exec-plans/active/<name>.md` | 用户确认后的当前实现计划 |
+| 历史执行计划 | `docs/exec-plans/completed/<name>.md` | 完成、验证并由用户接受后的执行计划 |
 | 架构变更 | `ARCHITECTURE.md` 与对应 `docs/design/*.md` | 仅在用户要求或实施后确认需要同步时更新 |
 | Agent 契约变更 | `docs/agent/*.md` | 修改 Runtime、Skill、Spec 契约时同步 |
 | Spec 模板变更 | `specs/templates/*.yaml` | 只沉淀可复用模板，不提交 `specs/runs/` |
 | Prompt / 经验沉淀 | `docs/prompt/*.md` | 专项流程、RPA经验、工具经验 |
+| Harness 清理记录 | `docs/generated/harness-garbage-collection.md` | 记录过期入口、完成计划迁移、失效引用和待清理项 |
 
 计划文档最少包含：目标、当前状态、实施步骤、涉及接口/数据流、验证方式、风险与回滚。
+
+制定非平凡计划后，先请用户确认；确认通过后再写入或更新 `docs/plans/` 或 `docs/exec-plans/active/`。
 
 ## 4. 架构判断红线
 

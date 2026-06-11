@@ -32,10 +32,12 @@ Harness 是让 Codex 能可靠开发一个项目的支撑结构。它不是单�
 | Agent 入口 | `AGENTS.md` 或项目约定入口如 `.roorules` | 自行维护 | 项目定位、目录地图、任务路由、命令、验证、安全规则 |
 | 系统架构 | `ARCHITECTURE.md` | Agent 维护 | 当前架构、模块边界、数据流、关键约束 |
 | 设计索引 | `docs/design/index.md` 或既有 `docs/design/` | Agent 维护 | 指向设计规范、领域设计和核心理念 |
-| 项目计划 | `docs/plans/index.md` 或既有 `docs/plans/` | Agent 维护 | 活跃计划、历史计划、执行状态 |
+| 项目计划 | `docs/plans/index.md`、`docs/exec-plans/active/*.md`、`docs/exec-plans/completed/*.md` | Agent 维护 | 长期计划索引、当前执行计划、历史执行计划 |
 | 规则/规格 | `specs/`、`docs/product-specs/` 或项目等价路径 | 自行维护 + Agent 维护 | 用户可维护规则、产品约束、任务契约 |
 | 参考资料 | `docs/references/` | 自行维护 | 外部依赖、框架文档、设计系统链接 |
 | 生成事实 | `docs/generated/` 或等价报告目录 | Agent 维护 | 扫描结果、索引、自动生成摘要，必须可重建 |
+| 可观测性入口 | `docs/observability.md` | Codex 能力 + Agent 维护 | 暴露 trace、日志、测试、smoke、诊断入口，指导 Codex 稳定验证目标 |
+| 垃圾回收机制 | `docs/generated/harness-garbage-collection.md` | Agent 维护 | 定期清理过期引用、完成计划、生成摘要和失效 Harness 入口 |
 | 机械约束 | `pyproject.toml`、lint/type/test 配置、CI | 自行维护 + Agent 维护 | 让架构和质量规则可执行 |
 
 ## 4. 可选项
@@ -45,16 +47,17 @@ Harness 是让 Codex 能可靠开发一个项目的支撑结构。它不是单�
 | 全局设计规范 | `docs/DESIGN.md` | 自行维护 | 产品有明确 UI、文案、交互、品牌品味时 |
 | 核心理念 | `docs/design/core-beliefs.md` | 自行维护 | 团队有稳定架构原则或产品原则时 |
 | 代码评审标准 | `docs/QUALITY.md`、`docs/RELIABILITY.md`、`docs/SECURITY.md` | Codex 能力 + 自行维护标准 | 多人/多 Agent 协作，或质量口径需要显式化时 |
-| 可观测性入口 | `docs/observability.md` | Codex 能力 + Agent 维护 | 服务、UI、日志、指标、trace 可被本地验证时 |
-| 垃圾回收机制 | `docs/plans/cleanup.md` 或计划索引中的维护项 | Agent 维护 | 技术债、过期文档、生成物需要定期清理时 |
 
 ## 5. Harness 构建原则
 
 - 根入口短：`AGENTS.md` / `.roorules` 只写高频规则和路由。
 - 事实分层：架构、设计、计划、规格、参考资料分目录维护。
+- 计划分层：长期计划进入 `docs/plans/`，当前执行计划进入 `docs/exec-plans/active/`，完成后移动到 `docs/exec-plans/completed/`。
 - 规则可执行：把“应该”转成测试、lint、类型检查、脚本或验收命令。
 - 运行产物隔离：运行态输出、trace、下载、缓存进入忽略目录。
 - 文档可修复：Agent 维护文档要有固定命名和更新时机。
+- 可观测性先行：代码变更后优先从 `docs/observability.md` 找 trace、日志、smoke 和诊断入口。
+- 定期清理：使用 `docs/generated/harness-garbage-collection.md` 记录 stale link、过期计划、失效生成物和待归档项。
 - 不过度生成：新项目先创建最小骨架，只有发现真实需要时再增加可选项。
 
 ## 6. 当前项目应用
@@ -66,6 +69,9 @@ Harness 是让 Codex 能可靠开发一个项目的支撑结构。它不是单�
 - `docs/agent/`：Agent / Skill / Spec 契约。
 - `docs/design/`：领域与设计文档。
 - `docs/plans/`：功能计划。
+- `docs/exec-plans/`：当前和历史执行计划。
+- `docs/observability.md`：验证、trace、日志和诊断入口。
+- `docs/generated/`：可重建审计与 Harness 清理记录。
 - `docs/prompt/`：专项经验。
 - `specs/`：任务 Spec 与 CT schema。
 
