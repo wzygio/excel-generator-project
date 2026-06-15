@@ -1,7 +1,7 @@
 """Shared Agent/Skill models.
 
 Codex is the external agent core for this project. These models are the
-stable Python-side contract that Codex, Streamlit, and tests can all call.
+stable Python-side contract that CopilotKit, Pi/OMP, Python Skills, and tests can all call.
 """
 
 from __future__ import annotations

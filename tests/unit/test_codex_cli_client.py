@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -55,17 +56,23 @@ def test_codex_cli_client_raises_on_nonzero_exit(tmp_path: Path, monkeypatch) ->
         client.run("prompt")
 
 
-def test_llm_manager_routes_legacy_provider_to_codex_client() -> None:
-    class FakeClient:
+def test_llm_manager_routes_legacy_provider_to_deepseek_client() -> None:
+    class FakeCompletions:
         def __init__(self) -> None:
             self.calls: list[dict] = []
 
-        def chat(self, **kwargs):
+        def create(self, **kwargs):
             self.calls.append(kwargs)
-            return "ok"
+            return SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))]
+            )
+
+    class FakeClient:
+        def __init__(self) -> None:
+            self.chat = SimpleNamespace(completions=FakeCompletions())
 
     fake = FakeClient()
-    manager = LLMManager(codex_client=fake)
+    manager = LLMManager(deepseek_client=fake)
 
     try:
         result = manager.chat(
@@ -77,19 +84,24 @@ def test_llm_manager_routes_legacy_provider_to_codex_client() -> None:
         manager.clear_clients()
 
     assert result == "ok"
-    assert fake.calls
-    assert fake.calls[0]["messages"][0]["content"] == "hello"
+    assert fake.chat.completions.calls
+    assert fake.chat.completions.calls[0]["messages"][0]["content"] == "hello"
+    assert fake.chat.completions.calls[0]["response_format"] == {"type": "json_object"}
 
 
-def test_llm_manager_wraps_codex_errors() -> None:
+def test_llm_manager_wraps_deepseek_errors() -> None:
+    class FakeCompletions:
+        def create(self, **kwargs):
+            raise RuntimeError("missing")
+
     class FakeClient:
-        def chat(self, **kwargs):
-            raise CodexCLIError("missing")
+        def __init__(self) -> None:
+            self.chat = SimpleNamespace(completions=FakeCompletions())
 
-    manager = LLMManager(codex_client=FakeClient())
+    manager = LLMManager(deepseek_client=FakeClient())
 
     try:
-        with pytest.raises(LLMProviderError, match="Codex CLI call failed"):
+        with pytest.raises(LLMProviderError, match="DeepSeek API call failed"):
             manager.chat(messages=[{"role": "user", "content": "hello"}])
     finally:
         manager.clear_clients()

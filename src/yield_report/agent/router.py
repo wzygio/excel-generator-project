@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 
 from yield_report.agent.spec_model import TaskSpec
+from yield_report.agent.spec_validation import SpecValidationError, assert_valid_task_spec
 
 
 class SpecLoadError(Exception):
@@ -38,16 +39,7 @@ def parse_task_spec(raw: dict[str, Any] | None) -> TaskSpec:
 
 def validate_task_spec(spec: TaskSpec) -> None:
     """Validate workflow references that Pydantic cannot check alone."""
-    if spec.schema_version != 1:
-        raise SpecLoadError(f"Unsupported spec schema_version: {spec.schema_version}")
-
-    seen: set[str] = set()
-    for call in spec.workflow:
-        if call.id in seen:
-            raise SpecLoadError(f"Duplicate workflow step id: {call.id}")
-        seen.add(call.id)
-
-    for call in spec.workflow:
-        missing = [dependency for dependency in call.depends_on if dependency not in seen]
-        if missing:
-            raise SpecLoadError(f"Step {call.id} depends on unknown steps: {missing}")
+    try:
+        assert_valid_task_spec(spec)
+    except SpecValidationError as exc:
+        raise SpecLoadError(str(exc)) from exc

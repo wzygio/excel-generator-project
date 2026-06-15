@@ -148,6 +148,68 @@ def test_resolver_calls_acquisition_when_no_local_file(tmp_path: Path) -> None:
     assert result.path == tmp_path / "output" / "decrypted_files" / downloaded.name
 
 
+def test_resolver_ignores_local_file_for_different_declared_product(tmp_path: Path) -> None:
+    resources = tmp_path / "resources"
+    resources.mkdir()
+    wrong = resources / "V3良率及不良率By月周天汇总报表_结束日期2026-06-01_产品型号M678.xlsx"
+    wrong.write_bytes(b"PK\x03\x04")
+    downloaded = tmp_path / "downloaded-c522.xlsx"
+    downloaded.write_bytes(b"PK\x03\x04")
+    calls: list[str] = []
+
+    class FakeAcquisition:
+        def process_user_query(self, query: str):
+            calls.append(query)
+            return SimpleNamespace(
+                results=[
+                    SimpleNamespace(
+                        success=True,
+                        file_path=downloaded,
+                        file_description="Downloaded C522 Daily",
+                    )
+                ]
+            )
+
+    def fake_decrypt(path: Path, output_dir: Path) -> Path:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / path.name
+        output.write_bytes(b"PK\x03\x04")
+        return output
+
+    resolver = AnalysisFileResolver(
+        resources_dir=resources,
+        decrypt_func=fake_decrypt,
+        acquisition_orchestrator=FakeAcquisition(),
+    )
+
+    request = _request()
+    request.product_models = ["C522"]
+    result = resolver.resolve(request=request, user_query="query")
+
+    assert calls
+    assert result.source == "download"
+    assert result.path == tmp_path / "output" / "decrypted_files" / downloaded.name
+
+
+def test_resolver_does_not_use_ct_exception_for_daily_yield_request(tmp_path: Path) -> None:
+    resources = tmp_path / "resources"
+    resources.mkdir()
+    ct_exception = resources / "CT良率异常波动管理表.xlsx"
+    ct_exception.write_bytes(b"PK\x03\x04")
+
+    class EmptyAcquisition:
+        def process_user_query(self, query: str):
+            return SimpleNamespace(results=[])
+
+    resolver = AnalysisFileResolver(
+        resources_dir=resources,
+        acquisition_orchestrator=EmptyAcquisition(),
+    )
+
+    with pytest.raises(AnalysisFileResolveError):
+        resolver.resolve(request=_request(), user_query="query")
+
+
 def test_resolver_does_not_treat_decrypted_priority_as_match(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
     decrypted = tmp_path / "output" / "decrypted_files"

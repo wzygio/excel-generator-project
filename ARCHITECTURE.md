@@ -14,7 +14,7 @@
 
 | 代际 | 路径 | 状态 |
 |------|------|------|
-| V2 主线 | `app/`, `src/shared_kernel/`, `src/yield_report/` | 当前开发主线 |
+| V2 主线 | `ui/copilotkit-agent/`, `src/shared_kernel/`, `src/yield_report/` | 当前开发主线 |
 | V1 兼容 | `src/excel_generator_project/` | 旧版 Excel 日报生成流水线，作为兼容和参考存在 |
 | Agent 主线 | `src/yield_report/agent/`, `src/yield_report/skills/`, `docs/agent/`, `specs/templates/` | Codex/Agent 友好的目标结构 |
 
@@ -67,7 +67,7 @@ src/yield_report/
 
 | 组件 | 技术选型 |
 |------|----------|
-| UI | Streamlit |
+| UI | CopilotKit / Next.js |
 | 配置模型 | Pydantic V2 |
 | 配置加载 | PyYAML + python-dotenv |
 | LLM | DeepSeek(OpenAI SDK 兼容) / Gemini(google-genai) |
@@ -85,12 +85,10 @@ src/yield_report/
 
 ```text
 yield-report-generator/
-├── app/
-│   ├── main.py                         # Streamlit 三标签工作台
-│   └── utils/
-│       ├── app_setup.py                # .env、日志、配置初始化
-│       ├── logger_setup.py             # 日志配置
-│       └── reloader.py                 # 热重载辅助
+├── ui/
+│   └── copilotkit-agent/               # CopilotKit Agent Workbench
+│       ├── app/page.tsx
+│       └── app/api/agent-runs/route.ts
 ├── config/
 │   └── global.yaml                     # Pydantic V2 配置输入
 ├── docs/
@@ -130,26 +128,16 @@ yield-report-generator/
 
 ## 5. UI 架构
 
-`app/main.py` 是当前唯一 Streamlit 入口。页面刻意精简为三个 tab：
-
-| Tab | 输入 | 执行 | 输出 |
-|-----|------|------|------|
-| 报表下载 | 自然语言下载需求 | `DataAcquisitionOrchestrator.process_user_query()` | 解析结果、下载结果、日志 |
-| 数据分析 | 自然语言分析需求 | `AnalysisOrchestrator.analyze()` | 分析文本或错误信息、日志 |
-| 日报生成 | 日报生成需求 | 当前为占位入口 | 日报下载按钮或占位信息、日志 |
-
-每个 tab 只保留三类元素：需求输入框、结果框/下载按钮、默认折叠日志。旧版侧边栏、上传区、文件列表、历史记录和智能查询 tab 已从当前主 UI 移除。
-
-目标 UI 将从“三个 tab”渐进收敛为 Agent 工作台：
+`ui/copilotkit-agent` 是当前唯一前端入口。它使用 CopilotKit / Next.js 提供 Agent Workbench：
 
 ```text
 用户输入
-  -> Spec 查看/修正
+  -> SpecBuilder 创建 specs/runs/<run_id>/spec.yaml
   -> 运行步骤
-  -> 结果与产物
+  -> 结果、Memory 候选与产物下载
 ```
 
-在 Task2 未完成前，当前三 tab UI 继续作为兼容入口。
+前端通过 `/api/agent-runs` 调用 `scripts/agent_workbench_bridge.py`，后端统一走 RunStore、RuntimeRouter、Python Skills 与 Pi/OMP Runtime。
 
 ## 6. 当前分层职责
 
@@ -203,7 +191,7 @@ yield-report-generator/
 
 ```text
 用户输入
-  -> app/main.py
+  -> ui/copilotkit-agent
   -> DataAcquisitionOrchestrator.process_user_query()
   -> QueryParser.parse()
   -> 根据 ReportType 分发
@@ -234,7 +222,7 @@ FINEREPORT_ENTRY_UUID
 
 ```text
 用户输入
-  -> app/main.py
+  -> ui/copilotkit-agent
   -> AnalysisOrchestrator.analyze()
   -> 定位 resources/ 下 Excel 文件
   -> extract_schema()
@@ -292,13 +280,16 @@ uv run pyright
 UI 验证：
 
 ```bash
-uv run streamlit run app/main.py --server.port 8502
+cd ui/copilotkit-agent
+npm run typecheck
+npm run build
+npm run dev
 ```
 
 ## 11. 已知边界
 
-- 日报生成 tab 当前是 UI 入口和下载按钮占位，完整 V2 日报编排尚未接入。
-- Agent Runtime 与 Skill 目录已接入；日报生成 Skill 当前为稳定占位接口，完整 V2 生成逻辑仍待实现。
+- CopilotKit Workbench 已接入 Spec run，日报生成 Skill 仍依赖当前 V2 源表与模板能力。
+- RuntimeRouter 已接入 Python Skill Runtime 与 Pi/OMP Runtime adapter；生产使用 Pi/OMP 时仍需模型配置和权限边界。
 - FineReport RPA 依赖内网、Chrome、`.env` 账号和 `fr_web_automation` 包。
 - `resources/` 中下载文件可能包含筛选条件后缀；后续分析模块应按 `config/global.yaml` 的 pattern 或业务描述匹配，而不是依赖完全固定文件名。
 - 自动同步脚本必须在 pull 前保护本地改动，并且日志不得写入仓库工作区。

@@ -1,0 +1,50 @@
+{
+  "totalFiles": 195,
+  "filesAnalyzedByStructureExtractor": 190,
+  "filesSkippedByStructureExtractor": [],
+  "uaScanFiles": 204,
+  "uaFilteredByIgnore": 0,
+  "byCategory": {
+    "docs": 50,
+    "code": 133,
+    "config": 8,
+    "script": 3,
+    "markup": 1
+  },
+  "byLanguage": {
+    "markdown": 49,
+    "python": 113,
+    "yaml": 3,
+    "xmind": 2,
+    "xlsx": 10,
+    "xlsm": 1,
+    "toml": 1,
+    "txt": 1,
+    "vbs": 1,
+    "json": 4,
+    "batch": 2,
+    "typescript": 6,
+    "css": 1,
+    "javascript": 1
+  },
+  "totalNodes": 709,
+  "totalEdges": 1136,
+  "nodeTypes": {
+    "module": 8,
+    "document": 50,
+    "file": 124,
+    "config": 8,
+    "resource": 13,
+    "function": 355,
+    "class": 151
+  },
+  "edgeTypes": {
+    "contains": 684,
+    "imports": 123,
+    "tested_by": 308,
+    "documents": 11,
+    "configures": 10
+  },
+  "layers": 12,
+  "tourSteps": 7
+}

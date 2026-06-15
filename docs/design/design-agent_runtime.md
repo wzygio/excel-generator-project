@@ -97,7 +97,7 @@ Codex 的强项是阅读代码库、修改文件、运行命令、检查 diff、
 
 ### 2. CLI 进程不是理想的 Web 后端接口
 
-把 `codex exec` 包在 FastAPI 或 Streamlit 后端里当然能跑，但会马上遇到这些问题：
+把 `codex exec` 包在 FastAPI 或 Next.js API Route 后端里当然能跑，但会马上遇到这些问题：
 
 1. 会话如何稳定恢复？
 2. 流式输出如何结构化返回 UI？

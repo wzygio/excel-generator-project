@@ -74,8 +74,9 @@ a one-off experiment.
 ## Commands
 
 ```bash
-# Start Streamlit UI
-uv run streamlit run app/main.py --server.port 8502
+# Start CopilotKit Agent Workbench
+cd ui/copilotkit-agent
+npm run dev
 
 # Run all tests
 uv run pytest tests/ -v --tb=short
@@ -90,7 +91,7 @@ uv run pytest tests/unit/agent tests/unit/skills -v --tb=short
 uv run python scripts/create_daily_report_spec.py --goal "生成 M678 今天良率日报" --print-path
 
 # Execute a TaskSpec and write trace/artifacts under specs/runs/<run_id>/
-uv run python scripts/run_task_spec.py --spec specs/runs/<run_id>/spec.yaml
+uv run python scripts/run_task_spec.py --spec specs/runs/<run_id>/spec.yaml --runtime auto
 
 # Quality checks
 uv run ruff check .
@@ -124,7 +125,7 @@ Before finishing, run the smallest relevant verification and report what ran.
 - Core parser, selector, or business-time changes: run focused `tests/unit/test_*.py` tests, or `uv run pytest tests/unit/ -v --tb=short` for broader risk.
 - Agent / Skill / Spec changes: run `uv run pytest tests/unit/agent tests/unit/skills -v --tb=short`.
 - FineReport, file loading, or download changes: run related unit tests; add browser/RPA smoke only when the visible or portal flow changed.
-- Streamlit UI changes: backend tests are not enough; perform a real browser/UI smoke test.
+- CopilotKit UI changes: backend tests are not enough; run `npm run typecheck`, `npm run build`, and perform a real browser/UI smoke test.
 - Config, dependency, or typing-sensitive changes: run `uv run pyright` and `uv run ruff check .`.
 - If a verification command cannot run, state the command, the blocker, and the residual risk.
 

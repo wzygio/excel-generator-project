@@ -183,15 +183,22 @@ class AnalysisFileResolver:
 
     def _score_file(self, request: AnalysisQueryRequest, path: Path) -> float:
         filename = _norm(path.name)
+        if _declares_different_product(filename, request.product_models):
+            return 0.0
         score = 0.0
 
         if request.source_file_type:
+            source_matched = False
             meta_name = REPORT_TYPE_META[request.source_file_type]["name"]
             if _norm(meta_name) in filename:
                 score += 20.0
+                source_matched = True
             for alias in REPORT_TYPE_ALIASES.get(request.source_file_type, []):
                 if _norm(alias) in filename:
                     score += 5.0
+                    source_matched = True
+            if not source_matched:
+                return 0.0
 
         for keyword in request.file_keywords:
             if _norm(keyword) and _norm(keyword) in filename:
@@ -201,6 +208,10 @@ class AnalysisFileResolver:
             metric_norm = _norm(metric)
             if metric_norm and metric_norm in filename:
                 score += 2.0
+
+        for product_model in request.product_models or []:
+            if _norm(product_model) in filename:
+                score += 8.0
 
         return score
 
@@ -307,6 +318,12 @@ class AnalysisFileResolver:
 
 def _norm(value: str) -> str:
     return value.lower().replace(" ", "")
+
+
+def _declares_different_product(filename: str, product_models: list[str] | None) -> bool:
+    if not product_models or "产品型号" not in filename:
+        return False
+    return not any(_norm(product_model) in filename for product_model in product_models)
 
 
 def _default_output_dir(resources_dir: Path) -> Path:

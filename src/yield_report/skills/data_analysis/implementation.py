@@ -47,6 +47,18 @@ def execute_data_analysis(
                 metadata={"skill": TOOL_NAME},
             )
         )
+    if legacy_result.success and legacy_result.result_text and context is not None:
+        output_path = Path(context.output_dir) / "data_analysis_result.md"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(legacy_result.result_text, encoding="utf-8")
+        artifacts.append(
+            ArtifactRef(
+                kind="markdown",
+                path=output_path,
+                description="data_analysis result text",
+                metadata={"skill": TOOL_NAME},
+            )
+        )
 
     memory_updates: list[MemoryCandidate] = []
     if legacy_result.memory_record_id:

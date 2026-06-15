@@ -15,7 +15,7 @@ from yield_report.agent.spec_model import RunContext, SkillCall, SkillError, Ski
 from yield_report.agent.trace import TraceEvent, TraceWriter
 from yield_report.infrastructure.logging_config import configure_yield_report_logging_for_context
 
-SkillRunFunc = Callable[[BaseModel, RunContext], SkillResult]
+SkillRunFunc = Callable[[Any, RunContext], SkillResult]
 logger = logging.getLogger(__name__)
 
 

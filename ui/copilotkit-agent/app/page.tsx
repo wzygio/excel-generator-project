@@ -36,16 +36,25 @@ type SkillArtifact = {
 
 type WorkflowStep = {
   name?: string;
+  title?: string;
+  step_id?: string;
+  skill?: string;
   status?: string;
   detail?: string;
+  summary?: string;
 };
 
 type SkillResult = {
   success: boolean;
   skill_name?: string;
+  run_id?: string;
+  runtime?: string;
+  status?: string;
+  spec?: Record<string, unknown>;
   summary?: string;
   artifacts?: SkillArtifact[];
   data?: Record<string, any>;
+  results?: SkillResult[];
   warnings?: string[];
   error?: {
     code?: string;
@@ -152,7 +161,11 @@ export default function Page() {
   ]);
   const reportRows = useMemo(() => deriveReportRows(lastResult), [lastResult]);
   const sourceCards = useMemo(() => deriveSourceCards(lastResult), [lastResult]);
-  const specPreview = useMemo(() => buildSpecPreview(activeConfig, query), [activeConfig, query]);
+  const specPreview = useMemo(() => buildSpecPreview(activeConfig, query, lastResult), [
+    activeConfig,
+    query,
+    lastResult,
+  ]);
   const pendingMemory = lastResult?.memory_updates?.[0] || null;
 
   async function runSkill(moduleKey: ModuleKey = activeModule, incomingQuery = query) {
@@ -186,16 +199,22 @@ export default function Page() {
       ...current.slice(0, 12),
     ]);
 
-    const response = await fetch("/api/yield-skill", {
+    const moduleConfig = MODULES.find((module) => module.key === moduleKey) || activeConfig;
+    const goal = nextQuery || moduleConfig.placeholder;
+    const response = await fetch("/api/agent-runs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        module: moduleKey,
-        query: nextQuery,
-        options: moduleKey === "daily_report" ? { output_name: "daily_report_output.xlsx" } : {},
+        action: "create_and_run",
+        goal,
+        runtime: "auto",
+        options:
+          moduleKey === "daily_report"
+            ? { output_name: "daily_report_output.xlsx" }
+            : {},
       }),
     });
-    const result = (await response.json()) as SkillResult;
+    const result = normalizeAgentRunResult((await response.json()) as SkillResult);
     setLastResult(result);
     setRunState(result.success ? "success" : "error");
     setModuleStates((current) => ({
@@ -216,11 +235,10 @@ export default function Page() {
       return;
     }
     setFeedbackState("running");
-    const response = await fetch("/api/yield-skill", {
+    const response = await fetch("/api/agent-runs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        module: "data_analysis",
         action,
         record_id: pendingMemory.record_id,
       }),
@@ -306,7 +324,7 @@ export default function Page() {
             </div>
             <div className="health-strip">
               <span>Runtime</span>
-              <strong>/api/copilotkit</strong>
+              <strong>/api/agent-runs</strong>
             </div>
           </header>
 
@@ -642,12 +660,31 @@ function moduleLabel(moduleKey: ModuleKey) {
   return MODULES.find((module) => module.key === moduleKey)?.label || moduleKey;
 }
 
+function normalizeAgentRunResult(result: SkillResult): SkillResult {
+  const primary = result.results?.[0];
+  if (!primary) {
+    return result;
+  }
+  return {
+    ...result,
+    skill_name: primary.skill_name || result.skill_name,
+    summary: primary.summary || result.summary,
+    data: {
+      ...(primary.data || {}),
+      run: result.data,
+      workflow_steps: result.data?.workflow_steps || primary.data?.workflow_steps,
+    },
+    warnings: [...(result.warnings || []), ...(primary.warnings || [])],
+    error: primary.error || result.error,
+  };
+}
+
 function deriveWorkflowSteps(moduleKey: ModuleKey, result: SkillResult | null) {
   const serverSteps = (result?.data?.workflow_steps as WorkflowStep[] | undefined) || [];
   if (serverSteps.length) {
     return serverSteps.map((step) => ({
-      title: step.name || "workflow step",
-      detail: `${step.status || "pending"}: ${step.detail || "N/A"}`,
+      title: step.name || step.title || step.skill || step.step_id || "workflow step",
+      detail: step.detail || step.summary || step.status || "N/A",
     }));
   }
 
@@ -717,7 +754,12 @@ function deriveSourceCards(result: SkillResult | null) {
   ];
 }
 
-function buildSpecPreview(module: ModuleConfig, query: string) {
+function buildSpecPreview(module: ModuleConfig, query: string, result: SkillResult | null) {
+  const runSpec = result?.spec || result?.data?.spec;
+  if (runSpec) {
+    return JSON.stringify(runSpec, null, 2);
+  }
+
   const payload = {
     status: "draft",
     user_goal: query || module.placeholder,
@@ -729,7 +771,7 @@ function buildSpecPreview(module: ModuleConfig, query: string) {
     ],
     outputs: {
       trace: "specs/runs/<run_id>/trace.jsonl",
-      artifacts: "output/",
+      artifacts: "specs/runs/<run_id>/outputs/",
     },
   };
   return JSON.stringify(payload, null, 2);

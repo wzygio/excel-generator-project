@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "自动生成良率日报的系统 - 基于LLM的智能分析引擎"
 requires-python = ">=3.11"
 dependencies = [
-    "streamlit>=1.28.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.0.0",
@@ -36,7 +35,7 @@ dev = [
 dev-dependencies = ["yield-report-generator[dev]"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/yield_report", "src/shared_kernel", "app"]
+packages = ["src/yield_report", "src/shared_kernel"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -35,7 +35,7 @@ class CodexCLIClient:
 
     The adapter intentionally keeps Codex in read-only mode by default. Runtime
     model calls should parse, reason, and generate text/code, not mutate the
-    repository behind the Streamlit app.
+    repository behind the Agent Workbench.
     """
 
     codex_bin: str | None = None

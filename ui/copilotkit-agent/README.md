@@ -6,9 +6,9 @@
 
 - 页面源码: `app/page.tsx`
 - CopilotKit Runtime: `app/api/copilotkit/route.ts`
-- Python Skill API: `app/api/yield-skill/route.ts`
+- Agent Run API: `app/api/agent-runs/route.ts`
 - 产物下载 API: `app/api/artifact/route.ts`
-- Python bridge: `../../scripts/copilotkit_skill_bridge.py`
+- Python bridge: `../../scripts/agent_workbench_bridge.py`
 
 ## 运行
 
@@ -31,4 +31,4 @@ npm run typecheck
 npm run build
 ```
 
-当前 UI 通过 `/api/yield-skill` 调用现有 `report_download`、`data_analysis`、`daily_report` 三个 Skill。日报下载链接来自 SkillResult 的 artifacts，并由 `/api/artifact` 校验路径后返回。
+当前 UI 通过 `/api/agent-runs` 创建并执行 `specs/runs/<run_id>/spec.yaml`。后端由 `RunStore` 收敛 `trace.jsonl`、`run_summary.json`、`memory_candidates.json` 和 `outputs/`，并通过 RuntimeRouter 调用 Python Skills 或 Pi/OMP Runtime。

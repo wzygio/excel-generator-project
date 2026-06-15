@@ -40,7 +40,6 @@ Harness的Skill同样需要修改。
     - plan中必须区分“当前执行计划：docs/exec-plans/active/*.md” 和 “历史执行计划：docs/exec-plans/completed/*.md”
 2. 执行完上述任务后，请将该逻辑同步至构建Harness的skill中
 
-
 ---
 
 # Task5

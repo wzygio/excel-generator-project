@@ -14,7 +14,7 @@ This file is the project-level entrypoint for signals Codex can use to verify wo
 - Agent / Skill / Spec changes: run `uv run pytest tests/unit/agent tests/unit/skills -v --tb=short`.
 - Broader Python behavior: run `uv run pytest tests/ -v --tb=short` when shared contracts or risky flows changed.
 - Type and lint-sensitive changes: run `uv run pyright` and `uv run ruff check .`.
-- Streamlit UI changes: run a real browser/UI smoke in addition to backend tests.
+- CopilotKit UI changes: run `npm run typecheck`, `npm run build`, and a real browser/UI smoke in addition to backend tests.
 
 ## Diagnostics
 
