@@ -6,7 +6,137 @@
 
 ---
 
+## 0. 最终架构决策
 
+### 0.1 一句话结论
+
+**不要把 Streamlit UI 直接变成 Codex CLI 的输入窗口，也不要引入 LangChain/LangGraph。**
+
+当前项目最适合采用：
+
+```text
+Codex CLI / Codex App：开发者智能体、维护者智能体、可选本地 LLM 后端
+Python Agent Runtime：产品运行时，负责稳定执行日报任务
+TaskSpec YAML：用户目标与执行流程之间的任务契约
+Python Skills：稳定、可测试、可复用的业务能力
+Streamlit Agent Workbench：用户输入、Spec确认、运行状态、产物下载
+```
+
+### 0.2 为什么这样设计
+
+你希望“尽量让 LLM 来帮助完成任务，而不是代码”。这个方向是正确的，但需要区分两类工作：
+
+| 类型 | 适合交给 LLM / Codex | 适合保留为代码 |
+|---|---|---|
+| 理解用户需求 | 是 | 否 |
+| 把自然语言转成任务 Spec | 是 | Spec 校验用代码 |
+| 决定需要哪些报表和分析章节 | 是 | 基础枚举和默认规则用代码 |
+| 下载 FineReport 报表 | 否 | 是，RPA 是稳定工具 |
+| 定位/解密/读取 Excel | 否 | 是，必须可复现 |
+| 表格筛选、聚合、排序、趋势计算 | 部分 | 核心计算用代码 |
+| 异常解释、日报文字组织 | 是 | 输入事实提取用代码 |
+| 写 Excel 模板、生成文件 | 否 | 是 |
+| Memory 候选提炼 | 是 | 状态存储和确认机制用代码 |
+| Trace / 运行记录 | 否 | 是 |
+
+因此，推荐的核心原则是：
+
+> **LLM 负责理解、计划、解释、生成文本；代码负责获取数据、执行确定性计算、写文件、记录状态。**
+
+---
+
+## 1. 对你当前理解的评价与修正
+
+你图中的架构理解总体方向是对的：已经意识到 Agent 不等于 LLM，而是 `Harness + 编排器 + 工具 + Memory + LLM + 反馈` 的组合。但对这个项目而言，需要做几个重要修正。
+
+### 1.1 Agent Harness 不是运行时代码，而是“给 Codex 看的项目操作系统”
+
+你把 `agents.md / ARCHITECTURE / design / plan / spec` 放在 Agent Harness 下，这个理解是对的。但在本项目中，它不应该被实现为一个复杂模块，而应该落成几类仓库文件：
+
+```text
+AGENTS.md                       # Codex 入口路由，必须新增或由 .roorules 复制
+ARCHITECTURE.md                 # 项目总架构
+TASK_SPEC.md / spec_contract.md # 任务契约
+SKILL.md                        # Codex/Agent 能力说明
+RUNBOOK.md                      # 常用运行命令和失败恢复
+```
+
+当前仓库已有 `.roorules`，内容其实已经很像 `AGENTS.md`。但 Codex 默认优先识别 `AGENTS.md`，所以应该新增根目录 `AGENTS.md`，不要只保留 `.roorules`。
+
+### 1.2 不要自己实现完整 ReAct；你的 Runtime 只需要管理业务生命周期
+
+你图中写了：
+
+```text
+Thinking -> Context -> Plan -> Action -> Observation -> Feedback
+```
+
+这是 Agent 的通用思维循环。但在本项目中，不建议你手写完整 ReAct 框架。原因是：
+
+1. Codex 自身已经具有代码仓库探索、计划、工具调用、失败修复能力。
+2. 你的业务链路并不复杂，核心流程是“生成日报”。
+3. 手写 ReAct 会导致调试复杂度上升，最终又变成你不想要的“太依赖代码”。
+
+你真正需要的 Runtime 是更简单的状态机：
+
+```text
+draft_spec
+  -> ready
+  -> running
+  -> step_started
+  -> step_succeeded / step_failed
+  -> needs_confirmation / completed / failed
+```
+
+也就是说：
+
+> **Agent 的思考交给 Codex/LLM；业务执行状态交给 Python Runtime。**
+
+### 1.3 你的 Skill 理解正确，但需要区分两种 Skill
+
+当前项目里应该有两类 Skill：
+
+| 类型 | 位置 | 作用 |
+|---|---|---|
+| Python Skill | `src/yield_report/skills/<skill>/` | 被 Runtime 调用，真正执行下载、分析、生成 |
+| Codex Skill | `.agents/skills/<skill>/SKILL.md` | 被 Codex 自动发现，指导 Codex 如何调用项目工具 |
+
+你现在的 `src/yield_report/skills/*/SKILL.md` 是项目内部文档，不等同于 Codex 官方自动发现的 Skill。建议新增 `.agents/skills/yield-report-daily/SKILL.md` 作为“薄壳”，里面告诉 Codex：
+
+- 先读 `AGENTS.md` 和 `docs/agent/*`；
+- 先生成/更新 `specs/runs/<run_id>/spec.yaml`；
+- 再运行 `scripts/run_task_spec.py`；
+- 失败时看 `trace.jsonl` 修复；
+- 不要直接改生产配置，不要绕过 Skill 工具。
+
+### 1.4 MCP / RAG / Sub-agent / 权限系统暂时不需要
+
+你的判断“很多高阶功能暂不需要”是正确的。
+
+当前阶段不要做：
+
+```text
+MCP Server
+向量知识库 RAG
+复杂 Sub-agent Team
+通用权限系统
+自动 Skill 沉淀系统
+完整上下文压缩系统
+```
+
+当前阶段只保留：
+
+```text
+AGENTS.md
+TaskSpec
+轻量 Runtime
+三个 Python Skill
+JSONL Trace
+简单 Memory
+Streamlit Agent Workbench
+```
+
+---
 
 ## 2. 当前项目诊断
 
@@ -707,6 +837,12 @@ workflow:
     save_as: daily_report_file
 ```
 
+### 短期兼容方案
+
+如果暂时不想大改，可以保留 `daily_report` 内部调用 `data_analysis`，但必须把 downstream result 写入 `SkillResult.data["downstream_results"]`，并在 UI 中显示出来。
+
+---
+
 ## 5. Agent Workbench UI 设计
 
 ### 5.1 替代当前三 Tab 的主界面
@@ -870,9 +1006,117 @@ trace policy
 
 ---
 
+## 8. 是否需要 LangChain / LangGraph / OpenAI Agents SDK
+
+### 8.1 当前结论
+
+**不需要。**
+
+当前项目已有：
+
+```text
+TaskSpec
+SkillResult
+RunContext
+AgentRuntime
+TraceWriter
+AgentMemory
+```
+
+这就是一个足够轻量的 Agent Runtime。现在引入 LangChain/LangGraph 会增加：
+
+- 依赖复杂度；
+- 版本兼容风险；
+- 调试成本；
+- 你需要学习框架抽象，而不是解决日报业务。
+
+### 8.2 什么时候再考虑 LangGraph
+
+只有当出现以下需求时再考虑：
+
+```text
+多个分支循环
+动态重试策略
+复杂 human-in-the-loop
+多 Agent 分工
+可视化图编排
+长期后台任务
+```
+
+当前阶段不符合。
+
+### 8.3 如果必须使用成熟框架，优先级建议
+
+| 优先级 | 方案 | 适用场景 |
+|---|---|---|
+| 1 | 当前自研轻量 Runtime | 当前项目最合适 |
+| 2 | OpenAI Agents SDK | 未来要把 Agent 变成标准服务端工具调用系统 |
+| 3 | Pydantic AI | 未来重视类型安全和结构化 LLM 输出 |
+| 4 | LangGraph | 未来需要复杂状态图和多分支流程 |
+| 5 | LangChain | 不建议作为本项目首选 |
+
+---
+
+## 9. Codex 执行任务书
+
+下面是可以直接交给 Codex 的执行计划。
+
+## 9.1 Codex 开始前必须阅读
+
+```text
+AGENTS.md 或 .roorules
+ARCHITECTURE.md
+docs/agent/architecture.md
+docs/agent/spec_contract.md
+docs/agent/skill_contract.md
+docs/design/yield_report_domain.md
+本文件：docs/prompt/refactor-agent_architecture.md
+```
+
+## 9.2 执行原则
+
+```text
+1. 不要推倒重来。
+2. 保留现有 report_download / data_analysis / daily_report 三个 Skill。
+3. 保留 CodexCLIClient，但不要扩大它的权限。
+4. UI 从“三个独立工具”逐步迁移到“Spec 驱动 Agent Workbench”。
+5. 所有运行态文件写入 specs/runs/<run_id>/。
+6. 每一步必须补测试。
+7. 先小步提交，优先保证现有测试不坏。
+```
+
+---
 
 ## 10. 具体开发任务
 
+## Task A：新增 `AGENTS.md`
+
+### 目标
+
+让 Codex 默认读取项目路由和红线。
+
+### 改动
+
+1. 新增根目录 `AGENTS.md`。
+2. 内容基于 `.roorules`。
+3. 在快速命令中增加 Spec/Runtime 命令。
+4. 保留 `.roorules`，不删除。
+
+### 验收
+
+```bash
+codex --ask-for-approval never "Summarize the current project instructions."
+```
+
+预期：Codex 能说出：
+
+- 项目是良率日报生成系统；
+- 入口文档；
+- 三个 Skill；
+- Spec 优先；
+- 常用测试命令。
+
+---
 
 ## Task B：新增 Codex Skill 薄壳
 
@@ -1365,6 +1609,35 @@ $yield-report-daily
 请为 M678 生成今天的良率日报。如果失败，请根据 trace 修复最小问题并重新运行测试。
 ```
 
+---
+
+## 14. 给 Codex 的完整执行 Prompt
+
+把下面这段直接发给 Codex：
+
+```text
+你现在在 excel-generator-project 仓库中工作。
+
+目标：按照 docs/prompt/refactor-agent_architecture.md，把项目从三 Tab 工具式 UI，重构为 Spec 驱动的良率日报 Agent Workbench。
+
+请严格遵守：
+1. 先读 AGENTS.md；如果不存在，读取 .roorules，并新增 AGENTS.md。
+2. 读取 ARCHITECTURE.md、docs/agent/architecture.md、docs/agent/spec_contract.md、docs/agent/skill_contract.md、docs/design/yield_report_domain.md。
+3. 不要推倒重来，不要删除旧 application/core/infrastructure。
+4. 保留 report_download、data_analysis、daily_report 三个 Python Skill。
+5. 不引入 LangChain/LangGraph。
+6. 新增 .agents/skills/yield-report-daily/SKILL.md。
+7. 新增 RunStore、SpecBuilder、create_daily_report_spec.py、run_task_spec.py。
+8. 修改 Runtime，使 trace/output/memory_candidates 收敛到 specs/runs/<run_id>/。
+9. 修改 app/main.py，新增 Agent 工作台 Tab，旧三个 Tab 暂时保留。
+10. 每个阶段补最小测试，并运行相关测试。
+
+请按小步提交思路工作：
+- 先列出你读到的当前结构和准备修改的文件。
+- 再实现 Task A-F。
+- 每完成一个阶段运行 focused tests。
+- 最后给出变更摘要、测试结果和未完成风险。
+```
 
 ---
 
