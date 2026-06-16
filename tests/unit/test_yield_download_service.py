@@ -11,6 +11,7 @@ from yield_report.infrastructure.yield_download_service import (
     DAILY_YIELD_FILENAME,
     DAILY_YIELD_REPORT_NAME,
     LABEL_END_DATE,
+    LABEL_MONTH_COUNT,
     LABEL_START_DATE,
     YIELD_REPORT_DIRECTORY,
     YieldDownloadService,
@@ -49,6 +50,23 @@ def test_download_daily_yield_passes_product_models(tmp_path: Path) -> None:
         file_name=DAILY_YIELD_FILENAME,
         save_path=tmp_path / DAILY_YIELD_FILENAME,
     )
+
+
+def test_download_daily_yield_sets_requested_month_count(tmp_path: Path) -> None:
+    """月周天报表应允许 Agent 将默认月数从 2 修正为 3。"""
+    service = _build_service_stub()
+    adapter = MagicMock()
+    service._get_adapter.return_value = adapter
+
+    service.download_daily_yield(
+        end_date="2026-06-15",
+        product_models=["M588"],
+        month_count=3,
+        save_dir=tmp_path,
+    )
+
+    adapter.set_date.assert_called_once_with("2026-06-15", LABEL_END_DATE)
+    adapter.set_text_parameter.assert_called_once_with("3", LABEL_MONTH_COUNT)
 
 
 def test_download_batch_yield_passes_product_models(tmp_path: Path) -> None:

@@ -15,10 +15,10 @@ def test_spec_builder_extracts_product_and_today(tmp_path: Path) -> None:
     assert result.spec.status == "ready"
     assert result.spec.inputs["report_date"] == "2026-06-08"
     assert result.spec.inputs["product_models"] == ["M678"]
-    assert result.spec.workflow[0].skill == "data_analysis"
-    assert result.spec.workflow[1].skill == "daily_report"
-    assert result.spec.workflow[0].input["source_files"]["daily_yield"].startswith("resources/")
-    assert result.spec.workflow[1].input["source_files"]["spotfire"].endswith("spotfire.xlsx")
+    assert len(result.spec.workflow) == 1
+    assert result.spec.workflow[0].skill == "daily_report"
+    assert result.spec.workflow[0].input["product_models"] == ["M678"]
+    assert result.spec.workflow[0].input["source_files"]["spotfire"].endswith("spotfire.xlsx")
     assert result.spec_path.exists()
 
 
@@ -56,7 +56,7 @@ def test_spec_builder_parses_explicit_date_and_sections(tmp_path: Path) -> None:
     assert result.spec.inputs["report_date"] == "2026-06-01"
     assert result.spec.inputs["date_range"] == {"start": "2026-05-26", "end": "2026-06-01"}
     assert result.spec.workflow[0].input["sections"] == ["gap", "trend"]
-    assert result.spec.workflow[1].input["analysis_results"] == ["daily_report_facts"]
+    assert result.spec.workflow[0].input["analysis_results"] == []
 
 
 def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -> None:
@@ -67,7 +67,7 @@ def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -
     )
 
     assert result.spec.status == "ready"
-    assert result.spec.constraints["runtime"] == "python_with_pi_fallback"
+    assert result.spec.constraints["runtime"] == "omp"
     assert result.spec.inputs["product_models"] == ["C522"]
     assert result.spec.workflow == [
         result.spec.workflow[0],
@@ -77,6 +77,25 @@ def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -
     assert result.spec.workflow[0].input["analysis_intent"] == "trend"
     assert "日度良率" in result.spec.workflow[0].input["metrics"]
     assert result.spec.outputs["analysis_summary"]["format"] == "markdown"
+
+
+def test_spec_builder_preserves_monthly_grain_for_monthly_trend_goal(tmp_path: Path) -> None:
+    builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 15))
+
+    result = builder.build(
+        SpecBuildRequest(
+            user_goal="请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因"
+        )
+    )
+
+    step_input = result.spec.workflow[0].input
+    assert result.spec.inputs["date_range"] == {"start": "2026-03-15", "end": "2026-06-15"}
+    assert result.spec.inputs["analysis"]["time_grain"] == "monthly"
+    assert result.spec.inputs["analysis"]["requested_periods"] == 3
+    assert step_input["time_grain"] == "monthly"
+    assert step_input["requested_periods"] == 3
+    assert step_input["metrics"] == ["月度良率"]
+    assert "日度良率" not in step_input["metrics"]
 
 
 def test_spec_builder_uses_llm_json_then_code_validation(tmp_path: Path) -> None:

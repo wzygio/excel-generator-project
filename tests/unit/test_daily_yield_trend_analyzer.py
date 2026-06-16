@@ -21,7 +21,9 @@ def _write_daily_yield_workbook(file_path: Path) -> Path:
             "ProductCode\n产品型号",
             "Type\n类别",
             None,
+            "M05",
             "M06",
+            "W22",
             "W23",
             "5/26",
             "5/27",
@@ -40,6 +42,8 @@ def _write_daily_yield_workbook(file_path: Path) -> Path:
             "屏体综合良率",
             0.90,
             0.91,
+            0.915,
+            0.918,
             0.92,
             0.93,
             0.94,
@@ -47,6 +51,25 @@ def _write_daily_yield_workbook(file_path: Path) -> Path:
             0.96,
             0.97,
             0.98,
+        ]
+    )
+    worksheet.append(
+        [
+            None,
+            None,
+            "屏体",
+            "MVI良率",
+            0.85,
+            0.80,
+            0.82,
+            0.81,
+            0.83,
+            0.84,
+            0.85,
+            0.86,
+            0.87,
+            0.88,
+            0.89,
         ]
     )
     workbook.save(file_path)
@@ -92,3 +115,25 @@ def test_daily_yield_trend_analyzer_resets_stale_dimension(tmp_path: Path) -> No
 
     assert len(result.points) == 7
     assert "最近一周日度良率变化趋势" in result.result_text
+
+
+def test_daily_yield_trend_analyzer_reads_monthly_grain_and_reports_data_limit(
+    tmp_path: Path,
+) -> None:
+    file_path = _write_daily_yield_workbook(tmp_path / "daily_yield.xlsx")
+
+    result = DailyYieldTrendAnalyzer().analyze(
+        file_path,
+        product_model="M626",
+        time_grain="monthly",
+        requested_periods=3,
+    )
+
+    assert result.time_grain == "monthly"
+    assert result.actual_period_count == 2
+    assert len(result.points) == 2
+    assert [point.label for point in result.points] == ["M05", "M06"]
+    assert "最近3个月月度良率变化趋势" in result.result_text
+    assert "请求 3 个月，源表仅提供 2 个月度周期" in result.result_text
+    assert "M05 | 90.00%" in result.result_text
+    assert "M06 | 91.00%" in result.result_text

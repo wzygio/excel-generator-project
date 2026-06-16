@@ -68,7 +68,31 @@ class FakeDailyYieldTrendAnalyzer:
 
     def analyze(self, **kwargs):
         self.calls.append(kwargs)
-        return type("DailyTrend", (), {"result_text": "daily trend ok"})()
+        return type(
+            "DailyTrend",
+            (),
+            {
+                "result_text": "daily trend ok",
+                "time_grain": kwargs.get("time_grain", "daily"),
+                "actual_period_count": 2,
+                "warnings": [],
+            },
+        )()
+
+
+class MismatchedDailyYieldTrendAnalyzer(FakeDailyYieldTrendAnalyzer):
+    def analyze(self, **kwargs):
+        self.calls.append(kwargs)
+        return type(
+            "DailyTrend",
+            (),
+            {
+                "result_text": "daily trend ok",
+                "time_grain": "daily",
+                "actual_period_count": 7,
+                "warnings": [],
+            },
+        )()
 
 
 def _request() -> AnalysisQueryRequest:
@@ -230,3 +254,93 @@ def test_analysis_orchestrator_uses_daily_yield_trend_analyzer(
     assert result.success is True
     assert result.result_text == "daily trend ok"
     assert daily_analyzer.calls
+
+
+def test_analysis_orchestrator_passes_monthly_grain_to_yield_trend_analyzer(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "daily.xlsx"
+    source.write_bytes(b"PK\x03\x04")
+    memory = AnalysisMemoryStore(tmp_path / "memory.json")
+    daily_analyzer = FakeDailyYieldTrendAnalyzer(can_handle=True)
+
+    monkeypatch.setattr(
+        "yield_report.application.analysis_orchestrator.extract_schema",
+        lambda path: "schema with 月份 产品 月度良率",
+    )
+
+    orchestrator = AnalysisOrchestrator(
+        query_parser=FakeParser(
+            AnalysisQueryRequest(
+                source_file_type=ReportType.DAILY_YIELD,
+                file_keywords=["月周天"],
+                product_models=["M678"],
+                start_date="2026-03-15",
+                end_date="2026-06-15",
+                target_metrics=["月度良率"],
+                time_grain="monthly",
+                requested_periods=3,
+                analysis_logic="趋势分析",
+                user_intent="分析M678最近三个月的月度良率变化趋势",
+            )
+        ),
+        file_resolver=FakeResolver(source),
+        memory_store=memory,
+        selector=FakeSelector(),
+        code_generator=FakeCodeGenerator(),
+        code_executor=FakeCodeExecutor(),
+        ct_trend_analyzer=FakeCtTrendAnalyzer(),
+        daily_yield_trend_analyzer=daily_analyzer,
+    )
+
+    result = orchestrator.analyze("请分析M678最近三个月的月度良率变化趋势")
+
+    assert result.success is True
+    assert daily_analyzer.calls[0]["time_grain"] == "monthly"
+    assert daily_analyzer.calls[0]["requested_periods"] == 3
+    assert result.goal_alignment["requested_time_grain"] == "monthly"
+    assert result.goal_alignment["actual_time_grain"] == "monthly"
+
+
+def test_analysis_orchestrator_fails_when_actual_grain_mismatches_request(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "daily.xlsx"
+    source.write_bytes(b"PK\x03\x04")
+    memory = AnalysisMemoryStore(tmp_path / "memory.json")
+
+    monkeypatch.setattr(
+        "yield_report.application.analysis_orchestrator.extract_schema",
+        lambda path: "schema with 日期 产品 日度良率",
+    )
+
+    orchestrator = AnalysisOrchestrator(
+        query_parser=FakeParser(
+            AnalysisQueryRequest(
+                source_file_type=ReportType.DAILY_YIELD,
+                file_keywords=["月周天"],
+                product_models=["M678"],
+                target_metrics=["月度良率"],
+                time_grain="monthly",
+                requested_periods=3,
+                analysis_logic="趋势分析",
+                user_intent="分析M678最近三个月的月度良率变化趋势",
+            )
+        ),
+        file_resolver=FakeResolver(source),
+        memory_store=memory,
+        selector=FakeSelector(),
+        code_generator=FakeCodeGenerator(),
+        code_executor=FakeCodeExecutor(),
+        ct_trend_analyzer=FakeCtTrendAnalyzer(),
+        daily_yield_trend_analyzer=MismatchedDailyYieldTrendAnalyzer(can_handle=True),
+    )
+
+    result = orchestrator.analyze("请分析M678最近三个月的月度良率变化趋势")
+
+    assert result.success is False
+    assert "粒度不匹配" in result.error_message
+    assert result.goal_alignment["requested_time_grain"] == "monthly"
+    assert result.goal_alignment["actual_time_grain"] == "daily"

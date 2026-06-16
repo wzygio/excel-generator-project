@@ -47,6 +47,7 @@ BATCH_YIELD_FILENAME = "V3良率及不良率By批次汇总报表.xlsx"
 LABEL_END_DATE = "结束日期："
 LABEL_START_DATE = "开始日期："
 LABEL_PRODUCT_MODEL = "产品型号："
+LABEL_MONTH_COUNT = "月数："
 
 # 等待超时（毫秒）
 WAIT_FOR_REPORT_TIMEOUT = 180000  # 3 分钟，大数据量报表可能需要较长时间
@@ -97,6 +98,7 @@ class YieldDownloadService(DownloadService):
         self,
         end_date: str | None = None,
         product_models: list[str] | None = None,
+        month_count: int | None = None,
         save_dir: Path | None = None,
     ) -> Path:
         """
@@ -127,6 +129,11 @@ class YieldDownloadService(DownloadService):
 
             # 设置参数
             adapter.set_date(end_date, LABEL_END_DATE)
+            if month_count is not None:
+                try:
+                    adapter.set_text_parameter(str(month_count), LABEL_MONTH_COUNT)
+                except Exception:
+                    logger.warning('月数字段不可用（该报表可能不含此参数），跳过月数设置')
             self._handle_product_models(product_models)
 
             # 查询并导出

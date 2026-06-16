@@ -62,13 +62,19 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
     module = str(payload.get("module") or "").strip()
     action = str(payload.get("action") or "run").strip()
 
-    if module == "data_analysis" and action in {"confirm_memory", "reject_memory"}:
+    if module == "data_analysis" and action in {"confirm_memory", "reject_memory", "correct_memory"}:
         record_id = str(payload.get("record_id") or "").strip()
         if not record_id:
             raise ValueError("record_id is required for memory feedback")
         if action == "confirm_memory":
             result = data_analysis_tool.confirm_memory(record_id)
             summary = f"已确认记忆: {record_id}"
+        elif action == "correct_memory":
+            correction = str(payload.get("correction") or payload.get("correction_text") or "").strip()
+            if not correction:
+                raise ValueError("correction is required for memory correction")
+            result = data_analysis_tool.correct_memory(record_id, correction)
+            summary = f"已记录修正: {record_id}"
         else:
             result = data_analysis_tool.reject_memory(record_id)
             summary = f"已拒绝记忆: {record_id}"
@@ -95,6 +101,12 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 start_date=options.get("start_date"),
                 end_date=options.get("end_date"),
                 product_models=_string_list(options.get("product_models")),
+                month_count=_optional_int(options.get("month_count"))
+                or _optional_int(
+                    options.get("filters", {}).get("month_count")
+                    if isinstance(options.get("filters"), dict)
+                    else None
+                ),
                 filters=options.get("filters") if isinstance(options.get("filters"), dict) else {},
                 prefer_decrypted=bool(options.get("prefer_decrypted", False)),
             ),
@@ -170,6 +182,12 @@ def _optional_string(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _optional_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    return int(value)
 
 
 def _optional_path(value: Any) -> Path | None:

@@ -87,13 +87,19 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
         paths = store.create_run(run_id)
         return _snapshot_response(paths.spec_path)
 
-    if action in {"confirm_memory", "reject_memory"}:
+    if action in {"confirm_memory", "reject_memory", "correct_memory"}:
         record_id = str(payload.get("record_id") or "").strip()
         if not record_id:
             raise ValueError("record_id is required")
         if action == "confirm_memory":
             record = data_analysis_tool.confirm_memory(record_id)
             summary = f"已确认记忆: {record_id}"
+        elif action == "correct_memory":
+            correction = str(payload.get("correction") or payload.get("correction_text") or "").strip()
+            if not correction:
+                raise ValueError("correction is required")
+            record = data_analysis_tool.correct_memory(record_id, correction)
+            summary = f"已记录修正: {record_id}"
         else:
             record = data_analysis_tool.reject_memory(record_id)
             summary = f"已拒绝记忆: {record_id}"

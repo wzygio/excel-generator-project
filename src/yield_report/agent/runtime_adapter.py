@@ -1,4 +1,4 @@
-"""Runtime selection between stable Python Skills and Pi/OMP."""
+"""Runtime selection for TaskSpec execution."""
 
 from __future__ import annotations
 
@@ -41,7 +41,12 @@ class PythonSkillRuntime:
 
 
 class RuntimeRouter:
-    """Choose a runtime according to user request and TaskSpec constraints."""
+    """Choose a runtime according to user request and TaskSpec constraints.
+
+    `auto` is OMP-first. The Python runtime remains available as an explicit
+    deterministic tool/debug path, but it is no longer the Agent Runtime picked
+    by the workbench.
+    """
 
     def __init__(
         self,
@@ -68,14 +73,10 @@ class RuntimeRouter:
         if runtime_hint in {"omp", "pi"}:
             return self._run_omp(spec, context)
 
-        results = self.python_runtime.run_spec(spec, context)
-        if all(result.success for result in results):
-            return RuntimeRunResult(runtime="python", results=results)
+        if requested == "auto":
+            return self._run_omp(spec, context)
 
-        if runtime_hint in {"python_with_pi_fallback", "python_with_omp_fallback"}:
-            fallback = self._run_omp(spec, context)
-            fallback.fallback_attempted = True
-            return fallback
+        results = self.python_runtime.run_spec(spec, context)
         return RuntimeRunResult(runtime="python", results=results)
 
     def _run_omp(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:

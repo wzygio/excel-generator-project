@@ -242,6 +242,7 @@ class DataAcquisitionOrchestrator:
             file_path = client.download_daily_yield_report(
                 end_date=end_date,
                 product_models=product_models,
+                month_count=request.month_count,
             )
             results.append(
                 AcquisitionResult(

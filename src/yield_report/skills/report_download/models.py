@@ -18,6 +18,7 @@ class ReportDownloadRequest(BaseModel):
     start_date: str | None = None
     end_date: str | None = None
     product_models: list[str] | None = None
+    month_count: int | None = None
     filters: dict[str, Any] = Field(default_factory=dict)
     prefer_decrypted: bool = False
 

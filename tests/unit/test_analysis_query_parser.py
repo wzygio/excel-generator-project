@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from unittest.mock import patch
 
 from yield_report.core.analysis_query_parser import (
@@ -109,3 +110,51 @@ def test_heuristic_analysis_request_handles_ct_yield_trend_query() -> None:
     assert result.product_models == ["M678"]
     assert "CT良率" in result.target_metrics
     assert result.analysis_logic == "趋势分析"
+
+
+def test_heuristic_analysis_request_handles_monthly_yield_trend_query() -> None:
+    result = build_heuristic_analysis_request(
+        "请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因",
+        today=date(2026, 6, 15),
+    )
+
+    assert result is not None
+    assert result.product_models == ["M678"]
+    assert result.time_grain == "monthly"
+    assert result.requested_periods == 3
+    assert result.start_date == "2026-03-15"
+    assert result.end_date == "2026-06-15"
+    assert result.target_metrics == ["月度良率"]
+
+
+def test_analysis_query_parser_prefers_explicit_monthly_grain_over_llm_daily_guess() -> None:
+    response = json.dumps(
+        {
+            "source_file_type": "daily_yield",
+            "file_keywords": ["月周天", "良率"],
+            "product_models": ["M678"],
+            "start_date": "2026-06-09",
+            "end_date": "2026-06-15",
+            "target_metrics": ["日度良率"],
+            "time_grain": "daily",
+            "requested_periods": 7,
+            "filter_conditions": {"product_model": "M678"},
+            "analysis_logic": "趋势分析",
+            "user_intent": "分析 M678 最近一周日度良率变化趋势",
+            "uncertainty_notes": None,
+        },
+        ensure_ascii=False,
+    )
+
+    with patch(
+        "yield_report.core.analysis_query_parser.llm_manager.chat",
+        return_value=response,
+    ):
+        result = AnalysisQueryParser(provider="deepseek").parse(
+            "请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因"
+        )
+
+    assert result.time_grain == "monthly"
+    assert result.requested_periods == 3
+    assert result.target_metrics == ["月度良率"]
+    assert result.start_date != "2026-06-09"

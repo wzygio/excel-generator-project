@@ -86,6 +86,38 @@ def test_report_download_skill_accepts_spec_report_ref(monkeypatch, tmp_path: Pa
     assert calls[0].product_models == ["M678"]
 
 
+def test_report_download_skill_passes_month_count_filter(monkeypatch, tmp_path: Path) -> None:
+    calls: list[ReportQueryRequest] = []
+
+    class FakeOrchestrator:
+        def process_request(self, request: ReportQueryRequest) -> UserQueryResult:
+            calls.append(request)
+            return UserQueryResult(
+                success=True,
+                parsed_request=request,
+                results=[],
+                summary="ok",
+            )
+
+    monkeypatch.setattr(
+        "yield_report.skills.report_download.implementation.DataAcquisitionOrchestrator",
+        FakeOrchestrator,
+    )
+
+    result = tool.run(
+        ReportDownloadRequest(
+            report_type=ReportType.DAILY_YIELD,
+            end_date="2026-06-15",
+            product_models=["M588"],
+            filters={"month_count": 3},
+        ),
+        RunContext(run_id="run-1", workspace=tmp_path),
+    )
+
+    assert result.success is True
+    assert calls[0].month_count == 3
+
+
 def test_report_download_skill_returns_structured_error(monkeypatch, tmp_path: Path) -> None:
     class FakeOrchestrator:
         def process_request(self, request: ReportQueryRequest) -> UserQueryResult:

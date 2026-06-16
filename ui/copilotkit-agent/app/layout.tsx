@@ -7,6 +7,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "良率日报 Agent 工作台",
   description: "CopilotKit Agent UI for the yield-report workspace.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

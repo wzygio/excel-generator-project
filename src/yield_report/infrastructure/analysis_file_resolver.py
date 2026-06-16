@@ -104,7 +104,7 @@ class AnalysisFileResolver:
                 )
 
         for candidate in memory_candidates or []:
-            matched = self._find_memory_file(candidate)
+            matched = self._find_memory_file(candidate, request)
             if matched is not None:
                 path, was_decrypted = self._ensure_decrypted(matched)
                 return ResolvedAnalysisFile(
@@ -149,13 +149,25 @@ class AnalysisFileResolver:
                 return candidate
         return None
 
-    def _find_memory_file(self, candidate: AnalysisMemoryCandidate) -> Path | None:
+    def _find_memory_file(
+        self,
+        candidate: AnalysisMemoryCandidate,
+        request: AnalysisQueryRequest,
+    ) -> Path | None:
         if candidate.local_file_path:
             path = Path(candidate.local_file_path)
-            if path.exists() and path.is_file():
+            if path.exists() and path.is_file() and not _declares_different_product(
+                _norm(path.name),
+                request.product_models,
+            ):
                 return path
         if candidate.local_file_name:
-            return self._find_by_file_name(candidate.local_file_name)
+            matched = self._find_by_file_name(candidate.local_file_name)
+            if matched is not None and not _declares_different_product(
+                _norm(matched.name),
+                request.product_models,
+            ):
+                return matched
         return None
 
     def _find_fuzzy_local_file(self, request: AnalysisQueryRequest) -> Path | None:
@@ -233,12 +245,35 @@ class AnalysisFileResolver:
         if path.suffix.lower() != ".xlsx":
             return path, False
 
-        if self._is_inside_decrypted_dir(path):
+        is_standard = _is_standard_xlsx(path)
+        if is_standard and self._is_inside_decrypted_dir(path):
             return path, False
 
         existing = self._decrypted_dir / path.name
-        if existing.exists() and existing.is_file():
+        if existing.exists() and existing.is_file() and _is_standard_xlsx(existing):
             return existing, False
+
+        if is_standard:
+            try:
+                output_path = self._decrypt_func(path, self._decrypted_dir)
+            except Exception as exc:
+                raise AnalysisFileResolveError(
+                    f"Failed to copy or normalize file {path}: {exc}"
+                ) from exc
+            return output_path, True
+
+        if self._is_inside_decrypted_dir(path):
+            normalized_dir = self._decrypted_dir / "_normalized"
+            existing = normalized_dir / path.name
+            if existing.exists() and existing.is_file() and _is_standard_xlsx(existing):
+                return existing, False
+            try:
+                output_path = self._decrypt_func(path, normalized_dir)
+            except Exception as exc:
+                raise AnalysisFileResolveError(
+                    f"Failed to decrypt or normalize file {path}: {exc}"
+                ) from exc
+            return output_path, True
 
         try:
             output_path = self._decrypt_func(path, self._decrypted_dir)

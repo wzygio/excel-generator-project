@@ -25,6 +25,7 @@ from yield_report.skills.daily_report.models import (
     ShippedProduct,
     TrendResult,
 )
+from yield_report.skills.daily_report.task0_task2_orchestrator import Task0Task2Orchestrator
 from yield_report.skills.data_analysis import tool as data_analysis_tool
 from yield_report.skills.data_analysis.models import DataAnalysisRequest
 
@@ -749,7 +750,20 @@ def execute_daily_report(
     request: DailyReportRequest,
     context: RunContext | None = None,
 ) -> SkillResult:
-    """Generate the daily report and return a structured SkillResult."""
+    """Run the Task0-Task2 daily-report orchestrator and return a SkillResult."""
+    context = context or RunContext(run_id="manual-run", workspace=Path.cwd())
+    return Task0Task2Orchestrator(request, context).run()
+
+
+def execute_legacy_daily_report(
+    request: DailyReportRequest,
+    context: RunContext | None = None,
+) -> SkillResult:
+    """Generate the legacy in-repo report implementation.
+
+    Kept for focused helper tests and as a rollback aid; Runtime daily_report uses
+    Task0Task2Orchestrator by default.
+    """
     context = context or RunContext(run_id="manual-run", workspace=Path.cwd())
     try:
         return DailyReportGenerator(request, context).run()

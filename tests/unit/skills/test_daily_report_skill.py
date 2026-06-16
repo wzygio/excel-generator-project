@@ -5,8 +5,8 @@ from pathlib import Path
 from openpyxl import Workbook, load_workbook
 
 from yield_report.agent.spec_model import RunContext, SkillError, SkillResult
-from yield_report.skills.daily_report import tool
 from yield_report.skills.daily_report.implementation import (
+    execute_legacy_daily_report,
     extract_exception_records,
     extract_shipped_products,
     extract_target_rates,
@@ -205,9 +205,9 @@ def test_exception_records_match_known_and_new_windows(tmp_path: Path) -> None:
     assert known[0].exception_reason == "清洗能力不足"
 
 
-def test_daily_report_skill_generates_excel_json_and_markdown(tmp_path: Path) -> None:
+def test_legacy_daily_report_generator_generates_excel_json_and_markdown(tmp_path: Path) -> None:
     output_dir = tmp_path / "output"
-    result = tool.run(
+    result = execute_legacy_daily_report(
         DailyReportRequest(
             report_date="2026-06-01",
             product_models=["M678"],
@@ -249,8 +249,8 @@ def test_daily_report_skill_generates_excel_json_and_markdown(tmp_path: Path) ->
         workbook.close()
 
 
-def test_daily_report_skill_returns_structured_missing_file_error(tmp_path: Path) -> None:
-    result = tool.run(
+def test_legacy_daily_report_generator_returns_structured_missing_file_error(tmp_path: Path) -> None:
+    result = execute_legacy_daily_report(
         DailyReportRequest(
             report_date="2026-06-01",
             source_files={
@@ -265,7 +265,7 @@ def test_daily_report_skill_returns_structured_missing_file_error(tmp_path: Path
     assert result.error.code == "daily_report.file.missing_required"
 
 
-def test_daily_report_skill_blocks_when_analysis_sources_missing(
+def test_legacy_daily_report_generator_blocks_when_analysis_sources_missing(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -286,7 +286,7 @@ def test_daily_report_skill_blocks_when_analysis_sources_missing(
         fake_download,
     )
     output_dir = tmp_path / "output"
-    result = tool.run(
+    result = execute_legacy_daily_report(
         DailyReportRequest(
             report_date="2026-06-01",
             product_models=["M678"],

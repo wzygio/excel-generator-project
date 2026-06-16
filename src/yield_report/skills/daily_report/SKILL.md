@@ -1,7 +1,15 @@
 # daily_report
 
 ## When To Use
-Use this skill when Codex needs to generate the final Excel yield daily report from a daily-report spec or from structured source-file inputs.
+Use this skill when Codex or Agent Runtime needs to run the full OLED daily-report workbook workflow.
+
+This skill is now a thin Python adapter around the Task0-Task2 orchestrator:
+
+1. `task0-report-download`
+2. `task1-gap-analysis`
+3. `task2-extract-anomalies`
+
+Do not duplicate the child skills' business rules here.
 
 ## Inputs
 - `report_date`: Report date.
@@ -15,26 +23,26 @@ Use this skill when Codex needs to generate the final Excel yield daily report f
 - `output_name`: Optional output file name.
 - `emit_intermediate_artifacts`: Whether to emit JSON and Markdown sidecar artifacts.
 - `use_llm_polishing`: Whether to ask LLMManager to polish deterministic report text. Defaults to false.
+- `orchestrator_workspace`: Optional external duty-workflow root. Defaults to `D:\wzy\工作-值班工作\相关文件`.
+- `orchestrator_now`: Optional deterministic run time, for example `2026-06-15 16:00`.
+- `download_sources`: Whether Task0 should download fresh FineReport sources before writing.
+- `reference_workbook`: Optional target workbook used for value-level comparison.
 
 ## Outputs
-- Excel artifact: the generated daily report.
-- JSON artifact: structured product-level facts used for the report.
-- Markdown artifact: human-readable report preview.
-- `data.products`: product rows, Gap TopN, trend result, known exceptions, new exceptions, and final report text.
-- `warnings`: missing optional source files or fallback decisions.
+- Excel artifact: the generated daily report workbook.
+- `data.workflow`: child skills executed in order.
+- `data.steps`: child script command results.
+- `data.verification`: Data Packet row count and nonblank counts for `1.1`, `1.3`, and `1.4`.
+- `data.comparison`: optional generated-vs-reference workbook comparison.
 
 ## Workflow
-1. Resolve report date, source files, and template.
-2. Read `spotfire` to identify shipped products.
-3. For each product, compute positive Defect Group Gap Top3 from the CT sheet and target table.
-4. Check latest-three-day CT yield decline and MVI share increase.
-5. Match known exceptions in the last 30 days and new exceptions on the report date.
-6. Compose deterministic report text, optionally polish through `LLMManager`.
-7. Write `sheet1` from row 4, preserving the header row.
+1. Resolve the external orchestrator workspace and output workbook path.
+2. Run `scripts/task0_report_download.py --write --output <workbook>`.
+3. Run `scripts/task1_overstock_impact.py --write <workbook>`.
+4. Run `scripts/task2_extract_anomalies.py --source <workbook> --write`.
+5. Verify the final workbook contains `Data Packet` and report nonblank counts.
+6. If `reference_workbook` is provided, compare Data Packet cell values.
 
 ## Error Handling
-- `daily_report.file.missing_required`: Required source file cannot be found.
-- `daily_report.file.missing_sheet`: Required worksheet is missing.
-- `daily_report.spotfire.missing_header`: `spotfire` does not contain the expected product headers.
-- `daily_report.data.no_products`: No shipped products matched the request.
-- `daily_report.execution.failed`: Unexpected generation failure.
+- `daily_report.orchestrator.failed`: child script, workbook verification, or filesystem failure.
+- `daily_report.reference_mismatch`: generated workbook differs from `reference_workbook`.

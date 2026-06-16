@@ -23,5 +23,7 @@ class DataAnalysisRequest(BaseModel):
     product_models: list[str] | None = None
     time_range: dict[str, str | None] = Field(default_factory=dict)
     metrics: list[str] = Field(default_factory=list)
+    time_grain: str = ""
+    requested_periods: int | None = None
     analysis_intent: str = ""
     confirmed_memory_ids: list[str] = Field(default_factory=list)

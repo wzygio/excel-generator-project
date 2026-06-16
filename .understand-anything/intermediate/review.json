@@ -1,58 +1,89 @@
 {
   "issues": [],
-  "warnings": [],
+  "warnings": [
+    "Graph includes the current dirty working tree; git commit hash identifies HEAD, while the status summary excludes generated .understand-anything artifacts."
+  ],
   "stats": {
-    "totalFiles": 195,
-    "filesAnalyzedByStructureExtractor": 190,
-    "filesSkippedByStructureExtractor": [],
-    "uaScanFiles": 204,
+    "totalFiles": 209,
+    "filesAnalyzedByStructureExtractor": 185,
+    "filesSkippedByStructureExtractor": [
+      ".gitignore",
+      ".planning/.active_plan",
+      ".roorules",
+      ".understand-anything/.understandignore",
+      "config/products/.gitkeep",
+      "docs/dev_docs/Python-良率日报生成器-v1.xmind",
+      "docs/dev_docs/Python-良率日报生成器-v2.xmind",
+      "docs/dev_docs/屏体大数据科-良率监控智能体需求梳理.xlsx",
+      "docs/project_files/3月(N+4)良率预测 2026.3.12.xlsx",
+      "docs/project_files/V3良率及不良率By批次汇总报表.xlsx",
+      "docs/project_files/V3良率及不良率By月周天汇总报表.xlsx",
+      "docs/project_files/V3良率日报每日异常填报表.xlsx",
+      "docs/project_files/V3良率日报每日异常填报表代码版本.xlsm",
+      "requirements.txt",
+      "resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx",
+      "resources/CT良率异常波动管理表.xlsx",
+      "resources/spotfire.xlsx",
+      "resources/V3良率及不良率By月周天汇总报表_结束日期2026-06-03_产品型号C516+C516-7+C530+M588+M628+等8项.xlsx",
+      "resources/V3良率及不良率By月周天汇总报表_结束日期2026-06-03_产品型号M626.xlsx",
+      "tests/integration/.gitkeep",
+      "tests/unit/.gitkeep",
+      "ui/copilotkit-agent/.gitignore",
+      "ui/copilotkit-agent/app/globals.css",
+      "ui/copilotkit-agent/app/icon.svg"
+    ],
+    "uaScanFiles": 209,
     "uaFilteredByIgnore": 0,
     "byCategory": {
-      "docs": 50,
-      "code": 133,
-      "config": 8,
-      "script": 3,
-      "markup": 1
+      "code": 120,
+      "config": 14,
+      "docs": 60,
+      "markup": 1,
+      "resource": 14
     },
     "byLanguage": {
-      "markdown": 49,
-      "python": 113,
-      "yaml": 3,
-      "xmind": 2,
-      "xlsx": 10,
-      "xlsm": 1,
+      "css": 1,
+      "gitignore": 2,
+      "image": 1,
+      "javascript": 1,
+      "json": 5,
+      "markdown": 57,
+      "python": 110,
+      "text": 3,
       "toml": 1,
       "txt": 1,
-      "vbs": 1,
-      "json": 4,
-      "batch": 2,
-      "typescript": 6,
-      "css": 1,
-      "javascript": 1
+      "typescript": 8,
+      "unknown": 3,
+      "xlsm": 1,
+      "xlsx": 10,
+      "xmind": 2,
+      "yaml": 3
     },
-    "totalNodes": 709,
-    "totalEdges": 1136,
+    "totalNodes": 1150,
+    "totalEdges": 1397,
     "nodeTypes": {
-      "module": 8,
-      "document": 50,
-      "file": 124,
-      "config": 8,
-      "resource": 13,
-      "function": 355,
-      "class": 151
+      "class": 134,
+      "config": 14,
+      "document": 60,
+      "file": 121,
+      "function": 796,
+      "module": 11,
+      "resource": 14
     },
     "edgeTypes": {
-      "contains": 684,
-      "imports": 123,
-      "tested_by": 308,
-      "documents": 11,
-      "configures": 10
+      "configures": 14,
+      "contains": 1139,
+      "documents": 23,
+      "imports": 196,
+      "tested_by": 25
     },
-    "layers": 12,
+    "layers": 13,
     "tourSteps": 7
   },
   "notes": [
-    "Graph generated with Understand-Anything deterministic scanners plus local assembly because subagent dispatch is not available in this session.",
-    "Some Chinese binary/resource filenames emitted mojibake warnings in the upstream Node import-map extractor; actual graph file paths were rebuilt from rg --files to preserve usable paths where possible."
+    "Rebuilt from the current filesystem, including uncommitted and untracked project changes.",
+    "Documentation references now prefer docs/references/ and docs/dev_docs/ for the files moved out of specs/ and docs/design/.",
+    "Generated graph excludes .understand-anything/intermediate, .understand-anything/tmp, caches, node_modules, runtime outputs, and ignored lock/log/cache files.",
+    "Worktree status summary excludes generated .understand-anything artifacts to avoid self-referential noise."
   ]
 }

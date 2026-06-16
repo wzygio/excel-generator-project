@@ -22,6 +22,12 @@ class DailyReportRequest(BaseModel):
     output_name: str | None = None
     emit_intermediate_artifacts: bool = True
     use_llm_polishing: bool = False
+    orchestrator_workspace: Path | None = None
+    orchestrator_now: str | None = None
+    run_inspection: bool = True
+    download_sources: bool = False
+    reference_workbook: Path | None = None
+    task2_max_anomaly_row: int | None = None
 
     @field_validator("sections")
     @classmethod

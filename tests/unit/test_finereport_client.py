@@ -19,12 +19,14 @@ class FakeYieldDownloadService:
         end_date: str,
         product_models: list[str] | None,
         save_dir: Path,
+        month_count: int | None = None,
     ) -> Path:
         self.daily_calls.append(
             {
                 "end_date": end_date,
                 "product_models": product_models,
                 "save_dir": save_dir,
+                "month_count": month_count,
             }
         )
         path = save_dir / "V3良率及不良率By月周天汇总报表.xlsx"
@@ -83,6 +85,29 @@ def test_daily_report_filename_appends_filter_conditions(tmp_path: Path) -> None
             "end_date": "2026-05-01",
             "product_models": ["M678"],
             "save_dir": download_dir,
+            "month_count": None,
+        }
+    ]
+
+
+def test_daily_report_download_accepts_month_count_filter(tmp_path: Path) -> None:
+    service = FakeYieldDownloadService()
+    client = _build_client(tmp_path, service)
+
+    result = client.download_daily_yield_report(
+        end_date="2026-06-15",
+        product_models=["M588"],
+        month_count=3,
+    )
+
+    expected_name = "V3良率及不良率By月周天汇总报表_结束日期2026-06-15_产品型号M588_月数3.xlsx"
+    assert result == tmp_path / "output" / "decrypted_files" / expected_name
+    assert service.daily_calls == [
+        {
+            "end_date": "2026-06-15",
+            "product_models": ["M588"],
+            "save_dir": tmp_path / "output" / "downloads",
+            "month_count": 3,
         }
     ]
 

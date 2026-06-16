@@ -67,6 +67,8 @@ class AnalysisResult:
     memory_record_id: str | None = None
     memory_candidates: list[AnalysisMemoryCandidate] = field(default_factory=list)
     workflow_steps: list[AnalysisWorkflowStep] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    goal_alignment: dict[str, Any] = field(default_factory=dict)
 
     def summary(self) -> str:
         if not self.success:
@@ -279,8 +281,8 @@ class AnalysisOrchestrator:
             decision = StrategyDecision(
                 strategy=AnalysisStrategy.CODE,
                 confidence=0.75,
-                reasoning=f"LLM策略判定失败，使用项目内 CT 趋势分析兜底: {exc}",
-                suggested_code_approach="读取 CT sheet 的 CT良率/CT产出数行并计算近一周趋势",
+                reasoning=f"LLM策略判定失败，使用项目内确定性趋势分析兜底: {exc}",
+                suggested_code_approach="读取月周天源表的目标粒度良率行并计算趋势",
             )
             workflow_steps.append(
                 AnalysisWorkflowStep(
@@ -323,7 +325,11 @@ class AnalysisOrchestrator:
                 AnalysisWorkflowStep(
                     name="数据分析",
                     status="success" if result.success else "failed",
-                    detail="使用内置日度良率趋势分析器。" if result.success else result.error_message,
+                    detail=(
+                        f"使用内置{_grain_label(parsed_request.time_grain)}良率趋势分析器。"
+                        if result.success
+                        else result.error_message
+                    ),
                 )
             )
         elif decision.strategy == AnalysisStrategy.CODE:
@@ -372,6 +378,10 @@ class AnalysisOrchestrator:
     def reject_memory(self, record_id: str) -> AnalysisMemoryRecord:
         """Mark a pending memory record as rejected."""
         return self._memory_store.reject(record_id)
+
+    def correct_memory(self, record_id: str, correction: str) -> AnalysisMemoryRecord:
+        """Mark a pending memory record as corrected with a user explanation."""
+        return self._memory_store.correct(record_id, correction)
 
     def _execute_code_analysis(
         self,
@@ -519,14 +529,15 @@ class AnalysisOrchestrator:
                 strategy_used=AnalysisStrategy.CODE,
                 strategy_decision=decision,
                 schema=schema,
-                error_message="未识别到产品型号，无法执行日度良率趋势分析。",
+                error_message="未识别到产品型号，无法执行良率趋势分析。",
             )
 
         try:
             trend = self._daily_yield_trend_analyzer.analyze(
                 file_path=resolved_file.path,
                 product_model=product_model,
-                days=7,
+                time_grain=request.time_grain or "daily",
+                requested_periods=request.requested_periods,
             )
         except DailyYieldTrendAnalysisError as exc:
             return AnalysisResult(
@@ -534,7 +545,26 @@ class AnalysisOrchestrator:
                 strategy_used=AnalysisStrategy.CODE,
                 strategy_decision=decision,
                 schema=schema,
-                error_message=f"日度良率趋势分析失败: {exc}",
+                error_message=f"良率趋势分析失败: {exc}",
+            )
+
+        requested_grain = request.time_grain or "daily"
+        actual_grain = getattr(trend, "time_grain", requested_grain)
+        if actual_grain != requested_grain:
+            return AnalysisResult(
+                success=False,
+                strategy_used=AnalysisStrategy.CODE,
+                strategy_decision=decision,
+                schema=schema,
+                error_message=(
+                    f"分析结果粒度不匹配: requested={requested_grain}, actual={actual_grain}"
+                ),
+                goal_alignment={
+                    "requested_time_grain": requested_grain,
+                    "actual_time_grain": actual_grain,
+                    "requested_periods": request.requested_periods,
+                    "actual_period_count": getattr(trend, "actual_period_count", None),
+                },
             )
 
         return AnalysisResult(
@@ -543,6 +573,13 @@ class AnalysisOrchestrator:
             strategy_decision=decision,
             result_text=trend.result_text,
             schema=schema,
+            warnings=list(getattr(trend, "warnings", [])),
+            goal_alignment={
+                "requested_time_grain": requested_grain,
+                "actual_time_grain": actual_grain,
+                "requested_periods": request.requested_periods,
+                "actual_period_count": getattr(trend, "actual_period_count", None),
+            },
         )
 
     def _record_pending_memory(
@@ -589,6 +626,7 @@ class AnalysisOrchestrator:
             user_query=user_query,
             target_metrics=request.target_metrics,
             analysis_logic=request.analysis_logic,
+            time_grain=request.time_grain,
         )
 
 
@@ -598,4 +636,16 @@ def _describe_request(request: AnalysisQueryRequest) -> str:
     metrics = ", ".join(request.target_metrics) if request.target_metrics else "未指定"
     dates = f"{request.start_date or '未指定'} ~ {request.end_date or '未指定'}"
     logic = request.analysis_logic or "未指定"
-    return f"source={source}; models={models}; dates={dates}; metrics={metrics}; logic={logic}"
+    grain = request.time_grain or "未指定"
+    periods = request.requested_periods if request.requested_periods is not None else "未指定"
+    return (
+        f"source={source}; models={models}; dates={dates}; metrics={metrics}; "
+        f"grain={grain}; periods={periods}; logic={logic}"
+    )
+
+
+def _grain_label(time_grain: str) -> str:
+    return {"monthly": "月度", "weekly": "周度", "daily": "日度"}.get(
+        time_grain or "daily",
+        "日度",
+    )

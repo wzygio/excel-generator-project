@@ -3,7 +3,7 @@ import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 
 const VALID_MODULES = new Set(["report_download", "data_analysis", "daily_report"]);
-const VALID_ACTIONS = new Set(["run", "confirm_memory", "reject_memory"]);
+const VALID_ACTIONS = new Set(["run", "confirm_memory", "reject_memory", "correct_memory"]);
 
 type BridgePayload = {
   module?: string;

@@ -16,7 +16,7 @@ from yield_report.core.query_parser import ReportType
 
 logger = logging.getLogger(__name__)
 
-MemoryStatus = Literal["pending", "confirmed", "rejected"]
+MemoryStatus = Literal["pending", "confirmed", "rejected", "corrected"]
 
 
 class AnalysisMemoryRecord(BaseModel):
@@ -34,6 +34,8 @@ class AnalysisMemoryRecord(BaseModel):
     report_file_name: str = ""
     product_models: list[str] = Field(default_factory=list)
     target_metrics: list[str] = Field(default_factory=list)
+    time_grain: str = ""
+    requested_periods: int | None = None
     field_mappings: dict[str, str] = Field(default_factory=dict)
     filter_conditions: dict[str, Any] = Field(default_factory=dict)
     analysis_logic: str = ""
@@ -50,7 +52,10 @@ class AnalysisMemoryCandidate(BaseModel):
     local_file_path: str
     report_file_name: str
     source_file_type: ReportType | None = None
+    product_models: list[str] = Field(default_factory=list)
     target_metrics: list[str] = Field(default_factory=list)
+    time_grain: str = ""
+    requested_periods: int | None = None
     analysis_logic: str = ""
 
 
@@ -95,7 +100,10 @@ class AnalysisMemoryStore:
                 local_file_path=record.local_file_path,
                 report_file_name=record.report_file_name,
                 source_file_type=record.source_file_type,
+                product_models=list(record.product_models),
                 target_metrics=list(record.target_metrics),
+                time_grain=record.time_grain,
+                requested_periods=record.requested_periods,
                 analysis_logic=record.analysis_logic,
             )
             for score, record in scored[:limit]
@@ -125,6 +133,8 @@ class AnalysisMemoryStore:
             report_file_name=report_file_name or resolved_file.stem,
             product_models=list(request.product_models or []),
             target_metrics=list(request.target_metrics),
+            time_grain=request.time_grain,
+            requested_periods=request.requested_periods,
             field_mappings=field_mappings or {},
             filter_conditions=dict(request.filter_conditions),
             analysis_logic=request.analysis_logic,
@@ -143,6 +153,22 @@ class AnalysisMemoryStore:
 
     def reject(self, record_id: str) -> AnalysisMemoryRecord:
         return self._update_record(record_id, "rejected", None)
+
+    def correct(self, record_id: str, correction: str) -> AnalysisMemoryRecord:
+        correction = correction.strip()
+        if not correction:
+            raise ValueError("correction is required")
+        record = self.get_record(record_id)
+        existing_notes = record.notes if record else ""
+        notes = "\n".join(
+            part
+            for part in [
+                existing_notes.strip(),
+                f"用户修正: {correction}",
+            ]
+            if part
+        )
+        return self._update_record(record_id, "corrected", {"notes": notes})
 
     def _append_record(self, record: AnalysisMemoryRecord) -> None:
         records = self._load_records()
@@ -204,6 +230,9 @@ class AnalysisMemoryStore:
         request: AnalysisQueryRequest,
         record: AnalysisMemoryRecord,
     ) -> float:
+        if request.time_grain and record.time_grain and request.time_grain != record.time_grain:
+            return 0.0
+
         score = 0.0
 
         if request.source_file_type and request.source_file_type == record.source_file_type:
@@ -212,6 +241,8 @@ class AnalysisMemoryStore:
         request_models = set(request.product_models or [])
         record_models = set(record.product_models)
         if request_models and record_models:
+            if not request_models & record_models:
+                return 0.0
             score += len(request_models & record_models) * 2.0
 
         request_metrics = {_norm(item) for item in request.target_metrics}

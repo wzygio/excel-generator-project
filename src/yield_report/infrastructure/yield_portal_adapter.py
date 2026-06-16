@@ -82,6 +82,28 @@ class YieldPortalAdapter(OLEDPortalAdapter):
         """快捷设置开始日期。"""
         self.set_date(date_str, "开始日期：")
 
+    def set_text_parameter(self, value: str, label_text: str) -> None:
+        """Set a generic text-like report parameter by its FineReport label."""
+        value = str(value).strip()
+        if not value:
+            raise ValueError(f"参数 [{label_text}] 不能为空")
+
+        logger.info("设置文本参数 [%s] = %s", label_text, value)
+        frame = self.get_active_frame()
+        xpath = (
+            f"//div[.//pre[contains(@class, 'fr-label') and contains(text(), '{label_text}')]]"
+            f"/following-sibling::div[contains(@class, 'fr-trigger-editor')][1]"
+            f"//input[contains(@class, 'fr-trigger-texteditor') or @type='text']"
+        )
+        field = frame.locator(xpath).first
+        field.wait_for(state="visible", timeout=self.default_timeout)
+        field.click()
+        field.fill("")
+        field.fill(value)
+        field.press("Tab")
+        self.page.wait_for_timeout(300)
+        logger.info("成功将文本参数 [%s] 设置为: %s", label_text, value)
+
     # ================================================================
     # 下拉复选框操作（产品型号、Group 等）
     # ================================================================

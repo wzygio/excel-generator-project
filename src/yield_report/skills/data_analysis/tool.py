@@ -27,3 +27,7 @@ def confirm_memory(record_id: str, corrections: dict[str, Any] | None = None):
 
 def reject_memory(record_id: str):
     return implementation.reject_memory(record_id)
+
+
+def correct_memory(record_id: str, correction: str):
+    return implementation.correct_memory(record_id, correction)

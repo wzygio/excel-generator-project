@@ -128,6 +128,7 @@ class FinereportClient:
         self,
         end_date: str | date | None = None,
         product_models: list[str] | None = None,
+        month_count: int | None = None,
         save_dir: str | Path | None = None,
     ) -> Path:
         """
@@ -151,15 +152,16 @@ class FinereportClient:
         downloaded_path = service.download_daily_yield(
             end_date=end_date_str,
             product_models=product_models,
+            month_count=month_count,
             save_dir=save_dir,
         )
-        filtered_path = self._rename_with_filter_suffix(
-            downloaded_path,
-            filters={
-                "结束日期": end_date_str,
-                "产品型号": self._format_product_models(product_models),
-            },
-        )
+        filters = {
+            "结束日期": end_date_str,
+            "产品型号": self._format_product_models(product_models),
+        }
+        if month_count is not None:
+            filters["月数"] = str(month_count)
+        filtered_path = self._rename_with_filter_suffix(downloaded_path, filters=filters)
         return self._decrypt_downloaded_file(filtered_path)
 
     def download_batch_yield_report(

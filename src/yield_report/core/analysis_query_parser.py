@@ -55,6 +55,14 @@ class AnalysisQueryRequest(BaseModel):
         default="",
         description="The requested analysis method, such as trend, comparison, ranking, or summary.",
     )
+    time_grain: str = Field(
+        default="",
+        description="Requested time grain: daily, weekly, monthly, or empty when unknown.",
+    )
+    requested_periods: int | None = Field(
+        default=None,
+        description="Requested number of periods, such as 3 for 最近三个月.",
+    )
     user_intent: str = Field(
         default="",
         description="Short natural-language summary of the user's intent.",
@@ -82,7 +90,7 @@ class AnalysisQueryRequest(BaseModel):
             return []
         return value
 
-    @field_validator("analysis_logic", "user_intent", mode="before")
+    @field_validator("analysis_logic", "time_grain", "user_intent", mode="before")
     @classmethod
     def normalize_optional_text(cls, value: Any) -> str:
         if value is None:
@@ -113,14 +121,15 @@ def build_heuristic_analysis_request(
     is_yield = "良率" in text
     is_ct_yield = "CT" in text_upper and is_yield
     is_trend = any(keyword in text for keyword in ["趋势", "变化", "波动"])
-    is_recent_week = any(keyword in text for keyword in ["近一周", "最近一周", "过去一周", "一周"])
+    time_grain = _infer_time_grain(text)
+    requested_periods = _infer_requested_periods(text, time_grain)
 
     if not (is_yield and is_trend):
         return None
 
     current_day = today or effective_report_end_date()
-    start_date = current_day - timedelta(days=6) if is_recent_week else None
-    target_metrics = ["日度良率"]
+    start_date = _infer_start_date(current_day, time_grain, requested_periods)
+    target_metrics = [_metric_for_grain(time_grain)]
     file_keywords = ["月周天", "良率"]
     if is_ct_yield:
         target_metrics.insert(0, "CT良率")
@@ -131,13 +140,15 @@ def build_heuristic_analysis_request(
         file_keywords=file_keywords,
         product_models=product_models or None,
         start_date=start_date.isoformat() if start_date else None,
-        end_date=current_day.isoformat() if is_recent_week else None,
+        end_date=current_day.isoformat() if start_date else None,
         target_metrics=target_metrics,
         filter_conditions={"product_model": product_models[0]} if product_models else {},
         analysis_logic="趋势分析",
+        time_grain=time_grain,
+        requested_periods=requested_periods,
         user_intent=(
             f"分析{','.join(product_models) if product_models else ''}"
-            f"{'日度CT良率' if is_ct_yield else '日度良率'}变化趋势"
+            f"{'CT良率' if is_ct_yield else _metric_for_grain(time_grain)}变化趋势"
         ),
         uncertainty_notes="LLM解析不可用时由项目内启发式规则生成，请在结果中核对。",
     )
@@ -158,6 +169,8 @@ ANALYSIS_QUERY_SYSTEM_PROMPT = """你是良率日报项目的数据分析需求�
 - start_date/end_date: 所有相对日期都按当前日期换算成 YYYY-MM-DD。
 - 日度良率的默认结束日期遵循 10 点规则：上午 10 点前仍截止昨日，10 点后截止今天。
 - target_metrics: 提取目标指标，例如 ["CT良率", "日度良率"]。
+- time_grain: 提取时间粒度，必须是 "daily"、"weekly"、"monthly" 或 ""。例如“月度/三个月”填 monthly，“周度/近三周”填 weekly，“日度/近一周”填 daily。
+- requested_periods: 提取用户要求的周期数，例如“最近三个月”填 3，“近一周”填 7；无法判断时填 null。
 - filter_conditions: 放入产品、时间、站点、工序、厂别等筛选条件。
 - analysis_logic: 提取分析方法，例如“趋势分析”“对比分析”“TopN”“异常归因”“汇总”。
 - user_intent: 用一句中文概括用户要完成的分析。
@@ -175,6 +188,8 @@ ANALYSIS_QUERY_SYSTEM_PROMPT = """你是良率日报项目的数据分析需求�
   "start_date": "2026-05-25",
   "end_date": "2026-06-01",
   "target_metrics": ["CT良率"],
+  "time_grain": "daily",
+  "requested_periods": 7,
   "filter_conditions": {{"product_model": "M678"}},
   "analysis_logic": "趋势分析",
   "user_intent": "分析 M678 近一周日度 CT 良率变化趋势",
@@ -259,11 +274,35 @@ class AnalysisQueryParser:
             return data
 
         fallback = heuristic.model_dump(mode="json")
+        original_grain = str(data.get("time_grain") or "")
+        original_metrics = list(data.get("target_metrics") or [])
+        force_grain = bool(
+            heuristic.time_grain
+            and (
+                (original_grain and original_grain != heuristic.time_grain)
+                or _has_metric_grain_mismatch(original_metrics, heuristic.time_grain)
+            )
+        )
         merged = dict(data)
         for key, value in fallback.items():
             current = merged.get(key)
             if current is None or current == "" or current == [] or current == {}:
                 merged[key] = value
+        should_align_metrics = bool(
+            heuristic.time_grain
+            and (force_grain or _has_generic_yield_metric(list(merged.get("target_metrics") or [])))
+        )
+        if force_grain:
+            merged["time_grain"] = heuristic.time_grain
+        if should_align_metrics:
+            merged["target_metrics"] = _align_metrics_to_grain(
+                list(merged.get("target_metrics") or []),
+                heuristic.time_grain,
+            )
+        if force_grain and heuristic.requested_periods is not None:
+            merged["requested_periods"] = heuristic.requested_periods
+            merged["start_date"] = fallback["start_date"]
+            merged["end_date"] = fallback["end_date"]
         return merged
 
     @staticmethod
@@ -274,3 +313,112 @@ class AnalysisQueryParser:
                 f"- {report_type.value}: {meta['name']}；{meta['description']}；来源：{meta['source']}"
             )
         return "\n".join(lines)
+
+
+def _infer_time_grain(text: str) -> str:
+    if any(keyword in text for keyword in ["月度", "月良率", "月度良率", "按月"]):
+        return "monthly"
+    if re.search(r"(?:最近|近|过去)?(?:\d+|[一二两三四五六七八九十])个?月", text):
+        return "monthly"
+    if any(keyword in text for keyword in ["周度", "周良率", "按周"]):
+        return "weekly"
+    week_match = re.search(r"(?:最近|近|过去)?(\d+|[一二两三四五六七八九十])周", text)
+    if week_match and week_match.group(1) not in {"1", "一"}:
+        return "weekly"
+    return "daily"
+
+
+def _infer_requested_periods(text: str, time_grain: str) -> int | None:
+    digits = {
+        "一": 1,
+        "二": 2,
+        "两": 2,
+        "三": 3,
+        "四": 4,
+        "五": 5,
+        "六": 6,
+        "七": 7,
+        "八": 8,
+        "九": 9,
+        "十": 10,
+    }
+    unit_pattern = "个?月" if time_grain == "monthly" else "周" if time_grain == "weekly" else "天"
+    match = re.search(rf"(?:最近|近|过去)?(\d+){unit_pattern}", text)
+    if match:
+        return int(match.group(1))
+    match = re.search(rf"(?:最近|近|过去)?([一二两三四五六七八九十]){unit_pattern}", text)
+    if match:
+        return digits.get(match.group(1))
+    if time_grain == "daily" and any(keyword in text for keyword in ["一周", "近一周", "最近一周"]):
+        return 7
+    return None
+
+
+def _infer_start_date(current_day: date, time_grain: str, requested_periods: int | None) -> date | None:
+    if requested_periods is None:
+        return current_day - timedelta(days=6) if time_grain == "daily" else None
+    if time_grain == "monthly":
+        return _subtract_months(current_day, requested_periods)
+    if time_grain == "weekly":
+        return current_day - timedelta(days=7 * requested_periods)
+    return current_day - timedelta(days=max(requested_periods - 1, 0))
+
+
+def _metric_for_grain(time_grain: str) -> str:
+    if time_grain == "monthly":
+        return "月度良率"
+    if time_grain == "weekly":
+        return "周度良率"
+    return "日度良率"
+
+
+def _align_metrics_to_grain(metrics: list[str], time_grain: str) -> list[str]:
+    grain_metrics = {"良率", "日度良率", "周度良率", "月度良率"}
+    aligned = [metric for metric in metrics if metric not in grain_metrics]
+    aligned.append(_metric_for_grain(time_grain))
+    return list(dict.fromkeys(aligned))
+
+
+def _has_metric_grain_mismatch(metrics: list[str], time_grain: str) -> bool:
+    grain_metrics = {"日度良率", "周度良率", "月度良率"}
+    expected = _metric_for_grain(time_grain)
+    return any(metric in grain_metrics and metric != expected for metric in metrics)
+
+
+def _has_generic_yield_metric(metrics: list[str]) -> bool:
+    return any(metric == "良率" for metric in metrics)
+
+
+def _subtract_months(value: date, months: int) -> date:
+    month_index = value.year * 12 + value.month - 1 - max(months, 0)
+    year = month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, _days_in_month(year, month))
+    return date(year, month, day)
+
+
+def _days_in_month(year: int, month: int) -> int:
+    if month == 12:
+        return 31
+    first_next_month = date(year, month + 1, 1)
+    return (first_next_month - timedelta(days=1)).day
+
+
+def infer_analysis_time_grain(text: str) -> str:
+    return _infer_time_grain(text)
+
+
+def infer_analysis_requested_periods(text: str, time_grain: str) -> int | None:
+    return _infer_requested_periods(text, time_grain)
+
+
+def infer_analysis_start_date(
+    current_day: date,
+    time_grain: str,
+    requested_periods: int | None,
+) -> date | None:
+    return _infer_start_date(current_day, time_grain, requested_periods)
+
+
+def metric_for_time_grain(time_grain: str) -> str:
+    return _metric_for_grain(time_grain)

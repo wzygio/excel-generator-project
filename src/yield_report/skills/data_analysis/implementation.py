@@ -81,6 +81,8 @@ def execute_data_analysis(
             "strategy_used": str(legacy_result.strategy_used or ""),
             "source_file_path": str(legacy_result.source_file_path or ""),
             "memory_record_id": legacy_result.memory_record_id,
+            "warnings": list(legacy_result.warnings),
+            "goal_alignment": dict(legacy_result.goal_alignment),
             "workflow_steps": [
                 {
                     "name": step.name,
@@ -101,6 +103,7 @@ def execute_data_analysis(
             recoverable=True,
             details={"workflow_steps": [step.name for step in legacy_result.workflow_steps]},
         ),
+        warnings=list(legacy_result.warnings),
         memory_updates=memory_updates,
     )
 
@@ -113,6 +116,11 @@ def confirm_memory(record_id: str, corrections: dict[str, Any] | None = None):
 def reject_memory(record_id: str):
     """Reject a pending data-analysis memory record."""
     return AnalysisOrchestrator().reject_memory(record_id)
+
+
+def correct_memory(record_id: str, correction: str):
+    """Record a user correction for a pending data-analysis memory record."""
+    return AnalysisOrchestrator().correct_memory(record_id, correction)
 
 
 def _compose_question(request: DataAnalysisRequest) -> str:
@@ -128,6 +136,10 @@ def _compose_question(request: DataAnalysisRequest) -> str:
         parts.append(f"时间范围：{start or '未指定'} ~ {end or '未指定'}")
     if request.metrics:
         parts.append(f"目标指标：{', '.join(request.metrics)}")
+    if request.time_grain:
+        parts.append(f"时间粒度：{request.time_grain}")
+    if request.requested_periods is not None:
+        parts.append(f"周期数：{request.requested_periods}")
     if request.analysis_intent:
         parts.append(f"分析意图：{request.analysis_intent}")
     return "；".join(parts)

@@ -75,6 +75,7 @@ def _run_legacy_workflow(
         product_models=request.product_models
         if request.product_models is not None
         else _filter_value(filters, "product_models"),
+        month_count=request.month_count or _filter_value(filters, "month_count"),
         user_intent=request.user_query or report_ref.get("alias", "") or "Spec-driven report download",
     )
     return orchestrator.process_request(report_request)

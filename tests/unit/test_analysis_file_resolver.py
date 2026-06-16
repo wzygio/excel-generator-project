@@ -58,6 +58,29 @@ def test_resolver_prefers_standard_xlsx_when_multiple_decrypted_candidates(tmp_p
     assert result.path == standard
 
 
+def test_resolver_normalizes_nonstandard_file_inside_decrypted_dir(tmp_path: Path) -> None:
+    resources = tmp_path / "resources"
+    decrypted = tmp_path / "output" / "decrypted_files"
+    decrypted.mkdir(parents=True)
+    encrypted = decrypted / "V3良率及不良率By月周天汇总报表.xlsx"
+    encrypted.write_bytes(b"\x00\x00\x00\x00encrypted")
+    calls: list[tuple[Path, Path]] = []
+
+    def fake_decrypt(path: Path, output_dir: Path) -> Path:
+        calls.append((path, output_dir))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / path.name
+        output.write_bytes(b"PK\x03\x04standard")
+        return output
+
+    resolver = AnalysisFileResolver(resources_dir=resources, decrypt_func=fake_decrypt)
+    result = resolver.resolve(request=_request(), user_query="query")
+
+    assert calls == [(encrypted, decrypted / "_normalized")]
+    assert result.path == decrypted / "_normalized" / encrypted.name
+    assert result.was_decrypted is True
+
+
 def test_resolver_decrypts_resource_file_when_needed(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
     resources.mkdir()
@@ -108,6 +131,35 @@ def test_resolver_uses_memory_candidate_before_fuzzy_search(tmp_path: Path) -> N
     assert result.source == "memory"
     assert result.matched_memory_id == "abc"
     assert result.path.name == memory_file.name
+
+
+def test_resolver_ignores_memory_file_for_different_declared_product(tmp_path: Path) -> None:
+    resources = tmp_path / "resources"
+    resources.mkdir()
+    memory_file = resources / "V3良率及不良率By月周天汇总报表_结束日期2026-06-14_产品型号C522.xlsx"
+    fuzzy_file = resources / "V3良率及不良率By月周天汇总报表_结束日期2026-06-03_产品型号M678.xlsx"
+    memory_file.write_bytes(b"PK\x03\x04")
+    fuzzy_file.write_bytes(b"PK\x03\x04")
+
+    candidate = AnalysisMemoryCandidate(
+        record_id="abc",
+        score=10,
+        local_file_name=memory_file.name,
+        local_file_path=str(memory_file),
+        report_file_name="remembered",
+        source_file_type=ReportType.DAILY_YIELD,
+        product_models=["C522"],
+    )
+
+    resolver = AnalysisFileResolver(resources_dir=resources)
+    result = resolver.resolve(
+        request=_request(),
+        user_query="query",
+        memory_candidates=[candidate],
+    )
+
+    assert result.source == "local_fuzzy"
+    assert result.path.name == fuzzy_file.name
 
 
 def test_resolver_calls_acquisition_when_no_local_file(tmp_path: Path) -> None:

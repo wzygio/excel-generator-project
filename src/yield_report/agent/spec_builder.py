@@ -17,6 +17,12 @@ from yield_report.agent.spec_validation import (
     SpecValidationIssue,
     validate_task_spec,
 )
+from yield_report.core.analysis_query_parser import (
+    infer_analysis_requested_periods,
+    infer_analysis_start_date,
+    infer_analysis_time_grain,
+    metric_for_time_grain,
+)
 
 DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
 DEFAULT_TEMPLATE_REF = "docs/project_files/V3良率日报每日异常填报表.xlsx"
@@ -196,12 +202,15 @@ class SpecBuilder:
         warnings: list[str],
     ) -> TaskSpec:
         parsed_date = date.fromisoformat(report_date)
+        question = request.user_goal.strip()
+        time_grain = infer_analysis_time_grain(question)
+        requested_periods = infer_analysis_requested_periods(question, time_grain)
+        start_date = infer_analysis_start_date(parsed_date, time_grain, requested_periods)
         date_range = {
-            "start": (parsed_date - timedelta(days=6)).isoformat(),
+            "start": start_date.isoformat() if start_date else None,
             "end": report_date,
         }
-        question = request.user_goal.strip()
-        metrics = _infer_metrics(question)
+        metrics = _infer_metrics(question, time_grain)
         return TaskSpec(
             run_id=paths.run_id,
             status="needs_confirmation" if warnings else "ready",
@@ -209,7 +218,7 @@ class SpecBuilder:
             constraints={
                 "codex_is_agent_core": True,
                 "prefer_existing_tools": True,
-                "runtime": "python_with_pi_fallback",
+                "runtime": "omp",
                 "pi_runtime_allowed": True,
                 "require_user_confirmation_for_pending_memory": True,
             },
@@ -217,6 +226,12 @@ class SpecBuilder:
                 "report_date": report_date,
                 "product_models": list(product_models),
                 "date_range": date_range,
+                "analysis": {
+                    "time_grain": time_grain,
+                    "requested_periods": requested_periods,
+                    "metrics": metrics,
+                    "analysis_intent": "trend",
+                },
                 "reports": [
                     {
                         "alias": "daily_yield",
@@ -242,6 +257,8 @@ class SpecBuilder:
                         "product_models": product_models,
                         "time_range": date_range,
                         "metrics": metrics,
+                        "time_grain": time_grain,
+                        "requested_periods": requested_periods,
                         "analysis_intent": "trend",
                     },
                     save_as="analysis_result",
@@ -335,34 +352,15 @@ class SpecBuilder:
     ) -> list[SkillCall]:
         return [
             SkillCall(
-                id="prepare_daily_report_facts",
-                skill="data_analysis",
-                input={
-                    "analysis_kind": "daily_report",
-                    "report_date": report_date,
-                    "sections": sections,
-                    "source_files": {
-                        alias: path
-                        for alias, path in LOCAL_SOURCE_FILES.items()
-                        if alias != "spotfire"
-                    },
-                    "product_models": product_models,
-                    "question": "生成良率日报所需的结构化分析事实",
-                    "analysis_intent": "daily_report",
-                },
-                save_as="daily_report_facts",
-            ),
-            SkillCall(
                 id="generate_daily_report",
                 skill="daily_report",
-                depends_on=["prepare_daily_report_facts"],
                 input={
                     "report_date": report_date,
                     "template_ref": DEFAULT_TEMPLATE_REF,
                     "product_models": product_models,
                     "source_files": LOCAL_SOURCE_FILES,
                     "sections": sections,
-                    "analysis_results": ["daily_report_facts"],
+                    "analysis_results": [],
                     "output_name": "daily_report_output.xlsx",
                     "emit_intermediate_artifacts": True,
                 },
@@ -428,15 +426,15 @@ def _is_analysis_goal(goal: str) -> bool:
     return has_analysis and not has_report_generation
 
 
-def _infer_metrics(goal: str) -> list[str]:
+def _infer_metrics(goal: str, time_grain: str = "daily") -> list[str]:
     metrics: list[str] = []
     if "CT" in goal.upper():
         metrics.append("CT良率")
     if "MVI" in goal.upper():
         metrics.append("MVI产出占比")
     if any(keyword in goal for keyword in ["良率", "yield", "Yield"]):
-        metrics.append("日度良率")
-    return list(dict.fromkeys(metrics)) or ["日度良率"]
+        metrics.append(metric_for_time_grain(time_grain))
+    return list(dict.fromkeys(metrics)) or [metric_for_time_grain(time_grain)]
 
 
 def _parse_llm_spec(raw: dict[str, Any] | str) -> TaskSpec:

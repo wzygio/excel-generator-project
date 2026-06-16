@@ -103,6 +103,10 @@ class ReportQueryRequest(BaseModel):
         default=None,
         description="产品型号列表，如 ['3TED01', '3TED02']。如果用户说'所有型号'则传空列表。",
     )
+    month_count: int | None = Field(
+        default=None,
+        description="月周天汇总报表的月数筛选，例如最近三个月时为 3。",
+    )
     user_intent: str = Field(
         default="",
         description="用户意图的简短描述，用于确认和展示。",
@@ -137,7 +141,7 @@ SYSTEM_PROMPT = """你是一个智能的报表查询解析助手。你的任务�
 
 1. **daily_yield** - "V3良率及不良率By月周天汇总报表": 按日月周维度汇总的良率及不良率数据，用于 Gap 计算。数据来源：FineReport。
    - 用户可能说：良率日报、月周天、daily yield、良率报表、V3良率、良率数据
-   - 筛选条件: 结束日期(必选)、产品型号(可选)
+   - 筛选条件: 结束日期(必选)、产品型号(可选)、月数(可选，默认通常为2，最近三个月应为3)
    - 默认日期规则: 上午10点前日度数据仍截止昨日；10点后截止今天。
 
 2. **batch_yield** - "V3良率及不良率By批次汇总报表": 按批次汇总的良率及不良率数据，用于判断最新批次是否恶化。数据来源：FineReport。
@@ -159,6 +163,7 @@ SYSTEM_PROMPT = """你是一个智能的报表查询解析助手。你的任务�
 - **start_date**: 从文本中提取具体日期。支持"今天"、"昨天"、"前天"、"上周一"等中文日期表达，以及"2026年5月18日"、"2026-05-18"等格式。一律转换为 YYYY-MM-DD 格式。
 - **end_date**: 同上。如果用户只说"今天的报表"，10点后设为今天日期；上午10点前设为昨日日期。
 - **product_models**: 提取用户明确提到的产品型号。如果用户说"所有型号"、"全部产品"等，设为空列表 []。如果未提及，设为 null。
+- **month_count**: 当用户要求"最近三个月/近3个月/月数3"等月周天汇总跨度时，提取为整数 3；否则设为 null。
 - **user_intent**: 用一句话概括用户想做什么。
 - **uncertainty_notes**: 如果对任何字段不确定（如无法确定 report_type），在此说明。
 
@@ -174,6 +179,7 @@ SYSTEM_PROMPT = """你是一个智能的报表查询解析助手。你的任务�
     "start_date": null,
     "end_date": "2026-05-18",
     "product_models": null,
+    "month_count": null,
     "user_intent": "用户意图的简短描述",
     "uncertainty_notes": null
 }}
