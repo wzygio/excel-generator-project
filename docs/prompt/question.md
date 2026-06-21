@@ -62,3 +62,12 @@ error sending request for url (https://auth.openai.com/oauth/token)”
 
 ---
 
+# Task6
+当前项目是一个良率监控智能体。使用OMP作为Agent Runtime来执行良率分析等任务。
+但OMP是否过重（尽管它已经是我使用的最轻的一个Agent）？我们是否应该将Agent Runtime替换为更加轻量级内核（比如PI和nanobot）？
+请你在github上查询一下agent项目并搜索相关资料，最终给出建议。请将结果输出至如下路径：“D:\wzy\Visionox-Docs_Backup\dev-docs\agent_dev”
+
+请您从以下几个角度考虑：
+1. agent能力
+2. agent复杂度
+3. agent记忆能力（这一点非常重要，因为作为一款业务Agent，一旦运行起来之后，我没有时间取手动管理记忆）

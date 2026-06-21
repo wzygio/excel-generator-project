@@ -29,6 +29,12 @@ implementation work; route to the lower Harness documents instead.
 - `.roo/rules-architect/` and `.roo/rules-code/`: RooCode mode-specific Harness rules.
 - `tests/`: validation entrypoint.
 
+## Code Intelligence Policy
+
+- Use CodeGraph as the default project code graph. When `.codegraph/` exists, prefer CodeGraph MCP tools or the equivalent `codegraph explore`, `codegraph node`, `codegraph callers`, `codegraph callees`, and `codegraph impact` CLI commands for structural code questions.
+- Understand-Anything is temporarily disabled for this project. Do not run the `understand-anything:*` skills, rebuild `.understand-anything/`, or treat Understand-Anything output as the active project graph unless the user explicitly asks to re-enable it.
+- If the user explicitly re-enables Understand-Anything, confirm the intended scope first and avoid committing generated graph artifacts unless asked.
+
 ## Task Routing
 
 - First read `ARCHITECTURE.md` when changing module ownership, cross-layer flow, or system shape.
