@@ -1,0 +1,69 @@
+schema_version: 1
+run_id: blackbox-m678-monthly
+status: ready
+user_goal: 请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因
+constraints:
+  codex_is_agent_core: true
+  prefer_existing_tools: true
+  runtime: omp
+  pi_runtime_allowed: true
+  require_user_confirmation_for_pending_memory: true
+inputs:
+  report_date: '2026-06-22'
+  product_models:
+  - M678
+  date_range:
+    start: '2026-03-22'
+    end: '2026-06-22'
+  analysis:
+    time_grain: monthly
+    requested_periods: 3
+    metrics:
+    - 月度良率
+    analysis_intent: trend
+  reports:
+  - alias: daily_yield
+    report_type: daily_yield
+    required: false
+    filters:
+      product_models:
+      - M678
+      start_date: '2026-03-22'
+      end_date: '2026-06-22'
+  local_files:
+  - alias: daily_yield
+    path: resources/V3良率及不良率By月周天汇总报表.xlsx
+workflow:
+- id: analyze_yield_trend
+  skill: data_analysis
+  input:
+    question: 请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因
+    product_models:
+    - M678
+    time_range:
+      start: '2026-03-22'
+      end: '2026-06-22'
+    metrics:
+    - 月度良率
+    time_grain: monthly
+    requested_periods: 3
+    analysis_intent: trend
+  depends_on: []
+  save_as: analysis_result
+outputs:
+  analysis_summary:
+    required: true
+    format: markdown
+  trace:
+    required: true
+    format: jsonl
+memory:
+  reuse_policy: confirmed_only
+  candidate_policy: record_pending
+  allowed_record_ids: []
+trace:
+  level: step
+  include_inputs: true
+  include_outputs: true
+  include_errors: true
+  path: trace.jsonl

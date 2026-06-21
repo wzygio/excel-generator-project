@@ -660,6 +660,32 @@ wheels = [
 ]
 
 [[package]]
+name = "letta-client"
+version = "1.12.1"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/8e/55/34a347fb443f5797045cde591c34ee2926650e99f1f0d5f565dcefa99120/letta_client-1.12.1.tar.gz", hash = "sha256:3073adb6cc1ce3b906a40d8ce3b2b77a77ac1887ca2135770590cfe3cef6eba9", size = 396805, upload-time = "2026-06-02T00:31:12.848Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/73/af/b140a7117b4385b3e1b060df97d9d39703f0c54e156a4d889de8bb8dd48f/letta_client-1.12.1-py3-none-any.whl", hash = "sha256:6f554569a684d57e7f4e4513f8ce6792129b305df37393c650e50776f61baf99", size = 418856, upload-time = "2026-06-02T00:31:14.475Z" },
+]
+
+[[package]]
+name = "nodeenv"
+version = "1.10.0"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/24/bf/d1bda4f6168e0b2e9e5958945e01910052158313224ada5ce1fb2e1113b8/nodeenv-1.10.0.tar.gz", hash = "sha256:996c191ad80897d076bdfba80a41994c2b47c68e224c542b48feba42ba00f8bb", size = 55611, upload-time = "2025-12-20T14:08:54.006Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/88/b2/d0896bdcdc8d28a7fc5717c305f1a861c26e18c05047949fb371034d98bd/nodeenv-1.10.0-py2.py3-none-any.whl", hash = "sha256:5bb13e3eed2923615535339b3c620e76779af4cb4c6a90deccc9e36b274d3827", size = 23438, upload-time = "2025-12-20T14:08:52.782Z" },
+]
+
+[[package]]
 name = "numpy"
 version = "2.4.4"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -1099,6 +1125,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pyright"
+version = "1.1.410"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/10/53/e4d8ea1391bd4355231be6f91bf239479aa0014260ed3fb5526eeb12a1f2/pyright-1.1.410.tar.gz", hash = "sha256:07a073b8ba6749826773c1269773efa11b93440d9a6aa60419d9a3172d6dc488", size = 4062013, upload-time = "2026-06-01T17:35:48.894Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/d7/33/288b5868fa00846dacf249633719d747893e54aebd196b9968ac1878a5d3/pyright-1.1.410-py3-none-any.whl", hash = "sha256:5e961bed37cacf96b3f7cd7b1da39b350a9239aa2e69138d0e88f728cfaf296c", size = 6082448, upload-time = "2026-06-01T17:35:46.387Z" },
+]
+
+[[package]]
 name = "pytest"
 version = "9.0.3"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -1502,6 +1541,7 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "fr-web-automation" },
     { name = "google-genai" },
+    { name = "letta-client" },
     { name = "openai" },
     { name = "openpyxl" },
     { name = "pandas" },
@@ -1520,6 +1560,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -1536,6 +1577,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
     { name = "fr-web-automation", editable = "../packages/web_automation" },
     { name = "google-genai", specifier = ">=1.0.0" },
+    { name = "letta-client", specifier = ">=1.12.1" },
     { name = "openai", specifier = ">=1.0.0" },
     { name = "openpyxl", specifier = ">=3.1.0" },
     { name = "pandas", specifier = ">=2.0.0" },
@@ -1543,6 +1585,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.410" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },

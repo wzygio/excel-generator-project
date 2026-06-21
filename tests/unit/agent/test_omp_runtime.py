@@ -232,22 +232,22 @@ def test_runtime_router_explicit_python_uses_deterministic_runtime(tmp_path: Pat
     assert result.success is True
 
 
-def test_runtime_router_auto_uses_omp_as_agent_runtime(tmp_path: Path) -> None:
+def test_runtime_router_auto_uses_configured_python_default(tmp_path: Path) -> None:
     class FakePython:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            raise AssertionError("auto runtime must not call PythonSkillRuntime")
+            return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
 
     class FakeOmp:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            return [SkillResult(skill_name="pi_agent", success=True, summary="omp ok")]
+            raise AssertionError("auto runtime must not call OMP when default_runtime=python")
 
     result = RuntimeRouter(python_runtime=FakePython(), omp_runtime=FakeOmp()).run_spec(
-        TaskSpec(run_id="run-omp-first"),
-        RunContext(run_id="run-omp-first", workspace=tmp_path),
+        TaskSpec(run_id="run-python-default"),
+        RunContext(run_id="run-python-default", workspace=tmp_path),
         requested_runtime="auto",
     )
 
-    assert result.runtime == "omp"
+    assert result.runtime == "python"
     assert result.fallback_attempted is False
     assert result.success is True
 

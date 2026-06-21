@@ -1,0 +1,58 @@
+{
+  "run_id": "blackbox-m678-monthly",
+  "runtime": "letta",
+  "letta_agent_id": "agent-blackbox-test",
+  "letta_conversation_id": "",
+  "letta_run_id": "letta-run-final",
+  "letta_archival_memory_count": 0,
+  "status": "completed",
+  "updated_at": "2026-06-22T04:24:05",
+  "result_count": 2,
+  "steps": [
+    {
+      "step_id": "letta_yield_data_analysis",
+      "skill": "data_analysis",
+      "status": "failed",
+      "success": false,
+      "summary": "❌ 分析失败: 需求解析失败: LLM call failed: DEEPSEEK_API_KEY is missing. Add it to the repository root .env file.",
+      "artifacts": [],
+      "warnings": [],
+      "error": {
+        "code": "data_analysis.execution.failed",
+        "message": "需求解析失败: LLM call failed: DEEPSEEK_API_KEY is missing. Add it to the repository root .env file.",
+        "recoverable": true,
+        "details": {
+          "workflow_steps": [
+            "需求解析"
+          ]
+        }
+      }
+    },
+    {
+      "step_id": "letta_runtime",
+      "skill": "letta_agent",
+      "status": "succeeded",
+      "success": true,
+      "summary": "已完成 M678 最近三个月月度良率趋势分析。",
+      "artifacts": [
+        {
+          "kind": "markdown",
+          "path": "D:\\wzy\\Python\\excel-generator-project\\tmp\\pytest-blackbox\\test_workbench_letta_agent_exe0\\specs\\runs\\blackbox-m678-monthly\\outputs\\letta_summary.md",
+          "description": "Letta runtime summary",
+          "metadata": {}
+        }
+      ],
+      "warnings": [],
+      "error": null
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "markdown",
+      "path": "D:\\wzy\\Python\\excel-generator-project\\tmp\\pytest-blackbox\\test_workbench_letta_agent_exe0\\specs\\runs\\blackbox-m678-monthly\\outputs\\letta_summary.md",
+      "description": "Letta runtime summary",
+      "metadata": {}
+    }
+  ],
+  "memory_candidates_path": "D:\\wzy\\Python\\excel-generator-project\\tmp\\pytest-blackbox\\test_workbench_letta_agent_exe0\\specs\\runs\\blackbox-m678-monthly\\memory_candidates.json"
+}

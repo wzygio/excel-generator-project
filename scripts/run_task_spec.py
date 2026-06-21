@@ -28,8 +28,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--runtime",
         default="auto",
-        choices=["auto", "python", "omp", "pi"],
-        help="Runtime to use. auto runs Python Skills and uses Pi/OMP where the spec allows it.",
+        choices=["auto", "python", "letta", "omp", "pi"],
+        help=(
+            "Runtime to use. auto follows config/default runtime; letta uses the "
+            "stateful Letta Agent Runtime."
+        ),
     )
     parser.add_argument("--json", action="store_true", help="Print a machine-readable run payload.")
     args = parser.parse_args(argv)

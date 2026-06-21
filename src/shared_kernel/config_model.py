@@ -128,6 +128,80 @@ class ReportConfig(BaseModel):
     trend_analysis: TrendAnalysisConfig = Field(default_factory=TrendAnalysisConfig)
 
 
+class LettaAgentRuntimeConfig(BaseModel):
+    """Letta Agent Runtime 配置"""
+
+    enabled: bool = Field(default=False, description="是否启用 Letta runtime")
+    base_url: str = Field(default="", description="Letta server base URL；为空时使用 Letta Cloud")
+    api_key_env: str = Field(default="LETTA_API_KEY", description="Letta API key 环境变量名")
+    server_password_env: str = Field(
+        default="LETTA_SERVER_PASSWORD",
+        description="本地 Letta server password 环境变量名",
+    )
+    agent_id: str = Field(default="", description="复用的 Letta agent id")
+    agent_name: str = Field(
+        default="visionox-yield-monitoring-agent",
+        description="自动创建 Letta agent 时使用的稳定名称",
+    )
+    agent_id_cache_path: str = Field(
+        default=".agent_workbench/letta_agent_id",
+        description="自动创建 Letta agent 后写入的本地 agent id 缓存路径",
+    )
+    model: str = Field(default="my-glm-key/glm-5.1", description="Letta agent 模型名")
+    embedding: str = Field(
+        default="my-glm-key/text-embedding-3-large",
+        description="Letta agent embedding 模型名；本地 Docker server 自动创建 Agent 时必填",
+    )
+    sync_memory_blocks: bool = Field(
+        default=True,
+        description="运行前同步 Letta memory blocks，包括 persona、runtime_policy、domain_contract、current_task",
+    )
+    archive_memory_candidates: bool = Field(
+        default=True,
+        description="将 SkillResult.memory_updates 写入 Letta archival memory/passages",
+    )
+    use_conversations: bool = Field(
+        default=True,
+        description="按 TaskSpec run_id 建立并复用 Letta conversation",
+    )
+    compaction_mode: str = Field(
+        default="sliding_window",
+        description="Letta context compaction 模式；留空则不显式配置",
+    )
+    compaction_clip_chars: int = Field(
+        default=50000,
+        description="Letta context compaction 裁剪字符数；小于等于 0 时不传入",
+    )
+    compaction_prompt: str = Field(
+        default="Summarize operational context without inventing facts.",
+        description="Letta compaction summarization prompt",
+    )
+    streaming: bool = Field(default=True, description="请求 Letta 返回 streaming response")
+    stream_tokens: bool = Field(default=False, description="是否启用 token 级 streaming")
+    background_runs: bool = Field(
+        default=False,
+        description="是否启用 Letta background run；默认关闭，避免改变现有同步执行语义",
+    )
+    timeout_seconds: int = Field(default=900, description="Letta runtime 超时秒数")
+    max_tool_rounds: int = Field(default=20, description="最大 client-side tool 调用轮数")
+
+
+class AgentConfig(BaseModel):
+    """Agent Runtime 配置"""
+
+    default_runtime: str = Field(default="python", description="默认 runtime: python / letta / omp")
+    letta: LettaAgentRuntimeConfig = Field(default_factory=LettaAgentRuntimeConfig)
+
+    @field_validator("default_runtime")
+    @classmethod
+    def validate_default_runtime(cls, value: str) -> str:
+        allowed = {"python", "letta", "omp", "pi", "auto"}
+        normalized = value.lower()
+        if normalized not in allowed:
+            raise ValueError(f"default_runtime 必须为 {allowed} 之一，当前值: {value}")
+        return normalized
+
+
 class AppConfig(BaseModel):
     """应用全局配置（根模型）"""
 
@@ -138,6 +212,7 @@ class AppConfig(BaseModel):
     llm: LlmConfig = Field(default_factory=LlmConfig, description="大模型配置")
     logging: LoggingConfig = Field(default_factory=LoggingConfig, description="日志配置")
     report: ReportConfig = Field(default_factory=ReportConfig, description="报告配置")
+    agent: AgentConfig = Field(default_factory=AgentConfig, description="Agent Runtime 配置")
     products: list[ProductConfig] = Field(default_factory=list, description="产品列表")
 
     model_config = {"extra": "ignore"}  # 忽略未定义的额外字段

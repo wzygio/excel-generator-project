@@ -1,0 +1,45 @@
+# Task18 Letta Runtime Refactor Progress
+
+## 2026-06-22
+
+- User requested implementation of `docs/exec-plans/active/refactor-letta_agent_runtime.md` using planning-with-files and TDD.
+- Read planning-with-files and tdd skill instructions.
+- Created task18 planning files and set this session as active.
+- RED/GREEN 1: added router behavior test for explicit `runtime=letta`; implemented minimal `LettaRuntime` import and router branch.
+- RED/GREEN 2: added LettaRuntime basic fake-client test; implemented prompt building, client-side tool schema, assistant summary artifact, and trace hooks.
+- RED/GREEN 3: added client-side tool dispatch test; implemented approval loop and mapping from Letta tools to project Skills.
+- Added `letta-client` dependency plus `agent.default_runtime` and `agent.letta.*` config model/YAML fields.
+- Changed `auto` routing to use configured default runtime; current default remains `python` for gray release.
+- Exposed `--runtime letta` in `scripts/run_task_spec.py` and covered it with a CLI-level unit test.
+- Added Letta run-output persistence: `run_summary.json`, `memory_candidates.json`, final summary artifact, and trace events stay under the RunStore-owned run directory.
+- Verified SDK shape from installed `letta-client==1.12.1`: `agents.messages.create` supports `client_tools`, and approval/tool-return message types match the adapter payload.
+- Added assistant content-block extraction after confirming Letta assistant content may be either a string or a list of typed blocks.
+- Added automatic Letta agent id management: configured/env id wins; otherwise runtime reuses `.agent_workbench/letta_agent_id`; if absent it creates a project-scoped Letta agent and caches the returned id.
+- Added local Letta server credential support: `LETTA_BASE_URL` + `LETTA_SERVER_PASSWORD` can be used when no `LETTA_API_KEY` is present.
+- Changed missing Letta credentials from a top-level CLI exception into a structured failed `SkillResult` that writes `trace.jsonl`, `run_summary.json`, and `memory_candidates.json`.
+- Added `pyright` to the dev extra so the documented `uv run pyright` command can execute.
+- Validation passed:
+  - `uv run pytest tests/unit/agent/test_letta_runtime.py -v --tb=short`
+  - `uv run pytest tests/unit/agent tests/unit/skills tests/unit/test_config_loader.py::TestAppConfigModel::test_agent_letta_config -v --tb=short` (67 passed)
+  - `uv run ruff check` on touched files.
+  - `uv run pyright` on touched production/test files.
+- Full `uv run ruff check .` is blocked by existing unrelated lint debt outside this task.
+- Full `uv run pyright` now runs but reports existing unrelated type debt outside this task.
+- Generated smoke spec `specs/runs/run-letta-m678-monthly-trend-smoke-20260622/spec.yaml` and corrected it to `constraints.runtime=letta`.
+- Real Letta black-box run is blocked by missing Letta Cloud/local server configuration: environment has no `LETTA_API_KEY`, `LETTA_AGENT_ID`, `LETTA_SERVER_PASSWORD`, or `LETTA_BASE_URL`; `http://localhost:8283/v1/health` is unreachable.
+- Task1-fix: evaluated local Letta deployment. Hardware is sufficient for a local Letta server with remote/API LLMs and <=3 concurrent users, but this PC currently lacks Docker CLI and a usable WSL distro, so Codex could not start the Docker/Postgres server in this turn.
+- Task1-fix code hardening: local `LETTA_BASE_URL` now supports no-password localhost mode; `agent.letta.embedding` is configurable; local auto-create fails early with a structured error if embedding is missing.
+- Wrote deployment/configuration report to `docs/generated/letta_local_deployment_assessment_2026-06-22.md`.
+- Validation passed after Task1-fix:
+  - `uv run pytest tests/unit/agent/test_letta_runtime.py tests/unit/test_config_loader.py::TestAppConfigModel::test_agent_letta_config -v --tb=short` (16 passed)
+  - `uv run pytest tests/unit/agent tests/unit/skills tests/unit/test_config_loader.py::TestAppConfigModel::test_agent_letta_config -v --tb=short` (70 passed)
+  - touched-file `uv run ruff check`
+  - touched-file `uv run pyright`
+- User configured GLM in Letta Cloud. Cloud model list exposed `my-glm-key/glm-5.1` and BYOK embedding `my-glm-key/text-embedding-3-large`; temporary Agent smoke succeeded and the temporary Agent was deleted.
+- Updated the cached Cloud Agent `visionox-yield-monitoring-agent` to `model=my-glm-key/glm-5.1` and `embedding=my-glm-key/text-embedding-3-large`; a lightweight message smoke succeeded.
+- Synced project defaults in `config/global.yaml`, `LettaRuntimeConfig`, and `LettaAgentRuntimeConfig` to the GLM handles.
+- Validation passed after GLM switch:
+  - `uv run pytest tests/unit/agent/test_letta_runtime.py tests/unit/test_config_loader.py::TestAppConfigModel::test_agent_letta_config -v --tb=short` (17 passed)
+  - `uv run pytest tests/unit/agent tests/unit/skills tests/unit/test_config_loader.py::TestAppConfigModel::test_agent_letta_config -v --tb=short` (71 passed)
+  - touched-file `uv run ruff check`
+  - touched-file `uv run pyright`

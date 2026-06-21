@@ -101,7 +101,7 @@ class TestConfigLoaderSingleton:
 
     def test_singleton_initialization_only_once(self):
         """__init__ 仅在首次调用时生效。"""
-        loader1 = ConfigLoader(config_dir=Path("/tmp/test"))
+        ConfigLoader(config_dir=Path("/tmp/test"))
         loader2 = ConfigLoader(config_dir=Path("/other"))
         # 第二次实例化不应覆盖 config_dir
         assert loader2.config_dir == loader2.config_dir  # 至少不报错
@@ -217,3 +217,53 @@ class TestAppConfigModel:
         assert cfg.report.gap_analysis.top_n == 3
         assert cfg.report.batch_analysis.min_yield_rate == 30.0
         assert cfg.report.trend_analysis.consecutive_days == 3
+
+    def test_agent_letta_config(self):
+        """Agent Runtime 配置应支持 Letta。"""
+        cfg = AppConfig.model_validate(
+            {
+                "agent": {
+                    "default_runtime": "letta",
+                    "letta": {
+                        "enabled": True,
+                        "base_url": "http://localhost:8283",
+                        "api_key_env": "LETTA_SERVER_PASSWORD",
+                        "server_password_env": "LETTA_SERVER_PASSWORD",
+                        "agent_id": "agent-test",
+                        "agent_name": "visionox-yield-monitoring-agent",
+                        "agent_id_cache_path": ".agent_workbench/letta_agent_id",
+                        "model": "openai/gpt-4.1",
+                        "embedding": "openai/text-embedding-3-small",
+                        "sync_memory_blocks": True,
+                        "archive_memory_candidates": True,
+                        "use_conversations": True,
+                        "compaction_mode": "sliding_window",
+                        "compaction_clip_chars": 50000,
+                        "streaming": True,
+                        "stream_tokens": False,
+                        "background_runs": False,
+                        "timeout_seconds": 600,
+                        "max_tool_rounds": 8,
+                    },
+                }
+            }
+        )
+
+        assert cfg.agent.default_runtime == "letta"
+        assert cfg.agent.letta.enabled is True
+        assert cfg.agent.letta.base_url == "http://localhost:8283"
+        assert cfg.agent.letta.api_key_env == "LETTA_SERVER_PASSWORD"
+        assert cfg.agent.letta.server_password_env == "LETTA_SERVER_PASSWORD"
+        assert cfg.agent.letta.agent_id == "agent-test"
+        assert cfg.agent.letta.agent_name == "visionox-yield-monitoring-agent"
+        assert cfg.agent.letta.agent_id_cache_path == ".agent_workbench/letta_agent_id"
+        assert cfg.agent.letta.embedding == "openai/text-embedding-3-small"
+        assert cfg.agent.letta.sync_memory_blocks is True
+        assert cfg.agent.letta.archive_memory_candidates is True
+        assert cfg.agent.letta.use_conversations is True
+        assert cfg.agent.letta.compaction_mode == "sliding_window"
+        assert cfg.agent.letta.compaction_clip_chars == 50000
+        assert cfg.agent.letta.streaming is True
+        assert cfg.agent.letta.stream_tokens is False
+        assert cfg.agent.letta.background_runs is False
+        assert cfg.agent.letta.max_tool_rounds == 8

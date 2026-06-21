@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Protocol
+
 from pydantic import BaseModel, Field
 
+from shared_kernel.config import config as app_config
+from yield_report.agent.letta_runtime import (
+    LettaRuntime,
+    LettaRuntimeConfig,
+    LettaRuntimeUnavailableError,
+)
 from yield_report.agent.omp_runtime import OmpJsonRuntime, OmpRuntimeUnavailableError
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.spec_model import RunContext, SkillResult, TaskSpec
@@ -40,21 +48,31 @@ class PythonSkillRuntime:
         return build_default_runtime().run_spec(spec, context)
 
 
+class SpecRuntime(Protocol):
+    """Runtime object that can execute a TaskSpec."""
+
+    def run_spec(self, spec: TaskSpec, context: RunContext) -> list[SkillResult]:
+        ...
+
+
 class RuntimeRouter:
     """Choose a runtime according to user request and TaskSpec constraints.
 
-    `auto` is OMP-first. The Python runtime remains available as an explicit
-    deterministic tool/debug path, but it is no longer the Agent Runtime picked
-    by the workbench.
+    `auto` follows the configured default runtime. Python remains the default
+    deterministic path until an explicit Letta smoke test is accepted.
     """
 
     def __init__(
         self,
-        python_runtime: PythonSkillRuntime | None = None,
-        omp_runtime: OmpJsonRuntime | None = None,
+        python_runtime: SpecRuntime | None = None,
+        omp_runtime: SpecRuntime | None = None,
+        letta_runtime: SpecRuntime | None = None,
+        default_runtime: str | None = None,
     ) -> None:
         self.python_runtime = python_runtime or PythonSkillRuntime()
         self.omp_runtime = omp_runtime or OmpJsonRuntime()
+        self.letta_runtime = letta_runtime or LettaRuntime(config=_configured_letta_runtime_config())
+        self.default_runtime = (default_runtime or _configured_default_runtime()).lower().strip()
 
     def run_spec(
         self,
@@ -63,6 +81,8 @@ class RuntimeRouter:
         requested_runtime: str = "auto",
     ) -> RuntimeRunResult:
         requested = (requested_runtime or "auto").lower().strip()
+        if requested == "letta":
+            return self._run_letta(spec, context)
         if requested in {"omp", "pi"}:
             return self._run_omp(spec, context)
         if requested == "python":
@@ -70,12 +90,22 @@ class RuntimeRouter:
             return RuntimeRunResult(runtime="python", results=results)
 
         runtime_hint = str(spec.constraints.get("runtime") or "").lower()
+        if runtime_hint == "letta":
+            return self._run_letta(spec, context)
         if runtime_hint in {"omp", "pi"}:
             return self._run_omp(spec, context)
 
         if requested == "auto":
-            return self._run_omp(spec, context)
+            return self._run_default(spec, context)
 
+        results = self.python_runtime.run_spec(spec, context)
+        return RuntimeRunResult(runtime="python", results=results)
+
+    def _run_default(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
+        if self.default_runtime == "letta":
+            return self._run_letta(spec, context)
+        if self.default_runtime in {"omp", "pi"}:
+            return self._run_omp(spec, context)
         results = self.python_runtime.run_spec(spec, context)
         return RuntimeRunResult(runtime="python", results=results)
 
@@ -85,3 +115,54 @@ class RuntimeRouter:
         except OmpRuntimeUnavailableError as exc:
             raise RuntimeError(str(exc)) from exc
         return RuntimeRunResult(runtime="omp", results=results)
+
+    def _run_letta(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
+        try:
+            results = self.letta_runtime.run_spec(spec, context)
+        except LettaRuntimeUnavailableError as exc:
+            raise RuntimeError(str(exc)) from exc
+        return RuntimeRunResult(runtime="letta", results=results)
+
+
+def _configured_default_runtime() -> str:
+    try:
+        return app_config.get().agent.default_runtime
+    except Exception:
+        return "python"
+
+
+def _configured_letta_runtime_config() -> LettaRuntimeConfig:
+    try:
+        settings = app_config.get().agent.letta
+    except Exception:
+        return LettaRuntimeConfig()
+    defaults = LettaRuntimeConfig()
+    return LettaRuntimeConfig(
+        base_url=settings.base_url,
+        api_key_env=settings.api_key_env,
+        server_password_env=settings.server_password_env,
+        agent_id=settings.agent_id,
+        agent_name=settings.agent_name,
+        agent_id_cache_path=settings.agent_id_cache_path,
+        model=settings.model,
+        embedding=settings.embedding,
+        sync_memory_blocks=getattr(settings, "sync_memory_blocks", defaults.sync_memory_blocks),
+        archive_memory_candidates=getattr(
+            settings,
+            "archive_memory_candidates",
+            defaults.archive_memory_candidates,
+        ),
+        use_conversations=getattr(settings, "use_conversations", defaults.use_conversations),
+        compaction_mode=getattr(settings, "compaction_mode", defaults.compaction_mode),
+        compaction_clip_chars=getattr(
+            settings,
+            "compaction_clip_chars",
+            defaults.compaction_clip_chars,
+        ),
+        compaction_prompt=getattr(settings, "compaction_prompt", defaults.compaction_prompt),
+        streaming=getattr(settings, "streaming", defaults.streaming),
+        stream_tokens=getattr(settings, "stream_tokens", defaults.stream_tokens),
+        background_runs=getattr(settings, "background_runs", defaults.background_runs),
+        timeout_seconds=settings.timeout_seconds,
+        max_tool_rounds=settings.max_tool_rounds,
+    )

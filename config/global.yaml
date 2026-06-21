@@ -60,6 +60,31 @@ report:
     consecutive_days: 3
     consecutive_weeks: 3
 
+# ---- Agent Runtime 配置 ----
+agent:
+  default_runtime: "python"
+  letta:
+    enabled: false
+    base_url: ""
+    api_key_env: "LETTA_API_KEY"
+    server_password_env: "LETTA_SERVER_PASSWORD"
+    agent_id: ""
+    agent_name: "visionox-yield-monitoring-agent"
+    agent_id_cache_path: ".agent_workbench/letta_agent_id"
+    model: "my-glm-key/glm-5.1"
+    embedding: "my-glm-key/text-embedding-3-large"
+    sync_memory_blocks: true
+    archive_memory_candidates: true
+    use_conversations: true
+    compaction_mode: "sliding_window"
+    compaction_clip_chars: 50000
+    compaction_prompt: "Summarize operational context without inventing facts."
+    streaming: true
+    stream_tokens: false
+    background_runs: false
+    timeout_seconds: 900
+    max_tool_rounds: 20
+
 # ---- 源表文件名校验规则 ----
 source_files:
   daily_yield:
