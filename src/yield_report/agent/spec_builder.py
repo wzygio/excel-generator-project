@@ -27,6 +27,7 @@ from yield_report.core.analysis_query_parser import (
 DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
 DEFAULT_TEMPLATE_REF = "docs/project_files/V3良率日报每日异常填报表.xlsx"
 DEFAULT_DAILY_YIELD_FILE_NAME = "V3良率及不良率By月周天汇总报表"
+REGISTERED_SKILLS = {"report_download", "data_analysis", "daily_report", "anomaly_monitor"}
 PRODUCT_MODEL_PATTERN = re.compile(r"(?<![A-Z0-9])[A-Z]\d{3,4}(?![A-Z0-9])", re.IGNORECASE)
 LOCAL_SOURCE_FILES = {
     "spotfire": "resources/project_files/spotfire.xlsx",
@@ -34,6 +35,16 @@ LOCAL_SOURCE_FILES = {
     "target_decomposition": "resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx",
     "ct_exception": "resources/CT良率异常波动管理表.xlsx",
     "code_mapping": "resources/大数据值班当日新增不良HL模板.xlsx",
+}
+ANOMALY_DATA_SOURCE_DIR = (
+    "//10.71.7.15/"
+    "大数据共享/"
+    "12.良率监控日报自动化"
+)
+ANOMALY_SPOTFIRE_FILE = "D:/wzy/工作-值班工作/相关文件/resources/spotfire.xlsx"
+ANOMALY_SOURCE_FILES = {
+    "data_source_dir": ANOMALY_DATA_SOURCE_DIR,
+    "spotfire": ANOMALY_SPOTFIRE_FILE,
 }
 
 
@@ -86,7 +97,7 @@ class SpecBuilder:
 
         validation = validate_task_spec(
             spec,
-            registered_skills={"report_download", "data_analysis", "daily_report"},
+            registered_skills=REGISTERED_SKILLS,
         )
         validation_issues.extend(validation.issues)
         if not validation.ok:
@@ -134,7 +145,7 @@ class SpecBuilder:
             "你是良率日报 Agent Workbench 的 Spec Builder。"
             "请把用户自然语言需求转换为 TaskSpec JSON。"
             "只输出 JSON，不输出解释。"
-            "Skill 只能使用 report_download、data_analysis、daily_report。"
+            "Skill 只能使用 report_download、data_analysis、daily_report、anomaly_monitor。"
             "memory.reuse_policy 必须为 confirmed_only。"
         )
         return llm_manager.chat(
@@ -155,6 +166,15 @@ class SpecBuilder:
         sections = _normalize_sections(request.sections) or DEFAULT_SECTIONS
         if not product_models and not request.allow_all_products:
             warnings.append("缺少产品型号，需要用户确认。")
+
+        if _is_anomaly_monitor_goal(request.user_goal):
+            return self._build_anomaly_monitor_spec(
+                request=request,
+                paths=paths,
+                report_date=report_date,
+                product_models=product_models,
+                warnings=warnings,
+            )
 
         if _is_analysis_goal(request.user_goal):
             return self._build_analysis_spec(
@@ -200,6 +220,68 @@ class SpecBuilder:
             },
         )
         return spec
+
+    def _build_anomaly_monitor_spec(
+        self,
+        *,
+        request: SpecBuildRequest,
+        paths: RunPaths,
+        report_date: str,
+        product_models: list[str],
+        warnings: list[str],
+    ) -> TaskSpec:
+        return TaskSpec(
+            run_id=paths.run_id,
+            status="needs_confirmation" if warnings else "ready",
+            user_goal=request.user_goal.strip(),
+            constraints={
+                "codex_is_agent_core": True,
+                "prefer_existing_tools": True,
+                "require_user_confirmation_for_pending_memory": True,
+                "side_effects_disabled_by_default": True,
+            },
+            inputs={
+                "report_date": report_date,
+                "product_models": list(product_models),
+                "reports": [],
+                "local_files": [
+                    {"alias": alias, "path": path}
+                    for alias, path in ANOMALY_SOURCE_FILES.items()
+                ],
+            },
+            workflow=[
+                SkillCall(
+                    id="run_anomaly_monitor",
+                    skill="anomaly_monitor",
+                    input={
+                        "report_date": report_date,
+                        "product_models": product_models,
+                        "mode": "detect",
+                        "source_files": ANOMALY_SOURCE_FILES,
+                        "write_ledgers": False,
+                        "push_notifications": False,
+                    },
+                    save_as="anomaly_monitor_result",
+                )
+            ],
+            outputs={
+                "anomaly_monitor_summary": {"required": True, "format": "markdown"},
+                "anomaly_monitor_result": {"required": True, "format": "json"},
+                "trace": {"required": True, "format": "jsonl"},
+            },
+            memory={
+                "reuse_policy": "confirmed_only",
+                "candidate_policy": "record_pending",
+                "allowed_record_ids": [],
+            },
+            trace={
+                "level": "step",
+                "include_inputs": True,
+                "include_outputs": True,
+                "include_errors": True,
+                "path": "trace.jsonl",
+            },
+        )
 
     def _build_analysis_spec(
         self,
@@ -578,6 +660,16 @@ def _infer_month_count(goal: str) -> int | None:
     if match:
         return digits.get(match.group(1))
     return None
+
+
+def _is_anomaly_monitor_goal(goal: str) -> bool:
+    text = goal.strip()
+    if not text:
+        return False
+    lowered = text.lower()
+    return any(keyword in text for keyword in ["异常监控", "真实异常", "HL通报", "异常识别"]) or (
+        "anomaly" in lowered and ("monitor" in lowered or "hl" in lowered)
+    )
 
 
 def _infer_metrics(goal: str, time_grain: str = "daily") -> list[str]:

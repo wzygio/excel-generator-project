@@ -10,7 +10,7 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dotenv import load_dotenv
 
@@ -20,6 +20,11 @@ sys.path.insert(0, str(WORKSPACE))
 load_dotenv(WORKSPACE / ".env")
 
 from yield_report.agent.spec_model import RunContext, SkillResult  # noqa: E402
+from yield_report.skills.anomaly_monitor import tool as anomaly_monitor_tool  # noqa: E402
+from yield_report.skills.anomaly_monitor.models import (  # noqa: E402
+    AnomalyMonitorMode,
+    AnomalyMonitorRequest,
+)
 from yield_report.skills.daily_report import tool as daily_report_tool  # noqa: E402
 from yield_report.skills.daily_report.models import DailyReportRequest  # noqa: E402
 from yield_report.skills.data_analysis import tool as data_analysis_tool  # noqa: E402
@@ -90,10 +95,13 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
         }
 
     context = _new_run_context()
-    options = payload.get("options") if isinstance(payload.get("options"), dict) else {}
+    raw_options = payload.get("options")
+    options: dict[str, Any] = raw_options if isinstance(raw_options, dict) else {}
     query = str(payload.get("query") or "").strip()
 
     if module == "report_download":
+        raw_filters = options.get("filters")
+        filters: dict[str, Any] = raw_filters if isinstance(raw_filters, dict) else {}
         result = report_download_tool.run(
             ReportDownloadRequest(
                 user_query=query,
@@ -102,12 +110,8 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 end_date=options.get("end_date"),
                 product_models=_string_list(options.get("product_models")),
                 month_count=_optional_int(options.get("month_count"))
-                or _optional_int(
-                    options.get("filters", {}).get("month_count")
-                    if isinstance(options.get("filters"), dict)
-                    else None
-                ),
-                filters=options.get("filters") if isinstance(options.get("filters"), dict) else {},
+                or _optional_int(filters.get("month_count")),
+                filters=filters,
                 prefer_decrypted=bool(options.get("prefer_decrypted", False)),
             ),
             context,
@@ -136,6 +140,22 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 output_dir=Path(options.get("output_dir") or context.output_dir),
                 emit_intermediate_artifacts=bool(options.get("emit_intermediate_artifacts", True)),
                 use_llm_polishing=bool(options.get("use_llm_polishing", False)),
+            ),
+            context,
+        )
+    elif module == "anomaly_monitor":
+        result = anomaly_monitor_tool.run(
+            AnomalyMonitorRequest(
+                report_date=_optional_string(options.get("report_date")),
+                product_models=_string_list(options.get("product_models")),
+                source_files=_path_map(options.get("source_files")),
+                mode=_anomaly_mode(options.get("mode")),
+                write_ledgers=bool(options.get("write_ledgers", False)),
+                push_notifications=bool(options.get("push_notifications", False)),
+                rules_profile=_optional_string(options.get("rules_profile")) or "default",
+                emit_intermediate_artifacts=bool(
+                    options.get("emit_intermediate_artifacts", True)
+                ),
             ),
             context,
         )
@@ -193,6 +213,24 @@ def _optional_int(value: Any) -> int | None:
 def _optional_path(value: Any) -> Path | None:
     text = _optional_string(value)
     return Path(text) if text else None
+
+
+def _path_map(value: Any) -> dict[str, Path]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, Path] = {}
+    for key, raw_path in value.items():
+        path = _optional_path(raw_path)
+        if path is not None:
+            result[str(key)] = path
+    return result
+
+
+def _anomaly_mode(value: Any) -> AnomalyMonitorMode:
+    mode = _optional_string(value) or "detect"
+    if mode not in {"detect", "draft_notice", "record", "full"}:
+        raise ValueError(f"Unsupported anomaly_monitor mode: {mode}")
+    return cast(AnomalyMonitorMode, mode)
 
 
 def _string_list(value: Any) -> list[str] | None:

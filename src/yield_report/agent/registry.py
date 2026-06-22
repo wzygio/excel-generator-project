@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from yield_report.agent.runtime import AgentRuntime
+from yield_report.skills.anomaly_monitor import tool as anomaly_monitor_tool
 from yield_report.skills.daily_report import tool as daily_report_tool
 from yield_report.skills.data_analysis import tool as data_analysis_tool
 from yield_report.skills.report_download import tool as report_download_tool
@@ -25,5 +26,10 @@ def build_default_runtime() -> AgentRuntime:
         daily_report_tool.name,
         daily_report_tool.request_model,
         daily_report_tool.run,
+    )
+    runtime.register(
+        anomaly_monitor_tool.name,
+        anomaly_monitor_tool.request_model,
+        anomaly_monitor_tool.run,
     )
     return runtime

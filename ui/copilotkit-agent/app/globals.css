@@ -239,6 +239,11 @@ h3 {
   padding-top: 12px;
 }
 
+.fixed-workflow-actions {
+  display: grid;
+  gap: 8px;
+}
+
 .daily-button,
 .primary-button,
 .ghost-button,
@@ -268,6 +273,12 @@ h3 {
 
 .daily-button {
   width: 100%;
+}
+
+.daily-button.secondary {
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--accent-strong);
 }
 
 .ghost-button,

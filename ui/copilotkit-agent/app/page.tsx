@@ -32,7 +32,7 @@ import {
   useFrontendTool,
 } from "@copilotkit/react-core/v2";
 
-type IntentKey = "auto" | "daily_report";
+type IntentKey = "auto" | "daily_report" | "anomaly_monitor";
 type RunState = "idle" | "running" | "success" | "error";
 type DebugTab = "spec" | "trace" | "memory" | "raw" | "logs";
 
@@ -145,6 +145,11 @@ const QUICK_PROMPTS: AssistantPrompt[] = [
     prompt: "请生成今天的良率日报，并列出Excel和Markdown产物路径",
     icon: FileSpreadsheet,
   },
+  {
+    label: "异常监控",
+    prompt: "请执行 M678 今天异常监控，识别真实异常并生成HL通报",
+    icon: ShieldCheck,
+  },
 ];
 
 const INITIAL_LOGS = [
@@ -195,7 +200,7 @@ export default function AgentWorkbenchPage() {
 
   useConfigureSuggestions({
     instructions:
-      "你是良率日报工作台助手。优先帮助用户用自然语言发起报表下载、Excel数据分析或日报生成，并把复杂执行细节收敛成清晰结果。",
+      "你是良率日报工作台助手。优先帮助用户用自然语言发起报表下载、Excel数据分析、日报生成或异常监控，并把复杂执行细节收敛成清晰结果。",
     minSuggestions: 2,
     maxSuggestions: 4,
     available: "always",
@@ -204,16 +209,21 @@ export default function AgentWorkbenchPage() {
   useFrontendTool({
     name: "run_yield_report_agent",
     description:
-      "Run the yield-report Agent Runtime for source report download, Excel analysis, or daily report generation.",
+      "Run the yield-report Agent Runtime for source report download, Excel analysis, daily report generation, or anomaly monitoring.",
     parameters: z.object({
       goal: z.string().min(1).describe("自然语言任务目标"),
       module: z
-        .enum(["auto", "report_download", "data_analysis", "daily_report"])
+        .enum(["auto", "report_download", "data_analysis", "daily_report", "anomaly_monitor"])
         .optional()
         .describe("可选模块；下载和分析都会交给 runtime:auto 判断"),
     }),
     handler: async ({ goal, module }) => {
-      const nextIntent = module === "daily_report" ? "daily_report" : "auto";
+      const nextIntent =
+        module === "daily_report"
+          ? "daily_report"
+          : module === "anomaly_monitor"
+            ? "anomaly_monitor"
+            : "auto";
       setIntent(nextIntent);
       setQuery(goal);
       const result = await runAgent(nextIntent, goal);
@@ -383,6 +393,8 @@ export default function AgentWorkbenchPage() {
           options:
             nextIntent === "daily_report"
               ? { output_name: "daily_report_output.xlsx" }
+              : nextIntent === "anomaly_monitor"
+                ? { mode: "detect", prefer_existing_tools: true }
               : { prefer_existing_tools: true },
         }),
       });
@@ -532,6 +544,15 @@ export default function AgentWorkbenchPage() {
     void runAgent("daily_report", goal);
   }
 
+  function runFixedAnomalyMonitor() {
+    const goal =
+      intent === "anomaly_monitor" && query.trim()
+        ? query.trim()
+        : "请执行 M678 今天异常监控，识别真实异常并生成HL通报";
+    setQuery(goal);
+    void runAgent("anomaly_monitor", goal);
+  }
+
   function resetWorkspace() {
     startNewConversation();
     setLogs(INITIAL_LOGS);
@@ -605,7 +626,7 @@ export default function AgentWorkbenchPage() {
               {stateIcon(runState)}
               <span>{stateLabel(runState)}</span>
             </div>
-            <p>Runtime 统一接管报表下载、数据分析与日报生成。</p>
+            <p>Runtime 统一接管报表下载、数据分析、日报生成与异常监控。</p>
           </div>
 
           <nav className="intent-nav" aria-label="任务入口">
@@ -627,16 +648,35 @@ export default function AgentWorkbenchPage() {
               <span>固定日报</span>
               <small>标准产物</small>
             </button>
+            <button
+              className={intent === "anomaly_monitor" ? "nav-item active" : "nav-item"}
+              type="button"
+              onClick={() => setIntent("anomaly_monitor")}
+            >
+              <ShieldCheck size={17} aria-hidden />
+              <span>异常监控</span>
+              <small>真实异常</small>
+            </button>
           </nav>
 
           <div className="rail-note">
             <p>调试信息已折叠到主区域下方，可随时查看 TaskSpec、Trace 与 Memory。</p>
           </div>
 
-          <button className="daily-button" type="button" onClick={runFixedDailyReport}>
-            <Play size={17} aria-hidden />
-            生成日报
-          </button>
+          <div className="fixed-workflow-actions">
+            <button className="daily-button" type="button" onClick={runFixedDailyReport}>
+              <Play size={17} aria-hidden />
+              生成日报
+            </button>
+            <button
+              className="daily-button secondary"
+              type="button"
+              onClick={runFixedAnomalyMonitor}
+            >
+              <ShieldCheck size={17} aria-hidden />
+              异常监控
+            </button>
+          </div>
         </aside>
 
         <section className="conversation-area">
@@ -646,7 +686,7 @@ export default function AgentWorkbenchPage() {
               <h2>Agent 对话工作区</h2>
             </div>
             <div className="header-metrics">
-              <Metric label="入口" value={intent === "daily_report" ? "固定日报" : "智能任务"} />
+              <Metric label="入口" value={intentLabel(intent)} />
               <Metric label="Skill" value={skillLabel(primarySkill)} />
               <Metric label="Run" value={activeRunId} />
             </div>
@@ -785,6 +825,14 @@ export default function AgentWorkbenchPage() {
                 <FileSpreadsheet size={15} aria-hidden />
                 固定日报
               </button>
+              <button
+                type="button"
+                className={intent === "anomaly_monitor" ? "active" : ""}
+                onClick={() => setIntent("anomaly_monitor")}
+              >
+                <ShieldCheck size={15} aria-hidden />
+                异常监控
+              </button>
             </div>
 
             <textarea
@@ -804,7 +852,7 @@ export default function AgentWorkbenchPage() {
                     type="button"
                     onClick={() => {
                       setQuery(item.prompt);
-                      setIntent(item.label === "生成日报" ? "daily_report" : "auto");
+                      setIntent(intentForPrompt(item.label));
                     }}
                   >
                     <item.icon size={15} aria-hidden />
@@ -943,8 +991,8 @@ export default function AgentWorkbenchPage() {
       <CopilotSidebar
         defaultOpen={false}
         labels={{
-          chatInputPlaceholder: "下载报表、分析 Excel 或生成日报…",
-          welcomeMessageText: "你可以让我下载报表、分析 Excel 或生成日报。",
+          chatInputPlaceholder: "下载报表、分析 Excel、生成日报或执行异常监控…",
+          welcomeMessageText: "你可以让我下载报表、分析 Excel、生成日报或执行异常监控。",
         }}
       />
     </main>
@@ -1236,6 +1284,18 @@ function formatDateTime(value: string) {
   });
 }
 
+function intentLabel(intent: IntentKey) {
+  if (intent === "daily_report") return "固定日报";
+  if (intent === "anomaly_monitor") return "异常监控";
+  return "智能任务";
+}
+
+function intentForPrompt(label: string): IntentKey {
+  if (label === "生成日报") return "daily_report";
+  if (label === "异常监控") return "anomaly_monitor";
+  return "auto";
+}
+
 function normalizeStepStatus(
   status: string | undefined,
   runState: RunState,
@@ -1265,6 +1325,7 @@ function derivePrimarySkill(result: SkillResult | null) {
 
 function skillLabel(skillName?: string) {
   if (!skillName) return "Runtime 自动";
+  if (skillName.includes("anomaly")) return "异常监控";
   if (skillName.includes("daily")) return "日报生成";
   if (skillName.includes("download") || skillName.includes("finereport")) return "报表下载";
   if (skillName.includes("analysis")) return "数据分析";
@@ -1303,6 +1364,10 @@ function deriveWorkflowSteps(result: SkillResult | null): WorkflowStep[] {
 function deriveResultText(result: SkillResult | null) {
   if (!result) return "";
   const nestedResults = result.results || (result.data?.results as SkillResult[] | undefined) || [];
+  const anomalyResult = nestedResults.find((item) => item.skill_name === "anomaly_monitor");
+  if (anomalyResult?.data) {
+    return renderAnomalyMonitorText(anomalyResult.data);
+  }
   const textCandidates = nestedResults
     .map(
       (item) =>
@@ -1319,6 +1384,41 @@ function deriveResultText(result: SkillResult | null) {
   return typeof chosen === "string" ? chosen : JSON.stringify(chosen, null, 2);
 }
 
+function renderAnomalyMonitorText(data: Record<string, any>) {
+  const counts = (data.summary_counts || {}) as Record<string, number>;
+  const drafts = Array.isArray(data.notice_drafts)
+    ? (data.notice_drafts as Array<Record<string, string>>)
+    : [];
+  const evidence = data.source_evidence?.real_anomaly_rows;
+  const lines = [
+    "## 异常监控结果",
+    `- 总数: ${counts.total ?? 0}`,
+    `- HL: ${counts.hl ?? 0}`,
+    `- 真实异常: ${counts.true_anomaly ?? 0}`,
+    `- 当站超规: ${counts.station_over_spec ?? 0}`,
+    `- 跳过: ${counts.skipped ?? 0}`,
+    `- 阻断: ${counts.blocked ?? 0}`,
+  ];
+  if (Array.isArray(evidence) && evidence.length) {
+    lines.push("", "## 真实异常证据");
+    for (const item of evidence.slice(0, 5) as Array<Record<string, any>>) {
+      lines.push(
+        `- ${item.product_model || "-"} / ${item.defect_desc || "-"} / ${
+          item.station || "-"
+        } / ${item.decision_reason || "-"}`,
+      );
+    }
+  }
+  if (drafts.length) {
+    lines.push("", "## HL 通报草稿");
+    for (const draft of drafts.slice(0, 2)) {
+      lines.push("", `### ${draft.product_model || ""} ${draft.defect_desc || ""}`.trim());
+      lines.push(draft.text || "");
+    }
+  }
+  return lines.join("\n");
+}
+
 function deriveDisplaySummary(result: SkillResult | null, resultText: string, runState: RunState) {
   if (!result) {
     if (runState === "running") return "正在生成 TaskSpec 并执行 Runtime。";
@@ -1330,6 +1430,7 @@ function deriveDisplaySummary(result: SkillResult | null, resultText: string, ru
   const skill = skillLabel(derivePrimarySkill(result));
   const artifactCount = deriveArtifacts(result).length;
   if (resultText) {
+    if (skill === "异常监控") return `异常监控完成，已生成 ${artifactCount} 个产物。`;
     if (skill === "数据分析") return `分析完成，已生成趋势结论和 ${artifactCount} 个产物。`;
     if (skill === "日报生成") return `日报生成完成，已输出 ${artifactCount} 个产物。`;
     if (skill === "报表下载") return `报表下载完成，已记录 ${artifactCount} 个文件。`;
