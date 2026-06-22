@@ -19,6 +19,9 @@ def test_spec_builder_extracts_product_and_today(tmp_path: Path) -> None:
     assert result.spec.workflow[0].skill == "daily_report"
     assert result.spec.workflow[0].input["product_models"] == ["M678"]
     assert result.spec.workflow[0].input["source_files"]["spotfire"].endswith("spotfire.xlsx")
+    assert result.spec.workflow[0].input["download_sources"] is False
+    assert result.spec.workflow[0].input["run_inspection"] is False
+    assert result.spec.workflow[0].input["task0_timeout_seconds"] == 90
     assert result.spec_path.exists()
 
 
@@ -35,9 +38,7 @@ def test_spec_builder_allows_missing_product_for_all_models(tmp_path: Path) -> N
 def test_spec_builder_requires_confirmation_when_all_products_disabled(tmp_path: Path) -> None:
     builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 8))
 
-    result = builder.build(
-        SpecBuildRequest(user_goal="生成今天良率日报", allow_all_products=False)
-    )
+    result = builder.build(SpecBuildRequest(user_goal="生成今天良率日报", allow_all_products=False))
 
     assert result.spec.status == "needs_confirmation"
     assert result.warnings == ["缺少产品型号，需要用户确认。"]
@@ -79,6 +80,24 @@ def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -
     assert result.spec.outputs["analysis_summary"]["format"] == "markdown"
 
 
+def test_spec_builder_builds_batch_report_download_spec_for_query_goal(
+    tmp_path: Path,
+) -> None:
+    builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 8))
+
+    result = builder.build(SpecBuildRequest(user_goal="请查询M626的最近的批次良率"))
+
+    assert result.spec.status == "ready"
+    assert result.spec.workflow[0].skill == "report_download"
+    assert result.spec.workflow[0].id == "download_batch_yield"
+    assert result.spec.workflow[0].input["report_type"] == "batch_yield"
+    assert result.spec.workflow[0].input["product_models"] == ["M626"]
+    assert result.spec.workflow[0].input["start_date"] == "2026-03-10"
+    assert result.spec.workflow[0].input["end_date"] == "2026-06-08"
+    assert result.spec.inputs["reports"][0]["alias"] == "source_batch_yield"
+    assert result.spec.inputs["reports"][0]["report_type"] == "batch_yield"
+
+
 def test_spec_builder_preserves_monthly_grain_for_monthly_trend_goal(tmp_path: Path) -> None:
     builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 15))
 
@@ -104,7 +123,13 @@ def test_spec_builder_uses_llm_json_then_code_validation(tmp_path: Path) -> None
             "schema_version": 1,
             "status": "draft",
             "user_goal": request.user_goal,
-            "workflow": [{"id": "analyze", "skill": "data_analysis", "input": {"question": request.user_goal}}],
+            "workflow": [
+                {
+                    "id": "analyze",
+                    "skill": "data_analysis",
+                    "input": {"question": request.user_goal},
+                }
+            ],
             "outputs": {"analysis_summary": {"required": True, "format": "markdown"}},
             "memory": {"reuse_policy": "confirmed_only"},
         }

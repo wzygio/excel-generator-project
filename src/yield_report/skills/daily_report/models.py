@@ -28,6 +28,7 @@ class DailyReportRequest(BaseModel):
     download_sources: bool = False
     reference_workbook: Path | None = None
     task2_max_anomaly_row: int | None = None
+    task0_timeout_seconds: int | None = None
 
     @field_validator("sections")
     @classmethod

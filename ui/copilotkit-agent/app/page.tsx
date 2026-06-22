@@ -900,7 +900,11 @@ export default function AgentWorkbenchPage() {
                   <div className="artifact-item" key={`${artifact.path}-${index}`}>
                     <ArrowDownToLine size={16} aria-hidden />
                     <div>
-                      <strong>{artifactLabel(artifact)}</strong>
+                      <strong>
+                        <a href={artifactDownloadHref(artifact)} download>
+                          {artifactLabel(artifact)}
+                        </a>
+                      </strong>
                       <span>{artifact.path}</span>
                     </div>
                   </div>
@@ -1446,6 +1450,10 @@ function artifactLabel(artifact: SkillArtifact) {
   if (artifact.description) return artifact.description;
   if (artifact.kind) return artifact.kind.toUpperCase();
   return basename(artifact.path || "artifact");
+}
+
+function artifactDownloadHref(artifact: SkillArtifact) {
+  return `/api/artifact?path=${encodeURIComponent(artifact.path || "")}`;
 }
 
 function deriveReportRows(result: SkillResult | null) {

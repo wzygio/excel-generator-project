@@ -165,6 +165,15 @@ class SpecBuilder:
                 warnings=warnings,
             )
 
+        if _is_report_download_goal(request.user_goal):
+            return self._build_report_download_spec(
+                request=request,
+                paths=paths,
+                report_date=report_date,
+                product_models=product_models,
+                warnings=warnings,
+            )
+
         spec = TaskSpec(
             run_id=paths.run_id,
             status="needs_confirmation" if warnings else "ready",
@@ -282,6 +291,86 @@ class SpecBuilder:
             },
         )
 
+    def _build_report_download_spec(
+        self,
+        *,
+        request: SpecBuildRequest,
+        paths: RunPaths,
+        report_date: str,
+        product_models: list[str],
+        warnings: list[str],
+    ) -> TaskSpec:
+        question = request.user_goal.strip()
+        report_type = _infer_report_type(question)
+        parsed_date = date.fromisoformat(report_date)
+        batch_start = (parsed_date - timedelta(days=90)).isoformat()
+        month_count = _infer_month_count(question) if report_type == "daily_yield" else None
+        start_date = batch_start if report_type == "batch_yield" else None
+        report_alias = f"source_{report_type}"
+        reports = [
+            {
+                "alias": report_alias,
+                "report_type": report_type,
+                "required": True,
+                "filters": {
+                    "product_models": list(product_models),
+                    "start_date": start_date,
+                    "end_date": report_date,
+                    "month_count": month_count,
+                },
+            }
+        ]
+        return TaskSpec(
+            run_id=paths.run_id,
+            status="needs_confirmation" if warnings else "ready",
+            user_goal=question,
+            constraints={
+                "codex_is_agent_core": True,
+                "prefer_existing_tools": True,
+                "require_user_confirmation_for_pending_memory": True,
+            },
+            inputs={
+                "report_date": report_date,
+                "product_models": list(product_models),
+                "date_range": {"start": start_date, "end": report_date},
+                "reports": reports,
+                "local_files": [
+                    {"alias": alias, "path": path} for alias, path in LOCAL_SOURCE_FILES.items()
+                ],
+            },
+            workflow=[
+                SkillCall(
+                    id=f"download_{report_type}",
+                    skill="report_download",
+                    input={
+                        "user_query": question,
+                        "report_type": report_type,
+                        "start_date": start_date,
+                        "end_date": report_date,
+                        "product_models": product_models,
+                        "month_count": month_count,
+                    },
+                    save_as="source_report_file",
+                )
+            ],
+            outputs={
+                "source_report": {"required": True, "format": "xlsx"},
+                "trace": {"required": True, "format": "jsonl"},
+            },
+            memory={
+                "reuse_policy": "confirmed_only",
+                "candidate_policy": "record_pending",
+                "allowed_record_ids": [],
+            },
+            trace={
+                "level": "step",
+                "include_inputs": True,
+                "include_outputs": True,
+                "include_errors": True,
+                "path": "trace.jsonl",
+            },
+        )
+
     def _resolve_report_date(self, request: SpecBuildRequest) -> str:
         if request.report_date:
             return _parse_goal_date(request.report_date, self.today)
@@ -339,8 +428,7 @@ class SpecBuilder:
                 },
             ],
             "local_files": [
-                {"alias": alias, "path": path}
-                for alias, path in LOCAL_SOURCE_FILES.items()
+                {"alias": alias, "path": path} for alias, path in LOCAL_SOURCE_FILES.items()
             ],
         }
 
@@ -363,6 +451,9 @@ class SpecBuilder:
                     "analysis_results": [],
                     "output_name": "daily_report_output.xlsx",
                     "emit_intermediate_artifacts": True,
+                    "download_sources": False,
+                    "run_inspection": False,
+                    "task0_timeout_seconds": 90,
                 },
                 save_as="daily_report_file",
             ),
@@ -424,6 +515,69 @@ def _is_analysis_goal(goal: str) -> bool:
     has_analysis = any(keyword in text for keyword in ["分析", "趋势", "变化", "波动", "原因"])
     has_report_generation = any(keyword in text for keyword in ["日报", "生成日报", "填报"])
     return has_analysis and not has_report_generation
+
+
+def _is_report_download_goal(goal: str) -> bool:
+    text = goal.strip()
+    if not text:
+        return False
+    if any(keyword in text for keyword in ["生成日报", "填报"]):
+        return False
+    has_action = any(keyword in text for keyword in ["下载", "查询", "获取", "导出"])
+    has_source_report = any(
+        keyword in text
+        for keyword in [
+            "批次",
+            "月周天",
+            "源表",
+            "报表",
+            "良率",
+            "CT异常",
+            "异常管理表",
+            "目标表",
+            "目标拆解",
+            "Gap模板",
+        ]
+    )
+    return has_action and has_source_report
+
+
+def _infer_report_type(goal: str) -> str:
+    text = goal.strip()
+    upper_text = text.upper()
+    if "批次" in text or "BATCH" in upper_text:
+        return "batch_yield"
+    if "CT异常" in text or "异常管理表" in text:
+        return "ct_exception"
+    if "目标拆解" in text or "目标表" in text or "良率目标" in text:
+        return "target_decomposition"
+    if "GAP模板" in upper_text or "GAP分析模板" in upper_text:
+        return "gap_template"
+    return "daily_yield"
+
+
+def _infer_month_count(goal: str) -> int | None:
+    text = goal.strip()
+    digits = {
+        "一": 1,
+        "二": 2,
+        "两": 2,
+        "三": 3,
+        "四": 4,
+        "五": 5,
+        "六": 6,
+        "七": 7,
+        "八": 8,
+        "九": 9,
+        "十": 10,
+    }
+    match = re.search(r"(?:最近|近|过去)?(\d+)个?月", text)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"(?:最近|近|过去)?([一二两三四五六七八九十])个?月", text)
+    if match:
+        return digits.get(match.group(1))
+    return None
 
 
 def _infer_metrics(goal: str, time_grain: str = "daily") -> list[str]:

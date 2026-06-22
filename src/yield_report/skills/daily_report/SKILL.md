@@ -3,11 +3,13 @@
 ## When To Use
 Use this skill when Codex or Agent Runtime needs to run the full OLED daily-report workbook workflow.
 
-This skill is now a thin Python adapter around the Task0-Task2 orchestrator:
+This skill is now a thin Python adapter around the Task0-Task4 orchestrator:
 
-1. `task0-report-download`
+1. `basic-preparation`
 2. `task1-gap-analysis`
 3. `task2-extract-anomalies`
+4. `task3-batch-month-analysis`
+5. `task4-daily-report-generation`
 
 Do not duplicate the child skills' business rules here.
 
@@ -32,7 +34,7 @@ Do not duplicate the child skills' business rules here.
 - Excel artifact: the generated daily report workbook.
 - `data.workflow`: child skills executed in order.
 - `data.steps`: child script command results.
-- `data.verification`: Data Packet row count and nonblank counts for `1.1`, `1.3`, and `1.4`.
+- `data.verification`: Data Packet and Sheet1 row counts, nonblank counts, and HTML style checks.
 - `data.comparison`: optional generated-vs-reference workbook comparison.
 
 ## Workflow
@@ -40,8 +42,10 @@ Do not duplicate the child skills' business rules here.
 2. Run `scripts/task0_report_download.py --write --output <workbook>`.
 3. Run `scripts/task1_overstock_impact.py --write <workbook>`.
 4. Run `scripts/task2_extract_anomalies.py --source <workbook> --write`.
-5. Verify the final workbook contains `Data Packet` and report nonblank counts.
-6. If `reference_workbook` is provided, compare Data Packet cell values.
+5. Run `scripts/task3_batch_month_analysis.py --source <workbook> --write`.
+6. Run `scripts/task4_daily_report_generation.py --source <workbook> --write`.
+7. Verify the final workbook contains `Data Packet` and `Sheet1`/`sheet1` and report nonblank counts.
+8. If `reference_workbook` is provided, compare Data Packet and upload sheet cell values.
 
 ## Error Handling
 - `daily_report.orchestrator.failed`: child script, workbook verification, or filesystem failure.
