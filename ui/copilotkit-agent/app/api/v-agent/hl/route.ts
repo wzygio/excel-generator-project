@@ -8,7 +8,7 @@ export async function POST() {
   const messagePath = resolveLatestMessagePath();
   try {
     const message = await fs.readFile(messagePath, "utf8");
-    return new NextResponse(message.trim() || emptyMessage(), {
+    return new NextResponse(formatHlMessageForGroup(message) || emptyMessage(), {
       status: 200,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
@@ -40,4 +40,49 @@ function resolveLatestMessagePath() {
 
 function emptyMessage() {
   return "暂无可推送的 HL 异常内容。请先在 Agent Workbench 点击异常HL/异常监控生成本地结果。";
+}
+
+function formatHlMessageForGroup(raw: string) {
+  const lines = raw
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const sections: string[][] = [];
+  let current: string[] = [];
+  let insideHl = false;
+
+  for (const line of lines) {
+    if (/^---\s*HL\s+\d+/i.test(line)) {
+      if (current.length) {
+        sections.push(current);
+        current = [];
+      }
+      insideHl = true;
+      continue;
+    }
+
+    if (!insideHl && line.startsWith("【")) {
+      insideHl = true;
+    }
+    if (!insideHl) {
+      continue;
+    }
+
+    if (line.startsWith("【")) {
+      current.push(line);
+    } else if (current.length) {
+      current[current.length - 1] = `${current[current.length - 1]} ${line}`;
+    }
+  }
+
+  if (current.length) {
+    sections.push(current);
+  }
+
+  if (!sections.length) {
+    return raw.trim();
+  }
+
+  return sections.map((section) => section.join("\n\n")).join("\n\n");
 }
