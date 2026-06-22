@@ -68,7 +68,8 @@ def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -
     )
 
     assert result.spec.status == "ready"
-    assert result.spec.constraints["runtime"] == "omp"
+    assert result.spec.constraints.get("runtime") != "omp"
+    assert result.spec.constraints["pi_runtime_allowed"] is True
     assert result.spec.inputs["product_models"] == ["C522"]
     assert result.spec.workflow == [
         result.spec.workflow[0],

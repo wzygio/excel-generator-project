@@ -151,7 +151,7 @@ def dispatch(payload: dict[str, Any]) -> dict[str, Any]:
                 source_files=_path_map(options.get("source_files")),
                 mode=_anomaly_mode(options.get("mode")),
                 write_ledgers=bool(options.get("write_ledgers", False)),
-                push_notifications=bool(options.get("push_notifications", False)),
+                push_notifications=bool(options.get("push_notifications", True)),
                 rules_profile=_optional_string(options.get("rules_profile")) or "default",
                 emit_intermediate_artifacts=bool(
                     options.get("emit_intermediate_artifacts", True)

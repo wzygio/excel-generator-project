@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from openpyxl import Workbook
 
 from yield_report.agent.spec_model import RunContext
+from yield_report.infrastructure import v_agent_client
 from yield_report.skills.anomaly_monitor import tool
 from yield_report.skills.anomaly_monitor.analyzers import (
     ConcentrationAnalyzer,
@@ -17,6 +19,14 @@ from yield_report.skills.anomaly_monitor.models import AnomalyMonitorRequest
 
 def _context(tmp_path: Path) -> RunContext:
     return RunContext(run_id="anomaly-run", workspace=tmp_path, output_dir=tmp_path / "outputs")
+
+
+class _FakeVAgentResponse:
+    status_code = 202
+    text = "accepted"
+
+    def raise_for_status(self) -> None:
+        return None
 
 
 def test_parse_ratio_accepts_percent_strings_and_numbers() -> None:
@@ -1017,7 +1027,17 @@ def test_anomaly_monitor_does_not_use_ct_exception_as_daily_candidate_source(tmp
     assert not any("CT良率异常波动管理表作为当日异常初筛候选源" in warning for warning in result.warnings)
 
 
-def test_anomaly_monitor_keeps_side_effects_gated(tmp_path: Path) -> None:
+def test_anomaly_monitor_skips_v_agent_push_without_endpoint(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.delenv("YIELD_REPORT_V_AGENT_WEBHOOK_URL", raising=False)
+
+    def fail_post(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("V-Agent POST should not run without endpoint")
+
+    monkeypatch.setattr(v_agent_client.requests, "post", fail_post)
+
     result = tool.run(
         AnomalyMonitorRequest(
             write_ledgers=True,
@@ -1039,4 +1059,90 @@ def test_anomaly_monitor_keeps_side_effects_gated(tmp_path: Path) -> None:
 
     assert result.success is True
     assert "台账写入尚未启用" in result.warnings
-    assert "群推送尚未启用" in result.warnings
+    assert result.data["notification_delivery"]["status"] == "skipped"
+    message_path = Path(result.data["latest_message_cache"]["message_path"])
+    assert message_path.exists()
+    assert "HL" in message_path.read_text(encoding="utf-8")
+    assert any("YIELD_REPORT_V_AGENT_WEBHOOK_URL" in warning for warning in result.warnings)
+
+
+def test_anomaly_monitor_posts_hl_notice_to_v_agent(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    calls: list[dict[str, Any]] = []
+
+    def fake_post(
+        url: str,
+        *,
+        json: dict[str, Any],
+        headers: dict[str, str],
+        timeout: float,
+    ) -> _FakeVAgentResponse:
+        calls.append(
+            {
+                "url": url,
+                "json": json,
+                "headers": headers,
+                "timeout": timeout,
+            }
+        )
+        return _FakeVAgentResponse()
+
+    monkeypatch.setenv("YIELD_REPORT_V_AGENT_WEBHOOK_URL", "https://v-agent.example/hooks/hl")
+    monkeypatch.setenv("YIELD_REPORT_V_AGENT_TOKEN", "secret-token")
+    monkeypatch.setenv("YIELD_REPORT_V_AGENT_TIMEOUT_SECONDS", "3")
+    monkeypatch.setattr(v_agent_client.requests, "post", fake_post)
+
+    result = tool.run(
+        AnomalyMonitorRequest(
+            report_date="2026-06-22",
+            push_notifications=True,
+            initial_rows=[
+                {
+                    "source_table": "hl_data",
+                    "prod_code": "M678",
+                    "defect_desc": "LINE_BAD",
+                    "defect_code": "D002",
+                    "oper_group": "CT",
+                    "ratio": 0.02,
+                    "month_ratio": 0.01,
+                    "batch_ratio": 0.04,
+                    "batch": "B20260622",
+                    "batch_date": "2026-06-22",
+                    "lot_input_ratio": 0.31,
+                    "batch_gap": 0.025,
+                    "ng_qty": 45,
+                    "interface_time": "2026-06-22 07:30",
+                    "owner": "owner-a",
+                }
+            ],
+        ),
+        _context(tmp_path),
+    )
+
+    assert result.success is True
+    assert result.data["summary_counts"]["hl"] == 1
+    assert len(calls) == 1
+    call = calls[0]
+    assert call["url"] == "https://v-agent.example/hooks/hl"
+    assert call["headers"]["Authorization"] == "Bearer secret-token"
+    assert call["timeout"] == 3
+    posted = call["json"]
+    assert posted["event_type"] == "yield_report.hl_anomaly"
+    assert posted["run_id"] == "anomaly-run"
+    assert posted["summary_counts"]["hl"] == 1
+    assert posted["notice_drafts"][0]["product_model"] == "M678"
+    assert "LINE_BAD" in posted["message"]
+    message_path = Path(result.data["latest_message_cache"]["message_path"])
+    assert "LINE_BAD" in message_path.read_text(encoding="utf-8")
+    assert result.data["notification_delivery"] == {
+        "requested": True,
+        "status": "sent",
+        "success": True,
+        "endpoint_host": "v-agent.example",
+        "status_code": 202,
+        "response_text": "accepted",
+        "error": "",
+        "skipped_reason": "",
+    }

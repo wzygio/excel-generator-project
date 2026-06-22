@@ -204,6 +204,8 @@ class TestAppConfigModel:
         assert cfg.version == "0.1.0"
         assert cfg.debug is False
         assert cfg.paths.base_dir == "."
+        assert cfg.agent.default_runtime == "letta"
+        assert cfg.agent.letta.enabled is True
 
     def test_extra_fields_ignored(self):
         """额外的字段应被忽略。"""

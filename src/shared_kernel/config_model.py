@@ -131,7 +131,7 @@ class ReportConfig(BaseModel):
 class LettaAgentRuntimeConfig(BaseModel):
     """Letta Agent Runtime 配置"""
 
-    enabled: bool = Field(default=False, description="是否启用 Letta runtime")
+    enabled: bool = Field(default=True, description="是否启用 Letta runtime")
     base_url: str = Field(default="", description="Letta server base URL；为空时使用 Letta Cloud")
     api_key_env: str = Field(default="LETTA_API_KEY", description="Letta API key 环境变量名")
     server_password_env: str = Field(
@@ -189,7 +189,7 @@ class LettaAgentRuntimeConfig(BaseModel):
 class AgentConfig(BaseModel):
     """Agent Runtime 配置"""
 
-    default_runtime: str = Field(default="python", description="默认 runtime: python / letta / omp")
+    default_runtime: str = Field(default="letta", description="默认 runtime: letta / python / omp")
     letta: LettaAgentRuntimeConfig = Field(default_factory=LettaAgentRuntimeConfig)
 
     @field_validator("default_runtime")

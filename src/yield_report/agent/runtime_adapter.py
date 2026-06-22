@@ -58,8 +58,8 @@ class SpecRuntime(Protocol):
 class RuntimeRouter:
     """Choose a runtime according to user request and TaskSpec constraints.
 
-    `auto` follows the configured default runtime. Python remains the default
-    deterministic path until an explicit Letta smoke test is accepted.
+    `auto` follows the configured default runtime. Letta is the Agent runtime;
+    Python remains available as an explicit deterministic Skill execution path.
     """
 
     def __init__(
@@ -90,10 +90,13 @@ class RuntimeRouter:
             return RuntimeRunResult(runtime="python", results=results)
 
         runtime_hint = str(spec.constraints.get("runtime") or "").lower()
+        if runtime_hint in {"python", "python_skill", "python_skills"}:
+            results = self.python_runtime.run_spec(spec, context)
+            return RuntimeRunResult(runtime="python", results=results)
         if runtime_hint == "letta":
             return self._run_letta(spec, context)
         if runtime_hint in {"omp", "pi"}:
-            return self._run_omp(spec, context)
+            return self._run_omp_with_python_fallback(spec, context)
 
         if requested == "auto":
             return self._run_default(spec, context)
@@ -105,7 +108,7 @@ class RuntimeRouter:
         if self.default_runtime == "letta":
             return self._run_letta(spec, context)
         if self.default_runtime in {"omp", "pi"}:
-            return self._run_omp(spec, context)
+            return self._run_omp_with_python_fallback(spec, context)
         results = self.python_runtime.run_spec(spec, context)
         return RuntimeRunResult(runtime="python", results=results)
 
@@ -115,6 +118,23 @@ class RuntimeRouter:
         except OmpRuntimeUnavailableError as exc:
             raise RuntimeError(str(exc)) from exc
         return RuntimeRunResult(runtime="omp", results=results)
+
+    def _run_omp_with_python_fallback(
+        self,
+        spec: TaskSpec,
+        context: RunContext,
+    ) -> RuntimeRunResult:
+        result = self._run_omp(spec, context)
+        if result.success or not _should_fallback_from_omp(result):
+            return result
+
+        python_results = self.python_runtime.run_spec(spec, context)
+        _add_fallback_warning(python_results, result.summary)
+        return RuntimeRunResult(
+            runtime="python",
+            results=python_results,
+            fallback_attempted=True,
+        )
 
     def _run_letta(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
         try:
@@ -129,6 +149,46 @@ def _configured_default_runtime() -> str:
         return app_config.get().agent.default_runtime
     except Exception:
         return "python"
+
+
+def _should_fallback_from_omp(result: RuntimeRunResult) -> bool:
+    """Return true when OMP failed before producing a useful task result."""
+    if result.success:
+        return False
+    fallback_error_codes = {"omp.start_failed", "omp.nonzero_exit"}
+    for skill_result in result.results:
+        error = skill_result.error
+        if error and error.code in fallback_error_codes:
+            return True
+        message = " ".join(
+            [
+                skill_result.summary or "",
+                error.message if error else "",
+                str(error.details if error else ""),
+            ]
+        )
+        if any(
+            marker in message
+            for marker in [
+                "ReferenceError: window is not defined",
+                "isMCPToolName",
+                "swagger-ui-bundle",
+            ]
+        ):
+            return True
+    return False
+
+
+def _add_fallback_warning(results: list[SkillResult], omp_summary: str) -> None:
+    if not results:
+        return
+    warning = (
+        "Pi/OMP runtime failed before completing the task; "
+        "fell back to deterministic Python Skill runtime."
+    )
+    if omp_summary:
+        warning = f"{warning} Original OMP summary: {omp_summary[:500]}"
+    results[0].warnings.insert(0, warning)
 
 
 def _configured_letta_runtime_config() -> LettaRuntimeConfig:

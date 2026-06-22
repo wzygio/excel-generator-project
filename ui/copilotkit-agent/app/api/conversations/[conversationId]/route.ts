@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  deleteConversation,
   listConversations,
   normalizeConversation,
   readConversation,
@@ -39,6 +40,21 @@ export async function PUT(
     const saved = await saveConversation(conversation);
     const conversations = await listConversations();
     return NextResponse.json({ success: true, conversation: saved, conversations });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ success: false, summary: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<{ conversationId: string }> },
+) {
+  const { conversationId } = await context.params;
+  try {
+    await deleteConversation(conversationId);
+    const conversations = await listConversations();
+    return NextResponse.json({ success: true, conversations });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ success: false, summary: message }, { status: 400 });

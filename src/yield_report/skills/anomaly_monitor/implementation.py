@@ -8,6 +8,10 @@ from pathlib import Path
 from typing import Any
 
 from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
+from yield_report.infrastructure.v_agent_client import (
+    send_hl_anomaly_notification,
+    write_latest_hl_message_cache,
+)
 from yield_report.skills.anomaly_monitor.analyzers import (
     ConcentrationAnalyzer,
     build_history_index,
@@ -46,8 +50,6 @@ def execute_anomaly_monitor(
 
     if request.write_ledgers:
         warnings.append("台账写入尚未启用")
-    if request.push_notifications:
-        warnings.append("群推送尚未启用")
 
     product_filter = set(request.product_models or [])
     normalized_rows = [
@@ -88,6 +90,21 @@ def execute_anomaly_monitor(
         warnings=warnings,
         source_files={key: str(value) for key, value in request.source_files.items()},
     )
+    if request.push_notifications:
+        delivery = send_hl_anomaly_notification(payload, context=context)
+        payload["notification_delivery"] = delivery.as_dict()
+        if delivery.status == "skipped":
+            warnings.append(f"V-Agent push skipped: {delivery.skipped_reason}")
+        elif delivery.status == "failed":
+            warnings.append(f"V-Agent push failed: {delivery.error}")
+    else:
+        payload["notification_delivery"] = {
+            "requested": False,
+            "status": "disabled",
+            "success": False,
+        }
+    payload["latest_message_cache"] = write_latest_hl_message_cache(payload, context=context)
+    payload["warnings"] = list(dict.fromkeys(warnings))
     artifacts = _write_artifacts(payload, context.output_dir)
     return SkillResult(
         skill_name=TOOL_NAME,

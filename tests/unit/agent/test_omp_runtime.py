@@ -5,7 +5,7 @@ from pathlib import Path
 
 from yield_report.agent.omp_runtime import OmpJsonRuntime, OmpRuntimeConfig
 from yield_report.agent.runtime_adapter import RuntimeRouter
-from yield_report.agent.spec_model import RunContext, SkillCall, SkillResult, TaskSpec
+from yield_report.agent.spec_model import RunContext, SkillCall, SkillError, SkillResult, TaskSpec
 
 
 def test_omp_runtime_builds_run_scoped_prompt_and_parses_events(
@@ -232,7 +232,7 @@ def test_runtime_router_explicit_python_uses_deterministic_runtime(tmp_path: Pat
     assert result.success is True
 
 
-def test_runtime_router_auto_uses_configured_python_default(tmp_path: Path) -> None:
+def test_runtime_router_auto_uses_explicitly_configured_python_default(tmp_path: Path) -> None:
     class FakePython:
         def run_spec(self, spec: TaskSpec, context: RunContext):
             return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
@@ -241,7 +241,11 @@ def test_runtime_router_auto_uses_configured_python_default(tmp_path: Path) -> N
         def run_spec(self, spec: TaskSpec, context: RunContext):
             raise AssertionError("auto runtime must not call OMP when default_runtime=python")
 
-    result = RuntimeRouter(python_runtime=FakePython(), omp_runtime=FakeOmp()).run_spec(
+    result = RuntimeRouter(
+        python_runtime=FakePython(),
+        omp_runtime=FakeOmp(),
+        default_runtime="python",
+    ).run_spec(
         TaskSpec(run_id="run-python-default"),
         RunContext(run_id="run-python-default", workspace=tmp_path),
         requested_runtime="auto",
@@ -250,6 +254,47 @@ def test_runtime_router_auto_uses_configured_python_default(tmp_path: Path) -> N
     assert result.runtime == "python"
     assert result.fallback_attempted is False
     assert result.success is True
+
+
+def test_runtime_router_falls_back_to_python_when_auto_omp_startup_fails(tmp_path: Path) -> None:
+    class FakePython:
+        def run_spec(self, spec: TaskSpec, context: RunContext):
+            return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
+
+    class FakeOmp:
+        def run_spec(self, spec: TaskSpec, context: RunContext):
+            return [
+                SkillResult(
+                    skill_name="pi_agent",
+                    success=False,
+                    summary="Pi/OMP runtime failed: ReferenceError: window is not defined",
+                    error=SkillError(
+                        code="omp.nonzero_exit",
+                        message="ReferenceError: window is not defined at swagger-ui-bundle.js",
+                    ),
+                )
+            ]
+
+    spec = TaskSpec(
+        run_id="run-router-omp-fallback",
+        constraints={"runtime": "omp"},
+        workflow=[SkillCall(id="analyze", skill="data_analysis")],
+    )
+
+    result = RuntimeRouter(
+        python_runtime=FakePython(),
+        omp_runtime=FakeOmp(),
+        default_runtime="python",
+    ).run_spec(
+        spec,
+        RunContext(run_id="run-router-omp-fallback", workspace=tmp_path),
+        requested_runtime="auto",
+    )
+
+    assert result.runtime == "python"
+    assert result.fallback_attempted is True
+    assert result.success is True
+    assert "Pi/OMP runtime failed" in result.results[0].warnings[0]
 
 
 def test_omp_runtime_prompt_contains_task16_workflow_guardrails(tmp_path: Path) -> None:

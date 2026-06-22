@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { mkdir, readFile, readdir, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 
 export type ConversationMessage = {
@@ -80,6 +80,18 @@ export async function saveConversation(record: ConversationRecord): Promise<Conv
     "utf-8",
   );
   return normalized;
+}
+
+export async function deleteConversation(id: string): Promise<void> {
+  const safe = safeConversationId(id);
+  try {
+    await unlink(path.join(conversationsDir(), `${safe}.json`));
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? error.code : "";
+    if (code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 export function safeConversationId(id: string) {

@@ -22,6 +22,7 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   X,
   XCircle,
 } from "lucide-react";
@@ -326,6 +327,34 @@ export default function AgentWorkbenchPage() {
       const message = error instanceof Error ? error.message : String(error);
       setLogs((previous) =>
         [`${new Date().toLocaleTimeString()} restore failed: ${message}`, ...previous].slice(0, 8),
+      );
+    } finally {
+      setIsLoadingConversations(false);
+    }
+  }
+
+  async function deleteConversation(conversationId: string) {
+    if (isRunning) return;
+    setIsLoadingConversations(true);
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: "DELETE",
+      });
+      const body = (await response.json()) as ConversationApiResponse;
+      if (!response.ok || body.success === false) {
+        throw new Error(body.summary || "删除会话失败");
+      }
+      setConversations(body.conversations || []);
+      if (activeConversation?.id === conversationId) {
+        startNewConversation();
+      }
+      setLogs((previous) =>
+        [`${new Date().toLocaleTimeString()} deleted conversation`, ...previous].slice(0, 8),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setLogs((previous) =>
+        [`${new Date().toLocaleTimeString()} delete failed: ${message}`, ...previous].slice(0, 8),
       );
     } finally {
       setIsLoadingConversations(false);
@@ -746,6 +775,9 @@ export default function AgentWorkbenchPage() {
                         <span>{message.warnings.join("；")}</span>
                       </div>
                     ) : null}
+                    {message.artifacts?.length ? (
+                      <ArtifactDownloads artifacts={message.artifacts} compact />
+                    ) : null}
                     {message.id === latestAssistantMessageId && memoryCandidate ? (
                       <MemoryFeedback
                         candidate={memoryCandidate}
@@ -913,26 +945,40 @@ export default function AgentWorkbenchPage() {
             {conversations.length ? (
               <div className="history-list">
                 {conversations.map((item) => (
-                  <button
+                  <article
                     className={`history-item ${item.latestStatus} ${
                       activeConversation?.id === item.id ? "active" : ""
                     }`}
                     key={item.id}
-                    type="button"
-                    onClick={() => void selectConversation(item.id)}
-                    disabled={isRunning}
                   >
-                    <div className="history-head">
-                      <span>{formatDateTime(item.updatedAt)}</span>
-                      <strong>{conversationStatusLabel(item.latestStatus)}</strong>
-                    </div>
-                    <p>{item.title}</p>
-                    <small>{item.lastMessage || "暂无消息"}</small>
+                    <button
+                      className="history-select"
+                      type="button"
+                      onClick={() => void selectConversation(item.id)}
+                      disabled={isRunning}
+                    >
+                      <div className="history-head">
+                        <span>{formatDateTime(item.updatedAt)}</span>
+                        <strong>{conversationStatusLabel(item.latestStatus)}</strong>
+                      </div>
+                      <p>{item.title}</p>
+                      <small>{item.lastMessage || "暂无消息"}</small>
+                    </button>
                     <div className="history-meta">
                       <span>{item.messageCount} 条消息</span>
                       <span>{item.runIds.length} 次执行</span>
+                      <button
+                        className="history-delete"
+                        type="button"
+                        aria-label={`删除会话 ${item.title}`}
+                        title="删除会话"
+                        disabled={isRunning}
+                        onClick={() => void deleteConversation(item.id)}
+                      >
+                        <Trash2 size={14} aria-hidden />
+                      </button>
                     </div>
-                  </button>
+                  </article>
                 ))}
               </div>
             ) : (
@@ -943,21 +989,7 @@ export default function AgentWorkbenchPage() {
           <section className="result-panel artifact-panel">
             <PanelHeader icon={ArrowDownToLine} title="当前产物" badge={`${artifacts.length} files`} />
             {artifacts.length ? (
-              <div className="artifact-list current-artifacts">
-                {artifacts.map((artifact, index) => (
-                  <div className="artifact-item" key={`${artifact.path}-${index}`}>
-                    <ArrowDownToLine size={16} aria-hidden />
-                    <div>
-                      <strong>
-                        <a href={artifactDownloadHref(artifact)} download>
-                          {artifactLabel(artifact)}
-                        </a>
-                      </strong>
-                      <span>{artifact.path}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ArtifactDownloads artifacts={artifacts} />
             ) : (
               <p className="empty-note">运行后会列出 Excel、Markdown 或 JSON 产物路径。</p>
             )}
@@ -1024,6 +1056,32 @@ function PanelHeader({
         <h3>{title}</h3>
       </div>
       {badge ? <span>{badge}</span> : null}
+    </div>
+  );
+}
+
+function ArtifactDownloads({
+  artifacts,
+  compact = false,
+}: {
+  artifacts: SkillArtifact[];
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? "artifact-list message-artifacts" : "artifact-list current-artifacts"}>
+      {artifacts.map((artifact, index) => (
+        <div className="artifact-item" key={`${artifact.path}-${index}`}>
+          <ArrowDownToLine size={16} aria-hidden />
+          <div>
+            <strong>{artifactLabel(artifact)}</strong>
+            <span>{artifact.path}</span>
+          </div>
+          <a className="artifact-download-button" href={artifactDownloadHref(artifact)} download>
+            <ArrowDownToLine size={14} aria-hidden />
+            下载
+          </a>
+        </div>
+      ))}
     </div>
   );
 }

@@ -62,9 +62,9 @@ report:
 
 # ---- Agent Runtime 配置 ----
 agent:
-  default_runtime: "python"
+  default_runtime: "letta"
   letta:
-    enabled: false
+    enabled: true
     base_url: ""
     api_key_env: "LETTA_API_KEY"
     server_password_env: "LETTA_SERVER_PASSWORD"

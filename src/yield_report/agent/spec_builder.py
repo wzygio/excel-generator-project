@@ -259,7 +259,7 @@ class SpecBuilder:
                         "mode": "detect",
                         "source_files": ANOMALY_SOURCE_FILES,
                         "write_ledgers": False,
-                        "push_notifications": False,
+                        "push_notifications": True,
                     },
                     save_as="anomaly_monitor_result",
                 )
@@ -309,7 +309,6 @@ class SpecBuilder:
             constraints={
                 "codex_is_agent_core": True,
                 "prefer_existing_tools": True,
-                "runtime": "omp",
                 "pi_runtime_allowed": True,
                 "require_user_confirmation_for_pending_memory": True,
             },

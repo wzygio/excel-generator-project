@@ -14,7 +14,10 @@ Use this Skill for the fixed anomaly-monitor workflow: read daily anomaly candid
   By default `data_source_dir` is `//10.71.7.15/大数据共享/12.良率监控日报自动化`.
 - `initial_rows`, `ct_exception_rows`, `batch_history_rows`, `detail_rows`: inline rows for tests or prepared upstream steps.
 - `mode`: `detect`, `draft_notice`, `record`, or `full`.
-- `write_ledgers` and `push_notifications`: accepted but currently gated and disabled by default.
+- `write_ledgers`: accepted but currently gated and disabled by default.
+- `push_notifications`: when true, posts the formatted HL anomaly payload to the
+  V-Agent webhook configured by `YIELD_REPORT_V_AGENT_WEBHOOK_URL`. Missing webhook
+  configuration skips delivery and keeps local artifacts successful.
 
 ## Outputs
 

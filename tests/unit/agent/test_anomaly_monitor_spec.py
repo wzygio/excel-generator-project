@@ -21,6 +21,7 @@ def test_spec_builder_builds_anomaly_monitor_spec(tmp_path: Path) -> None:
     assert result.spec.inputs["product_models"] == ["M678"]
     assert result.spec.workflow[0].skill == "anomaly_monitor"
     assert result.spec.workflow[0].input["mode"] == "detect"
+    assert result.spec.workflow[0].input["push_notifications"] is True
     assert result.spec.workflow[0].input["source_files"]["data_source_dir"].endswith(
         "12.良率监控日报自动化"
     )
@@ -41,6 +42,20 @@ def test_spec_builder_builds_anomaly_monitor_spec_from_ascii_keyword(tmp_path: P
     assert result.spec.workflow[0].skill == "anomaly_monitor"
     assert result.spec.inputs["report_date"] == "2026-06-15"
     assert result.spec.inputs["product_models"] == ["M678"]
+
+
+def test_spec_builder_does_not_force_omp_for_standard_trend_analysis(tmp_path: Path) -> None:
+    builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 15))
+
+    result = builder.build(
+        SpecBuildRequest(user_goal="请分析C522近一周的良率变化趋势；如果有恶化，请给出恶化原因")
+    )
+
+    assert result.spec.workflow[0].skill == "data_analysis"
+    assert result.spec.inputs["product_models"] == ["C522"]
+    assert result.spec.inputs["date_range"] == {"start": "2026-06-09", "end": "2026-06-15"}
+    assert result.spec.constraints.get("runtime") != "omp"
+    assert result.spec.constraints["pi_runtime_allowed"] is True
 
 
 def test_default_runtime_registers_anomaly_monitor() -> None:

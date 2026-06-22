@@ -897,6 +897,8 @@ h3 {
 
 .history-item {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -908,7 +910,22 @@ h3 {
     box-shadow 140ms ease;
 }
 
-.history-item:hover:not(:disabled),
+.history-select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.history-select:disabled {
+  cursor: wait;
+}
+
+.history-item:hover,
 .history-item.active {
   border-color: rgb(32 114 130 / 0.42);
   background: var(--accent-soft);
@@ -936,16 +953,20 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .history-head span,
 .history-meta span {
+  min-width: 0;
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .history-head strong {
+  flex: 0 0 auto;
   color: var(--accent-strong);
   font-size: 12px;
 }
@@ -957,6 +978,7 @@ h3 {
   color: var(--ink);
   font-size: 13px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -965,6 +987,7 @@ h3 {
   display: -webkit-box;
   overflow: hidden;
   line-height: 1.45;
+  overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -973,6 +996,24 @@ h3 {
   margin-top: 10px;
   border-top: 1px solid var(--line);
   padding-top: 8px;
+}
+
+.history-delete {
+  display: inline-grid;
+  flex: 0 0 28px;
+  width: 28px;
+  min-height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 0;
+}
+
+.history-delete:hover:not(:disabled) {
+  border-color: rgb(190 74 74 / 0.4);
+  color: var(--error);
 }
 
 .result-status {
@@ -1051,7 +1092,7 @@ h3 {
 
 .artifact-item {
   display: grid;
-  grid-template-columns: 24px 1fr;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: flex-start;
   border-top: 1px solid var(--line);
@@ -1069,6 +1110,32 @@ h3 {
   font-size: 12px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.message-artifacts {
+  margin-top: 12px;
+}
+
+.artifact-download-button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 10px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.artifact-download-button:hover {
+  border-color: rgb(32 114 130 / 0.38);
+  background: var(--accent-soft);
 }
 
 .memory-panel p,
