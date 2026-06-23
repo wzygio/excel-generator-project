@@ -123,6 +123,9 @@ def _create_spec(payload: dict[str, Any], store: RunStore):
         SpecBuildRequest(
             user_goal=goal,
             run_id=_optional_string(payload.get("run_id") or options.get("run_id")),
+            source=_optional_string(payload.get("source") or options.get("source")) or "agent",
+            capability=_optional_string(payload.get("capability") or options.get("capability")),
+            fixed_flow=_bool_option(payload.get("fixed_flow") or options.get("fixed_flow")),
             report_date=_optional_string(options.get("report_date")),
             product_models=_string_list(options.get("product_models")),
             sections=_string_list(options.get("sections")) or [],
@@ -314,6 +317,14 @@ def _string_list(value: Any) -> list[str] | None:
         items = [str(value).strip()]
     cleaned = [item for item in items if item]
     return cleaned or None
+
+
+def _bool_option(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "固定", "rule"}
 
 
 if __name__ == "__main__":

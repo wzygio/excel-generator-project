@@ -1,14 +1,17 @@
 schema_version: 1
 run_id: null
 status: draft
-created_at: null
-updated_at: null
 user_goal: "生成指定产品和日期的良率日报。"
 
 constraints:
-  codex_is_agent_core: true
+  spec_source: agent
+  spec_builder: rule
+  builder_mode: rule
+  capability: daily-report
+  codex_in_execution_chain: false
   prefer_existing_tools: true
   require_user_confirmation_for_pending_memory: true
+  fixed_flow: true
 
 inputs:
   report_date: null
@@ -74,7 +77,7 @@ outputs:
   daily_report:
     required: true
     format: xlsx
-    directory: output
+    directory: outputs
     filename_template: "良率日报_{report_date}_{product_models}.xlsx"
   analysis_summary:
     required: true

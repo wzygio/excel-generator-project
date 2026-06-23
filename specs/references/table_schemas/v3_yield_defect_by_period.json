@@ -1,0 +1,123 @@
+{
+  "file_name": "V3良率及不良率By月周天汇总报表.xlsx",
+  "description": "CT良率及不良率By月周天汇总报表V1.0；截图对应 CT sheet，数据区为按月、周、日展开的宽表，D:F 为合并行项目标签区。",
+  "columns": [
+    {
+      "index": 0,
+      "name": "ProductCode_产品型号",
+      "type": "string",
+      "required": true,
+      "description": "产品型号；截图中为 ProductCode/产品型号，数据区纵向合并。"
+    },
+    {
+      "index": 1,
+      "name": "Operation_站点",
+      "type": "string",
+      "required": true,
+      "description": "站点；截图中为 Operation/站点，数据区纵向合并。"
+    },
+    {
+      "index": 2,
+      "name": "Factory_归属工厂",
+      "type": "string",
+      "description": "归属工厂表头；CT sheet 数据区 D:F 每行横向合并，合并值实际为项目/指标/不良分组标签。"
+    },
+    {
+      "index": 3,
+      "name": "DefectGroup_不良分组",
+      "type": "string",
+      "description": "不良分组表头；与 Factory、项目列共同构成 D:F 合并行标签区。"
+    },
+    {
+      "index": 4,
+      "name": "项目",
+      "type": "string",
+      "required": true,
+      "description": "项目/指标/不良分组名称；实际值来自 D:F 合并单元格，如 CT产出数、CT良率、Array_AD、OLED_Mura。"
+    },
+    {
+      "index": 5,
+      "name": "M05",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "5 月汇总值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 6,
+      "name": "M06",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月汇总值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 7,
+      "name": "W22",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "第 22 周汇总值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 8,
+      "name": "W23",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "第 23 周汇总值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 9,
+      "name": "W24",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "第 24 周汇总值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 10,
+      "name": "6/4",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 4 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 11,
+      "name": "6/5",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 5 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 12,
+      "name": "6/6",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 6 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 13,
+      "name": "6/7",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 7 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 14,
+      "name": "6/8",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 8 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 15,
+      "name": "6/9",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 9 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 16,
+      "name": "6/10",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "6 月 10 日当日值；产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    }
+  ]
+}

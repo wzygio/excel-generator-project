@@ -2,6 +2,7 @@
 
 from yield_report.agent.letta_runtime import LettaRuntime, LettaRuntimeConfig
 from yield_report.agent.registry import build_default_runtime
+from yield_report.agent.run_id import RunIdFactory
 from yield_report.agent.runtime import AgentRuntime
 from yield_report.agent.runtime_adapter import RuntimeRouter
 from yield_report.agent.spec_model import (
@@ -21,6 +22,7 @@ __all__ = [
     "LettaRuntimeConfig",
     "RunContext",
     "RuntimeRouter",
+    "RunIdFactory",
     "SkillCall",
     "SkillError",
     "SkillResult",

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from yield_report.agent.omp_runtime import OmpJsonRuntime, OmpRuntimeConfig
 from yield_report.agent.runtime_adapter import RuntimeRouter
-from yield_report.agent.spec_model import RunContext, SkillCall, SkillError, SkillResult, TaskSpec
+from yield_report.agent.spec_model import RunContext, SkillCall, SkillResult, TaskSpec
 
 
 def test_omp_runtime_builds_run_scoped_prompt_and_parses_events(
@@ -205,96 +205,118 @@ def test_omp_runtime_returns_structured_failure_on_nonzero_exit(
     assert results[0].error.code == "omp.nonzero_exit"
 
 
-def test_runtime_router_explicit_python_uses_deterministic_runtime(tmp_path: Path) -> None:
+def test_runtime_router_rejects_explicit_python_for_non_exempt_spec(tmp_path: Path) -> None:
     class FakePython:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
+            raise AssertionError("non-exempt workflow must not call PythonSkillRuntime")
 
-    class FakeOmp:
+    class FakeLetta:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            raise AssertionError("explicit python runtime must not call OMP")
+            raise AssertionError("explicit python rejection must happen before Letta")
 
     spec = TaskSpec(
         run_id="run-router",
-        constraints={"runtime": "python_with_pi_fallback"},
+        constraints={"capability": "yield-trend"},
         workflow=[SkillCall(id="analyze", skill="data_analysis")],
         outputs={"analysis_summary": {"required": True}},
     )
 
-    result = RuntimeRouter(python_runtime=FakePython(), omp_runtime=FakeOmp()).run_spec(
-        spec,
-        RunContext(run_id="run-router", workspace=tmp_path),
-        requested_runtime="python",
-    )
+    router = RuntimeRouter(python_runtime=FakePython(), letta_runtime=FakeLetta())
+    try:
+        router.run_spec(
+            spec,
+            RunContext(run_id="run-router", workspace=tmp_path),
+            requested_runtime="python",
+        )
+    except RuntimeError as exc:
+        assert "fixed business exemptions" in str(exc)
+    else:
+        raise AssertionError("non-exempt explicit python runtime should fail")
 
-    assert result.runtime == "python"
-    assert result.fallback_attempted is False
-    assert result.success is True
 
-
-def test_runtime_router_auto_uses_explicitly_configured_python_default(tmp_path: Path) -> None:
+def test_runtime_router_auto_rejects_configured_python_default(tmp_path: Path) -> None:
     class FakePython:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
+            raise AssertionError("default runtime must not downgrade to PythonSkillRuntime")
 
-    class FakeOmp:
+    class FakeLetta:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            raise AssertionError("auto runtime must not call OMP when default_runtime=python")
+            raise AssertionError("invalid default runtime should fail before Letta")
+
+    router = RuntimeRouter(
+        python_runtime=FakePython(),
+        letta_runtime=FakeLetta(),
+        default_runtime="python",
+    )
+
+    try:
+        router.run_spec(
+            TaskSpec(run_id="run-python-default"),
+            RunContext(run_id="run-python-default", workspace=tmp_path),
+            requested_runtime="auto",
+        )
+    except RuntimeError as exc:
+        assert "Configured default runtime is disabled" in str(exc)
+    else:
+        raise AssertionError("python default runtime should be rejected")
+
+
+def test_runtime_router_auto_allows_rule_built_fixed_daily_report_exemption(
+    tmp_path: Path,
+) -> None:
+    class FakePython:
+        def run_spec(self, spec: TaskSpec, context: RunContext):
+            return [SkillResult(skill_name="daily_report", success=True, summary="fixed ok")]
+
+    class FakeLetta:
+        def run_spec(self, spec: TaskSpec, context: RunContext):
+            raise AssertionError("fixed business exemption should use Python directly")
+
+    spec = TaskSpec(
+        run_id="run-fixed-daily-report",
+        constraints={
+            "capability": "daily-report",
+            "fixed_flow": True,
+            "builder_mode": "rule",
+        },
+        workflow=[SkillCall(id="generate", skill="daily_report")],
+    )
 
     result = RuntimeRouter(
         python_runtime=FakePython(),
-        omp_runtime=FakeOmp(),
-        default_runtime="python",
+        letta_runtime=FakeLetta(),
     ).run_spec(
-        TaskSpec(run_id="run-python-default"),
-        RunContext(run_id="run-python-default", workspace=tmp_path),
+        spec,
+        RunContext(run_id="run-fixed-daily-report", workspace=tmp_path),
         requested_runtime="auto",
     )
 
     assert result.runtime == "python"
-    assert result.fallback_attempted is False
     assert result.success is True
 
 
-def test_runtime_router_falls_back_to_python_when_auto_omp_startup_fails(tmp_path: Path) -> None:
+def test_runtime_router_rejects_omp_runtime_hint_without_python_fallback(tmp_path: Path) -> None:
     class FakePython:
         def run_spec(self, spec: TaskSpec, context: RunContext):
-            return [SkillResult(skill_name="data_analysis", success=True, summary="python ok")]
-
-    class FakeOmp:
-        def run_spec(self, spec: TaskSpec, context: RunContext):
-            return [
-                SkillResult(
-                    skill_name="pi_agent",
-                    success=False,
-                    summary="Pi/OMP runtime failed: ReferenceError: window is not defined",
-                    error=SkillError(
-                        code="omp.nonzero_exit",
-                        message="ReferenceError: window is not defined at swagger-ui-bundle.js",
-                    ),
-                )
-            ]
+            raise AssertionError("OMP failure must not fall back to Python")
 
     spec = TaskSpec(
-        run_id="run-router-omp-fallback",
+        run_id="run-router-omp-disabled",
         constraints={"runtime": "omp"},
         workflow=[SkillCall(id="analyze", skill="data_analysis")],
     )
 
-    result = RuntimeRouter(
-        python_runtime=FakePython(),
-        omp_runtime=FakeOmp(),
-        default_runtime="python",
-    ).run_spec(
-        spec,
-        RunContext(run_id="run-router-omp-fallback", workspace=tmp_path),
-        requested_runtime="auto",
-    )
-
-    assert result.runtime == "python"
-    assert result.fallback_attempted is True
-    assert result.success is True
-    assert "Pi/OMP runtime failed" in result.results[0].warnings[0]
+    router = RuntimeRouter(python_runtime=FakePython())
+    try:
+        router.run_spec(
+            spec,
+            RunContext(run_id="run-router-omp-disabled", workspace=tmp_path),
+            requested_runtime="auto",
+        )
+    except RuntimeError as exc:
+        assert "disabled OMP/Pi runtime" in str(exc)
+    else:
+        raise AssertionError("OMP runtime hint should be rejected")
 
 
 def test_omp_runtime_prompt_contains_task16_workflow_guardrails(tmp_path: Path) -> None:

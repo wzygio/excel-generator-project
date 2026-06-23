@@ -1,0 +1,54 @@
+{
+  "file_name": "V3良率及不良率By批次汇总报表.xlsx",
+  "description": "CT良率及不良率By批次汇总报表V1.0；截图对应 CT sheet，数据区为按累计产出和当日日期分组展开的批次宽表，C:D 为合并行项目标签区。",
+  "columns": [
+    {
+      "index": 0,
+      "name": "Operation_站点",
+      "type": "string",
+      "required": true,
+      "description": "站点；截图中为 Operation/站点，数据区纵向合并。"
+    },
+    {
+      "index": 1,
+      "name": "DefectGroup_不良分组",
+      "type": "string",
+      "description": "不良分组表头；CT sheet 数据区 C:D 每行横向合并，合并值实际为项目/指标/不良分组标签。"
+    },
+    {
+      "index": 2,
+      "name": "项目",
+      "type": "string",
+      "required": true,
+      "description": "项目/指标/不良分组名称；实际值来自 C:D 合并单元格，如 CT产出数、CT良率、Array_AD、OLED_Mura。"
+    },
+    {
+      "index": 3,
+      "name": "累计产出_M673_26/05/14蒸镀批",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "累计产出分组下产品型号 M673、批次/工单 26/05/14蒸镀批的数值；批次Cycle 为 /，工单描述为空。产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 4,
+      "name": "累计产出_M673_26/05/25蒸镀批",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "累计产出分组下产品型号 M673、批次/工单 26/05/25蒸镀批的数值；批次Cycle 为 /，工单描述为空。产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 5,
+      "name": "当日-20260611_M673_26/05/14蒸镀批",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "当日-20260611 分组下产品型号 M673、批次/工单 26/05/14蒸镀批的数值；批次Cycle 为 /，工单描述为空。产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    },
+    {
+      "index": 6,
+      "name": "当日-20260611_M673_26/05/25蒸镀批",
+      "type": "number",
+      "format": "count-or-percentage",
+      "description": "当日-20260611 分组下产品型号 M673、批次/工单 26/05/25蒸镀批的数值；批次Cycle 为 /，工单描述为空。产出数类项目为数量，良率/占比/不良分组类项目为百分比。"
+    }
+  ]
+}

@@ -28,10 +28,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--runtime",
         default="auto",
-        choices=["auto", "python", "letta", "omp", "pi"],
+        choices=["auto", "letta", "python"],
         help=(
-            "Runtime to use. auto follows config/default runtime; letta uses the "
-            "stateful Letta Agent Runtime."
+            "Runtime to use. auto/letta use the stateful Letta Agent Runtime. "
+            "python is allowed only for fixed business exemptions."
         ),
     )
     parser.add_argument("--json", action="store_true", help="Print a machine-readable run payload.")

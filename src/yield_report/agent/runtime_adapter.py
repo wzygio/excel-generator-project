@@ -12,7 +12,6 @@ from yield_report.agent.letta_runtime import (
     LettaRuntimeConfig,
     LettaRuntimeUnavailableError,
 )
-from yield_report.agent.omp_runtime import OmpJsonRuntime, OmpRuntimeUnavailableError
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.spec_model import RunContext, SkillResult, TaskSpec
 
@@ -55,11 +54,15 @@ class SpecRuntime(Protocol):
         ...
 
 
-class RuntimeRouter:
-    """Choose a runtime according to user request and TaskSpec constraints.
+PYTHON_EXEMPT_CAPABILITIES = {"daily-report", "anomaly-monitor"}
 
-    `auto` follows the configured default runtime. Letta is the Agent runtime;
-    Python remains available as an explicit deterministic Skill execution path.
+
+class RuntimeRouter:
+    """Choose the single Agent runtime, with narrow fixed-flow exemptions.
+
+    Letta is the required Agent runtime. Deterministic Python Skill execution is
+    allowed only for rule-built, fixed business workflows whose capability is
+    explicitly exempted by project policy.
     """
 
     def __init__(
@@ -69,8 +72,8 @@ class RuntimeRouter:
         letta_runtime: SpecRuntime | None = None,
         default_runtime: str | None = None,
     ) -> None:
+        del omp_runtime
         self.python_runtime = python_runtime or PythonSkillRuntime()
-        self.omp_runtime = omp_runtime or OmpJsonRuntime()
         self.letta_runtime = letta_runtime or LettaRuntime(config=_configured_letta_runtime_config())
         self.default_runtime = (default_runtime or _configured_default_runtime()).lower().strip()
 
@@ -83,58 +86,42 @@ class RuntimeRouter:
         requested = (requested_runtime or "auto").lower().strip()
         if requested == "letta":
             return self._run_letta(spec, context)
-        if requested in {"omp", "pi"}:
-            return self._run_omp(spec, context)
         if requested == "python":
-            results = self.python_runtime.run_spec(spec, context)
-            return RuntimeRunResult(runtime="python", results=results)
+            return self._run_python_exemption(spec, context)
+        if requested in {"omp", "pi"}:
+            raise RuntimeError("OMP/Pi runtime is disabled. Use the Letta Agent Runtime.")
 
         runtime_hint = str(spec.constraints.get("runtime") or "").lower()
         if runtime_hint in {"python", "python_skill", "python_skills"}:
-            results = self.python_runtime.run_spec(spec, context)
-            return RuntimeRunResult(runtime="python", results=results)
+            return self._run_python_exemption(spec, context)
         if runtime_hint == "letta":
             return self._run_letta(spec, context)
         if runtime_hint in {"omp", "pi"}:
-            return self._run_omp_with_python_fallback(spec, context)
+            raise RuntimeError("TaskSpec requests disabled OMP/Pi runtime. Use Letta.")
 
         if requested == "auto":
             return self._run_default(spec, context)
 
-        results = self.python_runtime.run_spec(spec, context)
-        return RuntimeRunResult(runtime="python", results=results)
+        raise RuntimeError(f"Unsupported runtime: {requested_runtime}")
 
     def _run_default(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
-        if self.default_runtime == "letta":
-            return self._run_letta(spec, context)
-        if self.default_runtime in {"omp", "pi"}:
-            return self._run_omp_with_python_fallback(spec, context)
+        if _is_python_exempt_spec(spec):
+            return self._run_python_exemption(spec, context)
+        if self.default_runtime not in {"", "auto", "letta"}:
+            raise RuntimeError(
+                "Configured default runtime is disabled by policy: "
+                f"{self.default_runtime}. Use letta."
+            )
+        return self._run_letta(spec, context)
+
+    def _run_python_exemption(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
+        if not _is_python_exempt_spec(spec):
+            raise RuntimeError(
+                "Python runtime is allowed only for rule-built fixed business "
+                "exemptions: daily-report and anomaly-monitor."
+            )
         results = self.python_runtime.run_spec(spec, context)
         return RuntimeRunResult(runtime="python", results=results)
-
-    def _run_omp(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
-        try:
-            results = self.omp_runtime.run_spec(spec, context)
-        except OmpRuntimeUnavailableError as exc:
-            raise RuntimeError(str(exc)) from exc
-        return RuntimeRunResult(runtime="omp", results=results)
-
-    def _run_omp_with_python_fallback(
-        self,
-        spec: TaskSpec,
-        context: RunContext,
-    ) -> RuntimeRunResult:
-        result = self._run_omp(spec, context)
-        if result.success or not _should_fallback_from_omp(result):
-            return result
-
-        python_results = self.python_runtime.run_spec(spec, context)
-        _add_fallback_warning(python_results, result.summary)
-        return RuntimeRunResult(
-            runtime="python",
-            results=python_results,
-            fallback_attempted=True,
-        )
 
     def _run_letta(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
         try:
@@ -148,47 +135,26 @@ def _configured_default_runtime() -> str:
     try:
         return app_config.get().agent.default_runtime
     except Exception:
-        return "python"
+        return "letta"
 
 
-def _should_fallback_from_omp(result: RuntimeRunResult) -> bool:
-    """Return true when OMP failed before producing a useful task result."""
-    if result.success:
+def _is_python_exempt_spec(spec: TaskSpec) -> bool:
+    constraints = spec.constraints
+    capability = _normalize_capability(str(constraints.get("capability") or ""))
+    if capability not in PYTHON_EXEMPT_CAPABILITIES:
         return False
-    fallback_error_codes = {"omp.start_failed", "omp.nonzero_exit"}
-    for skill_result in result.results:
-        error = skill_result.error
-        if error and error.code in fallback_error_codes:
-            return True
-        message = " ".join(
-            [
-                skill_result.summary or "",
-                error.message if error else "",
-                str(error.details if error else ""),
-            ]
-        )
-        if any(
-            marker in message
-            for marker in [
-                "ReferenceError: window is not defined",
-                "isMCPToolName",
-                "swagger-ui-bundle",
-            ]
-        ):
-            return True
-    return False
+    if constraints.get("fixed_flow") is not True:
+        return False
+    builder = str(
+        constraints.get("builder_mode")
+        or constraints.get("spec_builder")
+        or ""
+    ).lower()
+    return builder == "rule"
 
 
-def _add_fallback_warning(results: list[SkillResult], omp_summary: str) -> None:
-    if not results:
-        return
-    warning = (
-        "Pi/OMP runtime failed before completing the task; "
-        "fell back to deterministic Python Skill runtime."
-    )
-    if omp_summary:
-        warning = f"{warning} Original OMP summary: {omp_summary[:500]}"
-    results[0].warnings.insert(0, warning)
+def _normalize_capability(value: str) -> str:
+    return value.strip().lower().replace("_", "-")
 
 
 def _configured_letta_runtime_config() -> LettaRuntimeConfig:

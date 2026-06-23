@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from openpyxl import Workbook
 
 from scripts import agent_workbench_bridge
+from shared_kernel.infrastructure import llm_handler
 
 BLACKBOX_GOAL = "请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因"
 
@@ -22,6 +23,46 @@ def test_workbench_letta_agent_executes_m678_monthly_trend_blackbox(
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LETTA_API_KEY", "test-key")
     monkeypatch.setenv("LETTA_AGENT_ID", "agent-blackbox-test")
+    monkeypatch.setattr(
+        llm_handler.llm_manager,
+        "chat",
+        lambda **kwargs: json.dumps(
+            {
+                "schema_version": 1,
+                "status": "draft",
+                "user_goal": BLACKBOX_GOAL,
+                "constraints": {"capability": "yield-trend", "pi_runtime_allowed": True},
+                "inputs": {
+                    "product_models": ["M678"],
+                    "date_range": {"start": "2026-03-22", "end": "2026-06-22"},
+                    "analysis": {
+                        "time_grain": "monthly",
+                        "requested_periods": 3,
+                        "metrics": ["月度良率"],
+                        "analysis_intent": "trend",
+                    },
+                },
+                "workflow": [
+                    {
+                        "id": "analyze_yield_trend",
+                        "skill": "data_analysis",
+                        "input": {
+                            "question": BLACKBOX_GOAL,
+                            "product_models": ["M678"],
+                            "time_range": {"start": "2026-03-22", "end": "2026-06-22"},
+                            "metrics": ["月度良率"],
+                            "time_grain": "monthly",
+                            "requested_periods": 3,
+                            "analysis_intent": "trend",
+                        },
+                    }
+                ],
+                "outputs": {"analysis_summary": {"required": True, "format": "markdown"}},
+                "memory": {"reuse_policy": "confirmed_only"},
+            },
+            ensure_ascii=False,
+        ),
+    )
 
     class FakeMessages:
         def __init__(self) -> None:
@@ -74,7 +115,7 @@ def test_workbench_letta_agent_executes_m678_monthly_trend_blackbox(
         {
             "action": "create_and_run",
             "goal": BLACKBOX_GOAL,
-            "run_id": "blackbox-m678-monthly",
+            "source": "test",
             "runtime": "letta",
             "workspace": str(tmp_path),
         }

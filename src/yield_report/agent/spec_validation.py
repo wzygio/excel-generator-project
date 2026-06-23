@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from yield_report.agent.run_id import RunIdFactory, normalize_capability, normalize_source
 from yield_report.agent.spec_model import TaskSpec
 
 
@@ -55,6 +56,7 @@ class SpecValidator:
         issues: list[SpecValidationIssue] = []
         self._validate_schema_version(spec, issues)
         self._validate_status(spec, issues)
+        self._validate_run_identity(spec, issues)
         self._validate_workflow(spec, issues)
         self._validate_outputs(spec, issues)
         self._validate_memory(spec, issues)
@@ -90,6 +92,73 @@ class SpecValidator:
                     location="status",
                 )
             )
+
+    @staticmethod
+    def _validate_run_identity(
+        spec: TaskSpec,
+        issues: list[SpecValidationIssue],
+    ) -> None:
+        if not spec.run_id:
+            issues.append(
+                SpecValidationIssue(
+                    code="spec.run_id.missing",
+                    message="run_id is required for executable TaskSpecs.",
+                    location="run_id",
+                )
+            )
+        else:
+            try:
+                RunIdFactory.validate(spec.run_id)
+            except ValueError as exc:
+                issues.append(
+                    SpecValidationIssue(
+                        code="spec.run_id.invalid",
+                        message=str(exc),
+                        location="run_id",
+                    )
+                )
+
+        source = spec.constraints.get("spec_source")
+        if not source:
+            issues.append(
+                SpecValidationIssue(
+                    code="spec.constraints.spec_source_missing",
+                    message="constraints.spec_source is required.",
+                    location="constraints.spec_source",
+                )
+            )
+        else:
+            try:
+                normalize_source(str(source))
+            except ValueError as exc:
+                issues.append(
+                    SpecValidationIssue(
+                        code="spec.constraints.spec_source_invalid",
+                        message=str(exc),
+                        location="constraints.spec_source",
+                    )
+                )
+
+        capability = spec.constraints.get("capability")
+        if not capability:
+            issues.append(
+                SpecValidationIssue(
+                    code="spec.constraints.capability_missing",
+                    message="constraints.capability is required.",
+                    location="constraints.capability",
+                )
+            )
+        else:
+            try:
+                normalize_capability(str(capability))
+            except ValueError as exc:
+                issues.append(
+                    SpecValidationIssue(
+                        code="spec.constraints.capability_invalid",
+                        message=str(exc),
+                        location="constraints.capability",
+                    )
+                )
 
     def _validate_workflow(self, spec: TaskSpec, issues: list[SpecValidationIssue]) -> None:
         if not spec.workflow:

@@ -33,6 +33,8 @@ from dotenv import load_dotenv
 
 from shared_kernel.config_model import AppConfig
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
 
 def _deep_merge(base: dict, override: dict) -> dict:
     """递归深度合并两个字典，override 的值会覆盖 base 的同名键。"""
@@ -64,7 +66,8 @@ def _load_env_overrides() -> dict:
         LOG_LEVEL           → logging.level
         LLM_GEMINI_API_KEY  → llm.gemini.api_key
     """
-    load_dotenv()
+    load_dotenv(PROJECT_ROOT / ".env", override=False)
+    load_dotenv(override=False)
     overrides: dict = {}
 
     # LLM 供应商

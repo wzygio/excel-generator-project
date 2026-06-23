@@ -33,3 +33,11 @@
 - Noted that the 2026-06-22 UI run has `1.3 当日异常` count 0 because no same-day CT exception matched in the current source data.
 - Reran black-box Runtime for `report_date=2026-06-21`; it produced `output/task0_task4_blackbox_after/blackbox_task0_task4_daily_report.xlsx` with `1.3 当日异常` count 6 and all HTML style checks true.
 - Final verification passed: `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` (76 passed), `npm run typecheck`, and `uv run ruff format --check ...`.
+
+## 2026-06-23
+- Started Letta client tools assessment using the planning-with-files workflow.
+- Read `D:\wzy\Visionox-Docs_Backup\dev-docs\agent_dev\agent-letta.md` section 10 and extracted the recommended `RuntimeTool` registry pattern.
+- Inspected current `LettaRuntime` and Skill registry through CodeGraph.
+- Confirmed current project has three hard-coded Letta client tools but no pluggable registry layer.
+- Confirmed `anomaly_monitor` is registered in the local Skill runtime but is not exposed as a Letta client tool.
+- Recorded recommendation: implement a fail-closed Letta client-tool registry over approved Skills and read-only artifact tools, excluding SpecBuilder.

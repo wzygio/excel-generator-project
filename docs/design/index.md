@@ -6,6 +6,7 @@ Use this file as the entrypoint for project design knowledge.
 
 - [System architecture](../../ARCHITECTURE.md)
 - [Design Agent Runtime](design-agent_runtime.md)
+- [Spec 生成与管理机制](spec_generation_management.md)
 - [Design Ui](design-UI.md)
 - [Codex Harness 蓝图](../dev_docs/harness_blueprint.md)
 - [Observability](../observability.md)

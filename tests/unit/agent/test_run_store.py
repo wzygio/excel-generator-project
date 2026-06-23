@@ -10,9 +10,9 @@ from yield_report.agent.trace import TraceWriter
 def test_run_store_creates_standard_run_paths(tmp_path: Path) -> None:
     store = RunStore(workspace=tmp_path)
 
-    paths = store.create_run("run-fixed")
+    paths = store.create_run("agent-daily-report-20260623-143015")
 
-    assert paths.run_dir == tmp_path / "specs" / "runs" / "run-fixed"
+    assert paths.run_dir == tmp_path / "specs" / "runs" / "agent-daily-report-20260623-143015"
     assert paths.spec_path == paths.run_dir / "spec.yaml"
     assert paths.trace_path == paths.run_dir / "trace.jsonl"
     assert paths.output_dir == paths.run_dir / "outputs"
@@ -23,11 +23,12 @@ def test_run_store_creates_standard_run_paths(tmp_path: Path) -> None:
 
 def test_run_store_saves_and_loads_task_spec(tmp_path: Path) -> None:
     store = RunStore(workspace=tmp_path)
-    paths = store.create_run("run-save-load")
+    paths = store.create_run("agent-data-analysis-20260623-143015")
     spec = TaskSpec(
         run_id=paths.run_id,
         status="ready",
         user_goal="生成 M678 今天良率日报",
+        constraints={"spec_source": "agent", "capability": "data-analysis"},
         workflow=[SkillCall(id="analyze", skill="data_analysis")],
         outputs={"analysis_summary": {"required": True, "format": "markdown"}},
     )
@@ -35,19 +36,19 @@ def test_run_store_saves_and_loads_task_spec(tmp_path: Path) -> None:
     store.save_spec(spec, paths.spec_path)
     loaded = store.load_spec(paths.spec_path)
 
-    assert loaded.run_id == "run-save-load"
+    assert loaded.run_id == "agent-data-analysis-20260623-143015"
     assert loaded.status == "ready"
     assert loaded.workflow[0].skill == "data_analysis"
 
 
 def test_run_store_make_context_points_to_run_directory(tmp_path: Path) -> None:
     store = RunStore(workspace=tmp_path)
-    paths = store.create_run("run-context")
-    spec = TaskSpec(run_id="run-context", workflow=[])
+    paths = store.create_run("agent-daily-report-20260623-143015")
+    spec = TaskSpec(run_id="agent-daily-report-20260623-143015", workflow=[])
 
     context = store.make_context(paths.spec_path, spec)
 
-    assert context.run_id == "run-context"
+    assert context.run_id == "agent-daily-report-20260623-143015"
     assert context.workspace == tmp_path
     assert context.spec_path == paths.spec_path
     assert context.output_dir == paths.output_dir

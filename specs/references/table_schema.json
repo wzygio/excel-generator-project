@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "description": "表格 schema 路由索引；完整字段结构存放在 table_schemas 目录下，本文件只负责按表格/文件路由到对应 schema。",
+  "schema_root": "table_schemas",
+  "routes": [
+    {
+      "id": "spotfire",
+      "file_name": "spotfire.xlsx",
+      "schema_path": "table_schemas/spotfire.json",
+      "figure_path": "table_schema_figure/Spotfire.png",
+      "source_path": "../resources/spotfire.xlsx",
+      "description": "产品良率与CT异常数据统计表"
+    },
+    {
+      "id": "v3_yield_defect_by_period",
+      "file_name": "V3良率及不良率By月周天汇总报表.xlsx",
+      "schema_path": "table_schemas/v3_yield_defect_by_period.json",
+      "figure_path": "table_schema_figure/V3良率及不良率By月周天汇总报表.png",
+      "source_path": "../resources/V3良率及不良率By月周天汇总报表.xlsx",
+      "sheet_name": "CT",
+      "description": "CT良率及不良率By月周天汇总报表V1.0"
+    },
+    {
+      "id": "v3_yield_defect_by_batch",
+      "file_name": "V3良率及不良率By批次汇总报表.xlsx",
+      "schema_path": "table_schemas/v3_yield_defect_by_batch.json",
+      "figure_path": "table_schema_figure/V3良率及不良率By批次汇总报表.png",
+      "source_path": "../spec/template/V3良率及不良率By批次汇总报表.xlsx",
+      "sheet_name": "CT",
+      "description": "CT良率及不良率By批次汇总报表V1.0"
+    }
+  ]
+}

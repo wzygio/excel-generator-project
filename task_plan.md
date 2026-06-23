@@ -29,3 +29,24 @@ Replace `src/yield_report/skills/daily_report` with the full Task0-Task4 OLED da
 | `report_type=batch_yield` was resolved as a report dict | First fixed UI smoke | Generated report aliases now use `source_<report_type>` to avoid runtime reference collisions. |
 | Task0/Excel lock left workbook unavailable | Daily-report UI smoke | Added Task0 timeout handling plus hidden Excel cleanup/file-unlock wait, then reran after killing old services. |
 | Playwright saw historical failure text | First daily-report UI poll | Waited for the new `/api/agent-runs` response and artifact link instead of scanning the full page tail. |
+
+---
+
+# Letta Client Tools Assessment Addendum
+
+## Goal
+Evaluate whether the current Agent Runtime has converted necessary business tools into Letta client tools according to `agent-letta.md` section 10, excluding the LangGraph-based SpecBuilder agent.
+
+## Phases
+
+| Phase | Status | Purpose |
+|---|---|---|
+| 1. Read target guidance | complete | Read `agent-letta.md` section 10 and identify the recommended client-tool registry shape. |
+| 2. Inspect current runtime | complete | Compare `LettaRuntime` client tool wiring against registered project Skills. |
+| 3. Gap analysis | complete | Decide whether current hard-coded tools are sufficient or a pluggable registry is needed. |
+| 4. Recommendation | complete | Produce a concise implementation plan or no-change rationale. |
+
+## Recommendation Summary
+- Current state is a partial conversion: three hard-coded Letta client tools exist, but the project has not implemented the pluggable `RuntimeTool` registry recommended by the Letta guidance.
+- SpecBuilder is intentionally out of scope because it has been moved to a separate LangGraph agent.
+- Recommended next implementation is to create a fail-closed Letta client-tool registry over approved business Skills and artifact-read tools, then refactor `LettaRuntime` to export and execute tools through that registry.

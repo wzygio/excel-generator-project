@@ -269,3 +269,8 @@ class TestAppConfigModel:
         assert cfg.agent.letta.stream_tokens is False
         assert cfg.agent.letta.background_runs is False
         assert cfg.agent.letta.max_tool_rounds == 8
+
+    def test_agent_default_runtime_rejects_disabled_downgrade_runtime(self):
+        """默认 Runtime 不允许配置为 Python/OMP 降级路径。"""
+        with pytest.raises(ValueError, match="default_runtime 必须为"):
+            AppConfig.model_validate({"agent": {"default_runtime": "python"}})

@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from typing import Any
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from yield_report.agent.registry import build_default_runtime
@@ -91,6 +92,8 @@ PROJECT_CLIENT_TOOLS: list[dict[str, Any]] = [
         },
     },
 ]
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 class LettaRuntimeConfig(BaseModel):
@@ -220,10 +223,14 @@ class LettaRuntime:
         return [result]
 
     def _client(self) -> Any:
+        self._load_runtime_env()
         base_url = self._configured_base_url()
-        api_key = os.getenv(self.config.api_key_env)
-        if not api_key and base_url:
+        if base_url and self._is_local_base_url(base_url):
             api_key = os.getenv(self.config.server_password_env)
+        else:
+            api_key = os.getenv(self.config.api_key_env)
+            if not api_key and base_url:
+                api_key = os.getenv(self.config.server_password_env)
         if not api_key and (
             not base_url or not self._is_local_base_url(base_url)
         ):
@@ -249,6 +256,11 @@ class LettaRuntime:
                 timeout=self.config.timeout_seconds,
             )
         return Letta(api_key=api_key, timeout=self.config.timeout_seconds)
+
+    @staticmethod
+    def _load_runtime_env() -> None:
+        load_dotenv(PROJECT_ROOT / ".env", override=False)
+        load_dotenv(override=False)
 
     def _resolve_agent_id(
         self,
@@ -409,26 +421,32 @@ class LettaRuntime:
     ) -> Any:
         for round_index in range(self.config.max_tool_rounds):
             approvals: list[dict[str, Any]] = []
+            seen_tool_call_ids: set[str] = set()
             for message in getattr(response, "messages", []) or []:
                 if getattr(message, "message_type", "") != "approval_request_message":
                     continue
-                tool_call = getattr(message, "tool_call", None)
-                if tool_call is None:
+                tool_calls = self._approval_tool_calls(message)
+                if not tool_calls:
                     continue
-                tool_return, status = self._execute_client_tool(
-                    tool_call,
-                    spec,
-                    context,
-                    tool_results,
-                )
-                approvals.append(
-                    {
-                        "type": "tool",
-                        "tool_call_id": getattr(tool_call, "tool_call_id", ""),
-                        "tool_return": tool_return,
-                        "status": status,
-                    }
-                )
+                for tool_call in tool_calls:
+                    tool_call_id = str(getattr(tool_call, "tool_call_id", "") or "")
+                    if not tool_call_id or tool_call_id in seen_tool_call_ids:
+                        continue
+                    seen_tool_call_ids.add(tool_call_id)
+                    tool_return, status = self._execute_client_tool(
+                        tool_call,
+                        spec,
+                        context,
+                        tool_results,
+                    )
+                    approvals.append(
+                        {
+                            "type": "tool",
+                            "tool_call_id": tool_call_id,
+                            "tool_return": tool_return,
+                            "status": status,
+                        }
+                    )
 
             if not approvals:
                 return response
@@ -448,6 +466,19 @@ class LettaRuntime:
             )
 
         raise RuntimeError(f"Letta exceeded max_tool_rounds={self.config.max_tool_rounds}")
+
+    @staticmethod
+    def _approval_tool_calls(message: Any) -> list[Any]:
+        tool_calls = getattr(message, "tool_calls", None)
+        if isinstance(tool_calls, list):
+            return [tool_call for tool_call in tool_calls if tool_call is not None]
+        if tool_calls is not None:
+            return [tool_calls]
+
+        tool_call = getattr(message, "tool_call", None)
+        if tool_call is None:
+            return []
+        return [tool_call]
 
     def _send_messages(
         self,

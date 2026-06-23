@@ -30,6 +30,9 @@
 2. 请检查AGENTS.md中是否有随着业务代码改动而需要改动的地方，如果有，将其剥离至下层的Harness文件。AGENTS.md中的架构和规范不应该随业务代码变动而变动。
 3. 执行完以上任务后，请将该逻辑同步至编写AGENTS.md的skill中。
 
+# Task3-1
+你好，请扫描Agent Runtime，
+
 ---
 
 # Task4
@@ -42,26 +45,6 @@ Harness的Skill同样需要修改。
 
 ---
 
-# Task5
-你好，请问你是否还记得我们之前讨论的使用auth.json来登录Codex的方法？
-
-## Problem
-1. 目前当我尝试在Codex中对话时，遇到了如下问题：“10:12
-正在重新连接 5/5
-error sending request for url (https://auth.openai.com/oauth/token)”
-2. 此外，当我试图在ChatGPT Web中上传图片时，会报出如下错误：“上传到 files.oaiusercontent.com 失败。请确保你的网络设置允许访问此站点或联系你的网络管理员。”
-
-## Context
-1. 我目前处于公司的内网环境中，使用代理来访问外网。
-2. 我可以登录Codex（使用账户），但是无法发送消息。
-3. 我可以登录ChatGPT Web版，但是无法上传图片。
-
-## Goal
-1. 请您分析并判断这是什么问题？是代理问题、还是公司防火墙拦截了流量、还是ChatGPT封杀了我的账户，还是其它问题？
-2. 如果您不能直接确定，可以教给我锁定问题的方法，我测试后将结果反馈给你
-
----
-
 # Task6
 当前项目是一个良率监控智能体。使用OMP作为Agent Runtime来执行良率分析等任务。
 但OMP是否过重（尽管它已经是我使用的最轻的一个Agent）？我们是否应该将Agent Runtime替换为更加轻量级内核（比如PI和nanobot）？
@@ -71,3 +54,23 @@ error sending request for url (https://auth.openai.com/oauth/token)”
 1. agent能力
 2. agent复杂度
 3. agent记忆能力（这一点非常重要，因为作为一款业务Agent，一旦运行起来之后，我没有时间取手动管理记忆）
+
+---
+
+# Task：Spec机制梳理
+
+1. 请问当前目录中的spec是Agent Runtime生成，还是Codex生成？
+2. 我注意到它们的命名规范并不一致。当前的spec构建机制是什么？应当如何管理？
+3. 当前AGENTS.md中的“## Rules Boundary”是在划定spec和coding的界限吗？它是否合理？
+
+# Task：Spec机制构建
+
+## Requirements
+谢谢。但是需要修改：
+1. run_id不能够使用“run-YYYYMMDD-HHMMSS”这种看不出业务功能的命名方式
+2. 我们要构建的智能体是强人工交互的Agent。因此，规则构建模式只能够用于固定流程触发（例如UI上的“日报生成”和“异常HL”的按键触发）。其余所有基于对话框执行的任务，哪怕是我在对话框里要求生成日报，spec都必须经由LLM进行构建。
+3. LLM生成spec时除了参考Template之外，是否会参考“docs\agent\spec_contract.md”？如果没有，如何约束它生成标准spec？
+4. 您的其余关于spec目录管理的建议值得采纳。
+
+## Goal 
+请思考并修正当前的spec管理机制，并更新至该文件：“docs\agent\spec_contract.md”

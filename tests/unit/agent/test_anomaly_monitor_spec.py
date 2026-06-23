@@ -12,11 +12,16 @@ def test_spec_builder_builds_anomaly_monitor_spec(tmp_path: Path) -> None:
     builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 8))
 
     result = builder.build(
-        SpecBuildRequest(user_goal="执行 M678 今天异常监控，识别真实异常并生成HL通报")
+        SpecBuildRequest(
+            user_goal="执行 M678 今天异常监控，识别真实异常并生成HL通报",
+            capability="anomaly_monitor",
+            fixed_flow=True,
+        )
     )
 
     assert result.spec.status == "ready"
     assert result.validation_issues == []
+    assert result.spec.run_id == "agent-anomaly-monitor-20260608-000000"
     assert result.spec.inputs["report_date"] == "2026-06-08"
     assert result.spec.inputs["product_models"] == ["M678"]
     assert result.spec.workflow[0].skill == "anomaly_monitor"
@@ -36,6 +41,8 @@ def test_spec_builder_builds_anomaly_monitor_spec_from_ascii_keyword(tmp_path: P
         SpecBuildRequest(
             user_goal="run anomaly_monitor for M678 and generate HL notice",
             report_date="2026-06-15",
+            capability="anomaly_monitor",
+            fixed_flow=True,
         )
     )
 
@@ -45,7 +52,36 @@ def test_spec_builder_builds_anomaly_monitor_spec_from_ascii_keyword(tmp_path: P
 
 
 def test_spec_builder_does_not_force_omp_for_standard_trend_analysis(tmp_path: Path) -> None:
-    builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 15))
+    def converter(request: SpecBuildRequest) -> dict:
+        return {
+            "schema_version": 1,
+            "status": "draft",
+            "user_goal": request.user_goal,
+            "constraints": {"capability": "yield-trend", "pi_runtime_allowed": True},
+            "inputs": {
+                "product_models": ["C522"],
+                "date_range": {"start": "2026-06-09", "end": "2026-06-15"},
+            },
+            "workflow": [
+                {
+                    "id": "analyze_yield_trend",
+                    "skill": "data_analysis",
+                    "input": {
+                        "question": request.user_goal,
+                        "product_models": ["C522"],
+                        "time_range": {"start": "2026-06-09", "end": "2026-06-15"},
+                    },
+                }
+            ],
+            "outputs": {"analysis_summary": {"required": True, "format": "markdown"}},
+            "memory": {"reuse_policy": "confirmed_only"},
+        }
+
+    builder = SpecBuilder(
+        store=RunStore(workspace=tmp_path),
+        today=date(2026, 6, 15),
+        llm_converter=converter,
+    )
 
     result = builder.build(
         SpecBuildRequest(user_goal="请分析C522近一周的良率变化趋势；如果有恶化，请给出恶化原因")

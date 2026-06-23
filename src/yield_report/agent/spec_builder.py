@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Callable
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
 
+from yield_report.agent.langgraph_spec_agent import LangGraphSpecAgent
+from yield_report.agent.run_id import RunIdFactory, normalize_capability, normalize_source
 from yield_report.agent.run_store import RunPaths, RunStore
 from yield_report.agent.spec_model import SkillCall, TaskSpec
 from yield_report.agent.spec_validation import (
@@ -28,6 +29,7 @@ DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
 DEFAULT_TEMPLATE_REF = "docs/project_files/V3良率日报每日异常填报表.xlsx"
 DEFAULT_DAILY_YIELD_FILE_NAME = "V3良率及不良率By月周天汇总报表"
 REGISTERED_SKILLS = {"report_download", "data_analysis", "daily_report", "anomaly_monitor"}
+RULE_BUILD_CAPABILITIES = {"anomaly-monitor", "daily-report"}
 PRODUCT_MODEL_PATTERN = re.compile(r"(?<![A-Z0-9])[A-Z]\d{3,4}(?![A-Z0-9])", re.IGNORECASE)
 LOCAL_SOURCE_FILES = {
     "spotfire": "resources/project_files/spotfire.xlsx",
@@ -49,10 +51,13 @@ ANOMALY_SOURCE_FILES = {
 
 
 class SpecBuildRequest(BaseModel):
-    """Request for turning a natural-language daily-report goal into a TaskSpec."""
+    """Request for turning an Agent trigger and user goal into a TaskSpec."""
 
     user_goal: str
     run_id: str | None = None
+    source: str = "agent"
+    capability: str | None = None
+    fixed_flow: bool = False
     report_date: str | None = None
     product_models: list[str] | None = None
     sections: list[str] = Field(default_factory=list)
@@ -74,26 +79,51 @@ LlmConverter = Callable[[SpecBuildRequest], dict[str, Any] | str]
 
 
 class SpecBuilder:
-    """Build executable TaskSpecs with LLM conversion and code validation fallback."""
+    """Build executable TaskSpecs through LangGraph or fixed-flow rule construction."""
 
     def __init__(
         self,
         store: RunStore | None = None,
         today: date | None = None,
         llm_converter: LlmConverter | None = None,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         self.store = store or RunStore()
         self.today = today or date.today()
+        self._clock = clock or (
+            (lambda: datetime.combine(self.today, time.min)) if today is not None else datetime.now
+        )
         self._llm_converter = llm_converter
 
     def build(self, request: SpecBuildRequest) -> SpecBuildResult:
         """Create a run directory, write ``spec.yaml``, and return the TaskSpec."""
-        paths = self.store.create_run(request.run_id)
         warnings: list[str] = []
         validation_issues: list[SpecValidationIssue] = []
-        spec = self._try_build_with_llm(request, paths, warnings)
-        if spec is None:
+        if self._uses_rule_builder(request):
+            capability = normalize_capability(request.capability or "")
+            run_id = self._resolve_rule_run_id(request, capability)
+            paths = self.store.create_run(run_id)
             spec = self._build_rule_based(request, paths, warnings)
+        elif request.fixed_flow:
+            capability = normalize_capability(request.capability or "data-analysis")
+            run_id = self._resolve_rule_run_id(request, capability)
+            paths = self.store.create_run(run_id)
+            spec = self._build_disallowed_rule_spec(request, paths, capability)
+            warnings.append(
+                "规则构建仅允许 anomaly_monitor 和 daily_report 固定业务流程。"
+            )
+        else:
+            agent = LangGraphSpecAgent(
+                workspace=self.store.workspace,
+                draft_generator=self._generate_langgraph_draft,
+                registered_skills=REGISTERED_SKILLS,
+                today_clock=self._clock,
+            )
+            agent_result = agent.build(request)
+            spec = agent_result["spec"]
+            warnings.extend(agent_result["warnings"])
+            validation_issues.extend(agent_result["validation_issues"])
+            paths = self.store.create_run(spec.run_id)
 
         validation = validate_task_spec(
             spec,
@@ -113,29 +143,36 @@ class SpecBuilder:
             validation_issues=validation_issues,
         )
 
-    def _try_build_with_llm(
+    def _uses_rule_builder(self, request: SpecBuildRequest) -> bool:
+        if not request.fixed_flow:
+            return False
+        try:
+            capability = normalize_capability(request.capability or "")
+        except ValueError:
+            return False
+        return capability in RULE_BUILD_CAPABILITIES
+
+    def _resolve_rule_run_id(self, request: SpecBuildRequest, capability: str) -> str:
+        source = normalize_source(request.source)
+        if request.run_id:
+            RunIdFactory.validate(request.run_id)
+            return request.run_id
+        return RunIdFactory(clock=self._clock).create(source=source, capability=capability)
+
+    def _generate_langgraph_draft(
         self,
         request: SpecBuildRequest,
-        paths: RunPaths,
-        warnings: list[str],
-    ) -> TaskSpec | None:
-        mode = request.builder_mode.lower().strip()
-        if mode not in {"llm", "auto_llm"}:
-            return None
+        issues: list[SpecValidationIssue],
+        context: str,
+    ) -> dict[str, Any] | str:
+        return self._convert_with_llm(request, issues=issues, context=context)
 
-        try:
-            raw = self._convert_with_llm(request)
-            spec = _parse_llm_spec(raw)
-        except Exception as exc:
-            warnings.append(f"LLM Spec 转换失败，已回退到规则构建: {exc}")
-            return None
-
-        spec.run_id = paths.run_id
-        if spec.status in {"draft", ""}:
-            spec.status = "ready"
-        return spec
-
-    def _convert_with_llm(self, request: SpecBuildRequest) -> dict[str, Any] | str:
+    def _convert_with_llm(
+        self,
+        request: SpecBuildRequest,
+        issues: list[SpecValidationIssue] | None = None,
+        context: str = "",
+    ) -> dict[str, Any] | str:
         if self._llm_converter is not None:
             return self._llm_converter(request)
 
@@ -143,13 +180,30 @@ class SpecBuilder:
 
         system_prompt = (
             "你是良率日报 Agent Workbench 的 Spec Builder。"
-            "请把用户自然语言需求转换为 TaskSpec JSON。"
+            "请严格依据项目 Spec 契约、模板和 Skill 输入模型，把用户自然语言需求转换为 TaskSpec JSON。"
             "只输出 JSON，不输出解释。"
             "Skill 只能使用 report_download、data_analysis、daily_report、anomaly_monitor。"
             "memory.reuse_policy 必须为 confirmed_only。"
+            "constraints.capability 必须使用代码枚举。"
+            "不得生成 run_id，run_id 由 Agent Runtime 生成。"
         )
+        repair_text = ""
+        if issues:
+            repair_text = "\n请修复以下校验问题：\n" + "\n".join(
+                f"- {issue.location}: {issue.code} {issue.message}" for issue in issues
+            )
         return llm_manager.chat(
-            messages=[{"role": "user", "content": request.user_goal}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"{context}\n\n用户目标：{request.user_goal}\n"
+                        f"source: {request.source}\n"
+                        f"capability_hint: {request.capability or ''}"
+                        f"{repair_text}"
+                    ),
+                }
+            ],
             system_prompt=system_prompt,
             temperature=0.1,
             max_tokens=4096,
@@ -167,26 +221,9 @@ class SpecBuilder:
         if not product_models and not request.allow_all_products:
             warnings.append("缺少产品型号，需要用户确认。")
 
-        if _is_anomaly_monitor_goal(request.user_goal):
+        capability = normalize_capability(request.capability or "")
+        if capability == "anomaly-monitor":
             return self._build_anomaly_monitor_spec(
-                request=request,
-                paths=paths,
-                report_date=report_date,
-                product_models=product_models,
-                warnings=warnings,
-            )
-
-        if _is_analysis_goal(request.user_goal):
-            return self._build_analysis_spec(
-                request=request,
-                paths=paths,
-                report_date=report_date,
-                product_models=product_models,
-                warnings=warnings,
-            )
-
-        if _is_report_download_goal(request.user_goal):
-            return self._build_report_download_spec(
                 request=request,
                 paths=paths,
                 report_date=report_date,
@@ -199,9 +236,15 @@ class SpecBuilder:
             status="needs_confirmation" if warnings else "ready",
             user_goal=request.user_goal.strip(),
             constraints={
+                "spec_source": normalize_source(request.source),
+                "spec_builder": "rule",
+                "builder_mode": "rule",
+                "capability": "daily-report",
                 "codex_is_agent_core": True,
+                "codex_in_execution_chain": False,
                 "prefer_existing_tools": True,
                 "require_user_confirmation_for_pending_memory": True,
+                "fixed_flow": True,
             },
             inputs=self._build_inputs(report_date, product_models),
             workflow=self._build_workflow(report_date, product_models, sections),
@@ -221,6 +264,30 @@ class SpecBuilder:
         )
         return spec
 
+    def _build_disallowed_rule_spec(
+        self,
+        request: SpecBuildRequest,
+        paths: RunPaths,
+        capability: str,
+    ) -> TaskSpec:
+        return TaskSpec(
+            run_id=paths.run_id,
+            status="needs_confirmation",
+            user_goal=request.user_goal.strip(),
+            constraints={
+                "spec_source": normalize_source(request.source),
+                "spec_builder": "rule",
+                "builder_mode": "rule",
+                "capability": capability,
+                "codex_in_execution_chain": False,
+                "fixed_flow": True,
+                "blocked_reason": "rule_builder_capability_not_allowed",
+            },
+            outputs={"trace": {"required": True, "format": "jsonl"}},
+            memory={"reuse_policy": "confirmed_only"},
+            trace={"path": "trace.jsonl"},
+        )
+
     def _build_anomaly_monitor_spec(
         self,
         *,
@@ -235,10 +302,16 @@ class SpecBuilder:
             status="needs_confirmation" if warnings else "ready",
             user_goal=request.user_goal.strip(),
             constraints={
+                "spec_source": normalize_source(request.source),
+                "spec_builder": "rule",
+                "builder_mode": "rule",
+                "capability": "anomaly-monitor",
                 "codex_is_agent_core": True,
+                "codex_in_execution_chain": False,
                 "prefer_existing_tools": True,
                 "require_user_confirmation_for_pending_memory": True,
                 "side_effects_disabled_by_default": True,
+                "fixed_flow": True,
             },
             inputs={
                 "report_date": report_date,
@@ -681,15 +754,3 @@ def _infer_metrics(goal: str, time_grain: str = "daily") -> list[str]:
         metrics.append(metric_for_time_grain(time_grain))
     return list(dict.fromkeys(metrics)) or [metric_for_time_grain(time_grain)]
 
-
-def _parse_llm_spec(raw: dict[str, Any] | str) -> TaskSpec:
-    if isinstance(raw, dict):
-        return TaskSpec(**raw)
-    text = raw.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json|yaml)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-    try:
-        return TaskSpec(**json.loads(text))
-    except json.JSONDecodeError as exc:
-        raise ValueError("LLM Spec output is not valid JSON") from exc

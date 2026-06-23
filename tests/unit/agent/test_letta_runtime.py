@@ -701,6 +701,87 @@ def test_letta_runtime_dispatches_client_tool_to_project_skill(tmp_path: Path) -
     assert "mem-m678-monthly-trend" in fake_passages.create_calls[0]["text"]
 
 
+def test_letta_runtime_returns_all_pending_approval_tool_calls(tmp_path: Path) -> None:
+    calls: list[dict] = []
+    tool_call_analysis = SimpleNamespace(
+        name="yield_data_analysis",
+        arguments=json.dumps(
+            {
+                "analysis_goal": "生成日报前分析M678良率",
+                "product_models": ["M678"],
+            },
+            ensure_ascii=False,
+        ),
+        tool_call_id="call-analysis",
+    )
+    tool_call_report = SimpleNamespace(
+        name="yield_daily_report",
+        arguments=json.dumps(
+            {
+                "report_date": "2026-06-22",
+                "product_models": ["M678"],
+                "output_name": "daily_report_output.xlsx",
+            },
+            ensure_ascii=False,
+        ),
+        tool_call_id="call-report",
+    )
+
+    class FakeMessages:
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            if len(calls) == 1:
+                return SimpleNamespace(
+                    messages=[
+                        SimpleNamespace(
+                            message_type="approval_request_message",
+                            tool_call=tool_call_analysis,
+                            tool_calls=[tool_call_analysis, tool_call_report],
+                        )
+                    ]
+                )
+            return SimpleNamespace(
+                messages=[
+                    SimpleNamespace(
+                        message_type="assistant_message",
+                        content="日报生成完成，已列出 Excel 和 Markdown 产物路径。",
+                    )
+                ]
+            )
+
+    class FakeProjectRuntime:
+        def __init__(self) -> None:
+            self.skill_names = []
+
+        def run_call(self, call, context):
+            self.skill_names.append(call.skill)
+            return SkillResult(
+                skill_name=call.skill,
+                success=True,
+                summary=f"{call.skill} completed",
+            )
+
+    fake_project_runtime = FakeProjectRuntime()
+    fake_client = SimpleNamespace(agents=SimpleNamespace(messages=FakeMessages()))
+    context = RunContext(run_id="run-letta-parallel-tools", workspace=tmp_path)
+    spec = TaskSpec(run_id=context.run_id, user_goal="请生成今天的良率日报")
+
+    results = LettaRuntime(
+        client=fake_client,
+        agent_id="agent-test",
+        project_runtime=fake_project_runtime,
+    ).run_spec(spec, context)
+
+    assert results[0].success is True
+    assert fake_project_runtime.skill_names == ["data_analysis", "daily_report"]
+    approvals = calls[1]["messages"][0]["approvals"]
+    assert [approval["tool_call_id"] for approval in approvals] == [
+        "call-analysis",
+        "call-report",
+    ]
+    assert all(approval["status"] == "success" for approval in approvals)
+
+
 def test_letta_runtime_keeps_run_successful_when_archival_memory_write_fails(
     tmp_path: Path,
 ) -> None:
@@ -798,7 +879,10 @@ def test_letta_runtime_returns_structured_failure_when_api_key_is_missing(
     )
     spec = TaskSpec(run_id="run-letta-missing-key", user_goal="分析M678良率趋势")
 
-    results = LettaRuntime(agent_id="agent-test").run_spec(spec, context)
+    results = LettaRuntime(
+        config=LettaRuntimeConfig(api_key_env="MISSING_LETTA_API_KEY"),
+        agent_id="agent-test",
+    ).run_spec(spec, context)
 
     assert results[0].success is False
     assert results[0].error is not None

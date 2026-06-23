@@ -1,0 +1,56 @@
+schema_version: 1
+run_id: null
+status: draft
+user_goal: "识别指定日期和产品的真实异常并生成 HL 通报。"
+
+constraints:
+  spec_source: agent
+  spec_builder: rule
+  builder_mode: rule
+  capability: anomaly-monitor
+  codex_in_execution_chain: false
+  prefer_existing_tools: true
+  require_user_confirmation_for_pending_memory: true
+  side_effects_disabled_by_default: true
+  fixed_flow: true
+
+inputs:
+  report_date: null
+  product_models: []
+  reports: []
+  local_files: []
+
+workflow:
+  - id: run_anomaly_monitor
+    skill: anomaly_monitor
+    input:
+      report_date: null
+      product_models: []
+      mode: detect
+      source_files: {}
+      write_ledgers: false
+      push_notifications: true
+    save_as: anomaly_monitor_result
+
+outputs:
+  anomaly_monitor_summary:
+    required: true
+    format: markdown
+  anomaly_monitor_result:
+    required: true
+    format: json
+  trace:
+    required: true
+    format: jsonl
+
+memory:
+  reuse_policy: confirmed_only
+  candidate_policy: record_pending
+  allowed_record_ids: []
+
+trace:
+  level: step
+  include_inputs: true
+  include_outputs: true
+  include_errors: true
+  path: trace.jsonl

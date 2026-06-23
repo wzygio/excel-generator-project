@@ -25,6 +25,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Create specs/runs/<run_id>/spec.yaml")
     parser.add_argument("--goal", required=True, help="Natural-language daily-report goal.")
     parser.add_argument("--run-id", default=None, help="Optional stable run id.")
+    parser.add_argument("--source", default="agent", help="Run id source segment.")
+    parser.add_argument("--capability", default="daily_report", help="Capability segment.")
+    parser.add_argument(
+        "--fixed-flow",
+        action="store_true",
+        default=True,
+        help="Use the fixed daily_report business flow.",
+    )
     parser.add_argument("--workspace", default=None, help="Project root. Defaults to this repository.")
     parser.add_argument("--report-date", default=None, help="Optional YYYY-MM-DD report date override.")
     parser.add_argument("--product-model", action="append", default=None, help="Product model override.")
@@ -45,6 +53,9 @@ def main(argv: list[str] | None = None) -> int:
         SpecBuildRequest(
             user_goal=args.goal,
             run_id=args.run_id,
+            source=args.source,
+            capability=args.capability,
+            fixed_flow=args.fixed_flow,
             report_date=args.report_date,
             product_models=args.product_model,
             sections=args.section or [],

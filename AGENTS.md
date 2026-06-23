@@ -47,11 +47,6 @@ implementation work; route to the lower Harness documents instead.
 - For Harness / planning behavior, read `.roo/rules-architect/harness-architecture.md`.
 - After coding work, follow `.roo/rules-code/knowledge-summarization.md` and `docs/observability.md`.
 
-## Planning And Architecture Updates
-
-- After drafting a non-trivial plan, ask the user to confirm it. Once accepted, update the plan under `docs/plans/`, using `docs/exec-plans/active/` for current execution plans.
-- After code changes, ask the user to confirm whether the resulting architecture is accepted. Once accepted, update `ARCHITECTURE.md` when module ownership, contracts, runtime flow, or cross-layer behavior changed.
-
 ## Rules Boundary
 
 Spec-owned rules are stable, repeatable, and user-maintainable. Put them in `specs/templates/`,

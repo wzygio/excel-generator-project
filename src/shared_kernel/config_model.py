@@ -189,13 +189,13 @@ class LettaAgentRuntimeConfig(BaseModel):
 class AgentConfig(BaseModel):
     """Agent Runtime 配置"""
 
-    default_runtime: str = Field(default="letta", description="默认 runtime: letta / python / omp")
+    default_runtime: str = Field(default="letta", description="默认 runtime: letta / auto")
     letta: LettaAgentRuntimeConfig = Field(default_factory=LettaAgentRuntimeConfig)
 
     @field_validator("default_runtime")
     @classmethod
     def validate_default_runtime(cls, value: str) -> str:
-        allowed = {"python", "letta", "omp", "pi", "auto"}
+        allowed = {"letta", "auto"}
         normalized = value.lower()
         if normalized not in allowed:
             raise ValueError(f"default_runtime 必须为 {allowed} 之一，当前值: {value}")

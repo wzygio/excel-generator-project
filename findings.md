@@ -29,3 +29,43 @@
 - After killing the old service and restarting Next, run `run-20260622-162510` completed successfully and exposed `/api/artifact` for `specs/runs/run-20260622-162510/outputs/daily_report_output.xlsx`.
 - The downloaded UI workbook for 2026-06-22 has populated 2.1/2.2/2.3-style fields (`1.1`, `1.2`, `1.4`) and final `Sheet1` text, but `1.3 当日异常` is empty because the current same-day CT exception source has no matching records.
 - A black-box Runtime run for 2026-06-21 proves the current full Skill still writes `1.3 当日异常` when data exists: Data Packet count is 6 and `Sheet1` HTML style checks are true.
+
+---
+
+# Letta Client Tools Assessment Findings
+
+## External Guidance
+- `D:\wzy\Visionox-Docs_Backup\dev-docs\agent_dev\agent-letta.md` section 10 recommends a local `RuntimeTool` registry with name, description, JSON schema parameters, handler, and risk level.
+- The recommended runtime should export registry entries to Letta `client_tools`, validate tool-call JSON against schema, authorize locally, execute a whitelisted handler, audit the call, and return a compact tool result with summaries and artifact refs.
+- The section lists suitable client tools such as `run_task_spec`, `download_report`, `analyze_data`, `generate_daily_report`, `list_run_artifacts`, and `read_artifact_summary`.
+- It explicitly excludes arbitrary shell, arbitrary file read/write, raw SQL, secrets retrieval, portal cookie access, and destructive cleanup.
+
+## Current Project State
+- `src/yield_report/agent/letta_runtime.py` already exposes three hard-coded Letta client tools: `yield_report_download`, `yield_data_analysis`, and `yield_daily_report`.
+- `src/yield_report/agent/registry.py` registers four local Skills: `report_download`, `data_analysis`, `daily_report`, and `anomaly_monitor`.
+- `anomaly_monitor` is registered in the Python Skill runtime but is not exposed as a Letta client tool.
+- The current Letta tool schemas are handwritten and narrower than the Pydantic request models, so schema drift is possible.
+- `_execute_client_tool()` manually maps Letta tool names to Skill names and dispatches through `AgentRuntime.run_call()`.
+- `_client_tools_for_spec()` filters exposed tools based on `spec.workflow`, but it falls back to the three hard-coded tools when the workflow contains unrecognized Skills.
+
+## Assessment
+- The project has partially converted business capabilities into Letta client tools, but not in the architecture recommended by the Letta document.
+- The missing piece is not the Letta connection itself; it is a reusable local client-tool layer with registry metadata, schema validation, local authorization, audit, and compact return normalization.
+- Because the user has required no runtime downgrade and a unified Agent Runtime for non-exempt workflows, the Letta tool layer should fail closed for unknown workflows/tools instead of exposing a default broad tool set.
+- `anomaly_monitor` is a special boundary: it can remain a fixed-flow UI exemption, but if Letta conversational workflows should trigger anomaly monitoring, it needs a Letta client-tool wrapper too.
+- SpecBuilder should not be included in this conversion plan because it is now owned by the separate LangGraph SpecBuilder agent.
+
+## Recommended Tool Scope
+- Keep and rewrap: `yield_report_download`, `yield_data_analysis`, `yield_daily_report`.
+- Add or explicitly document exemption: `yield_anomaly_monitor`.
+- Add read-only operational tools: `list_run_artifacts` and `read_artifact_summary`, constrained to runtime run stores/artifact references.
+- Avoid a broad `run_task_spec(runtime=...)` tool unless the runtime argument is removed or forced to Letta, because allowing runtime selection would reintroduce a downgrade path.
+- Do not expose arbitrary shell, arbitrary file access, raw SQL, secrets, portal cookies, or destructive cleanup.
+
+## Implementation Plan
+- Add `src/yield_report/agent/client_tools.py` with `RuntimeTool`, `ToolResult`, registry construction, Letta export, argument validation, authorization hooks, audit hooks, and compact return shaping.
+- Build registry entries from approved Skill modules where possible, using each Skill's Pydantic request model as the source of JSON schema to reduce schema drift.
+- Add a wrapper for `anomaly_monitor` only if it is intended to be callable from Letta-agent workflows; otherwise document it as fixed-flow-only.
+- Refactor `LettaRuntime._client_tools_for_spec()` to select tools from the registry by workflow Skill and to return an empty/failing whitelist for unknown Skills rather than defaulting to all hard-coded project tools.
+- Refactor `LettaRuntime._execute_client_tool()` to dispatch through the registry handler instead of maintaining an inline name-to-Skill map.
+- Add focused tests for tool export, schema validation, unknown-tool failure, anomaly-monitor exposure or exemption, compact result shape, and path/artifact allowlisting.
