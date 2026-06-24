@@ -54,7 +54,8 @@
 
 ```text
 src/yield_report/
-├── agent/                # Spec、Router、Runtime、Memory、Trace
+├── agent/                # Spec、LangGraph Spec Graph、Runtime、Memory、Trace
+│   └── spec_graph/       # State、Nodes、Edges、Graph、Checkpointer、Agent facade
 ├── skills/               # report_download、data_analysis、daily_report
 ├── adapters/             # Task2 后续迁移：FineReport、Excel、LLM 适配器
 ├── shared/               # Task2 后续迁移：yield_report 内部共享工具

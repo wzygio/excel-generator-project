@@ -41,3 +41,33 @@
 - Confirmed current project has three hard-coded Letta client tools but no pluggable registry layer.
 - Confirmed `anomaly_monitor` is registered in the local Skill runtime but is not exposed as a Letta client tool.
 - Recorded recommendation: implement a fail-closed Letta client-tool registry over approved Skills and read-only artifact tools, excluding SpecBuilder.
+
+## 2026-06-24
+- Started Agent Architecture Refactor using `planning-with-files` and `anysearch`.
+- Read both skill instruction files and restored existing `task_plan.md`, `findings.md`, and `progress.md`.
+- Confirmed `.codegraph/` exists and loaded CodeGraph MCP tools for structural analysis.
+- Initial `git status --short` showed one untracked file: `docs/prompt/refactor-project_arch.md`.
+- Appended the new Agent Architecture Refactor plan, findings, and progress sections without removing previous completed planning history.
+- Logged PowerShell `Get-ChildItem -Name` filter error and changed approach to explicit file checks.
+- Re-read project architecture docs with UTF-8 output after detecting mojibake from default PowerShell decoding.
+- Extracted `agent-LangGraph.md` section 4 and recorded the recommended LangGraph package split.
+- Read `docs/agent/skill_contract.md`, `docs/agent/spec_contract.md`, and `docs/design/index.md` entrypoint.
+- Identified architecture drift: older docs defer LangGraph, while current Spec contract requires a LangGraph Spec sub-agent by default.
+- Ran AnySearch batch search for LangGraph official project structure, Graph API, persistence/interrupts, multi-agent/subagents, and testing guidance.
+- Opened official LangGraph/LangChain docs for Graph API, application structure, persistence, interrupts, testing, and subagent/supervisor patterns; recorded architecture implications in `findings.md`.
+- Used CodeGraph to inspect `yield_report.agent` and `yield_report.skills` architecture, including `LangGraphSpecAgent`, `AgentRuntime`, `RuntimeRouter`, `RunStore`, `spec_model`, `client_tools`, and `letta_runtime`.
+- Listed current `src/yield_report` and Agent/Skill tests; confirmed `langgraph>=0.2.0` is already in `pyproject.toml`.
+- Read `docs/design/design-spec_builder.md` and `docs/observability.md`.
+- Decided the first refactor slice should standardize the existing LangGraph Spec sub-agent into a graph package while preserving compatibility imports.
+- Added active execution plan `docs/exec-plans/active/refactor-agent_langgraph_architecture.md`.
+- Added `src/yield_report/agent/spec_graph/` with `state.py`, `nodes.py`, `edges.py`, `graph.py`, `checkpointer.py`, `agent.py`, and package exports.
+- Replaced `src/yield_report/agent/langgraph_spec_agent.py` with a compatibility wrapper.
+- Updated `src/yield_report/agent/spec_builder.py` to import `LangGraphSpecAgent` from `yield_report.agent.spec_graph`.
+- Added `tests/unit/agent/test_spec_graph.py` for direct node enrichment, graph compilation/checkpointer, and repair behavior.
+- Updated `ARCHITECTURE.md`, `docs/agent/architecture.md`, and `docs/design/design-spec_builder.md` to reflect the new LangGraph Spec graph package and current LangGraph default Spec-builder policy.
+- Verification: `uv run pytest tests/unit/agent/test_spec_graph.py -q --tb=short` passed (3 tests).
+- Verification: `uv run pytest tests/unit/agent/test_spec_builder.py tests/unit/agent/test_anomaly_monitor_spec.py -q --tb=short` passed (14 tests).
+- Verification: `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` passed (113 tests).
+- First `ruff check` reported import ordering and one unused import; ran `uv run ruff check ... --fix`, then reran targeted ruff successfully.
+- Ran `git diff --check`; no whitespace errors were reported, only Git LF-to-CRLF warnings for touched files.
+- Removed test-created `src/yield_report/agent/spec_graph/__pycache__/` after verifying it was inside the workspace.

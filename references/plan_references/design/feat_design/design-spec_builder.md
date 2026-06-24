@@ -104,7 +104,8 @@ LangGraph 只负责 Spec 构建的状态机，不替代 Runtime 执行 Skill，�
 当前实现职责如下：
 
 - `src/yield_report/agent/spec_builder.py`: Spec 构建门面，负责默认路径与固定流程规则构建的分流。
-- `src/yield_report/agent/langgraph_spec_agent.py`: LangGraph Spec sub-agent，负责 draft、校验、repair、finalize。
+- `src/yield_report/agent/spec_graph/`: LangGraph Spec sub-agent，负责 state、节点、条件边、图装配、可选 checkpointer 和 `LangGraphSpecAgent` facade。
+- `src/yield_report/agent/langgraph_spec_agent.py`: 兼容导入层，保留旧路径但不承载实现。
 - `src/yield_report/agent/run_id.py`: `RunIdFactory` 和 source/capability 归一化校验。
 - `src/yield_report/agent/spec_validation.py`: 统一 Spec 校验入口。
 - `src/yield_report/agent/run_store.py`: 创建 run 目录并保存 Spec。

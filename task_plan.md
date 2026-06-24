@@ -50,3 +50,69 @@ Evaluate whether the current Agent Runtime has converted necessary business tool
 - Current state is a partial conversion: three hard-coded Letta client tools exist, but the project has not implemented the pluggable `RuntimeTool` registry recommended by the Letta guidance.
 - SpecBuilder is intentionally out of scope because it has been moved to a separate LangGraph agent.
 - Recommended next implementation is to create a fail-closed Letta client-tool registry over approved business Skills and artifact-read tools, then refactor `LettaRuntime` to export and execute tools through that registry.
+
+---
+
+# Agent Architecture Refactor Plan
+
+## Goal
+Refactor the current `yield_report` implementation from the existing TDD-era module shape into a standard, enterprise-grade Agent architecture that is aligned with LangGraph and preserves verified report behavior.
+
+## Current Phase
+Complete
+
+## Requirements
+- Search current Agent/LangGraph architecture guidance and incorporate the local reference `D:\wzy\Visionox-Docs_Backup\dev-docs\agent_dev\agent-LangGraph.md`, especially `## 4. 一个典型 LangGraph 项目结构`.
+- Analyze the current program structure before moving code.
+- Identify whether the refactor needs only module movement or also import, interface, adapter, runtime, test, and workflow rewrites.
+- Produce an execution plan with a final target checklist.
+- Execute the plan iteratively until the checklist is complete.
+- Preserve existing user work and runtime artifacts; do not delete user-provided Excel/resources.
+
+## Phases
+
+| Phase | Status | Purpose |
+|---|---|---|
+| 1. Research and architecture baseline | complete | Gather external/current LangGraph Agent structure guidance and project-specific reference docs. |
+| 2. Current-state analysis | complete | Use CodeGraph and docs to map current `yield_report` modules, entrypoints, runtime flow, interfaces, tests, and coupling. |
+| 3. Target architecture and checklist | complete | Define enterprise Agent package structure, migration rules, compatibility boundaries, and final checklist. |
+| 4. Refactor implementation | complete | Move/add/refactor code in small verified steps, updating imports/interfaces/tests as needed. |
+| 5. Verification and hardening | complete | Run targeted and broader checks; fix regressions until the checklist is complete. |
+| 6. Delivery summary | complete | Summarize final architecture, changed files, verification, and residual risks. |
+
+## Target Checklist
+- [x] `yield_report` has a clear Agent architecture with graph/state/nodes/tools/runtime boundaries.
+- [x] LangGraph-owned workflow orchestration is explicit and documented.
+- [x] Existing Skills and report logic remain callable through stable public entrypoints or intentional compatibility adapters.
+- [x] Imports are updated and no stale module paths remain in source/tests/docs touched by the refactor.
+- [x] Runtime interfaces have typed request/result contracts and fail-closed tool/workflow dispatch.
+- [x] Existing daily report, report download, data analysis, anomaly monitor, and SpecBuilder behavior is preserved or intentionally rehomed.
+- [x] Focused tests cover new architecture boundaries and compatibility behavior.
+- [x] Relevant unit tests pass.
+- [x] `ruff`/typing-sensitive checks are run where risk justifies them.
+- [x] Planning files record research, decisions, errors, and verification results.
+
+## Decisions Made
+
+| Decision | Rationale |
+|---|---|
+| Preserve existing planning history and append this refactor plan | Previous plan sections are completed audit history; appending keeps continuity without overwriting useful context. |
+| Use CodeGraph first for code analysis | `.codegraph/` exists and project instructions require CodeGraph before grep/read for structural questions. |
+| Scope first implementation slice to LangGraph Spec graph package | Existing Skill/Runtime contracts are already mostly Agent-shaped; this brings the LangGraph piece to the requested standard structure with limited blast radius. |
+
+## Errors Encountered
+
+| Error | Attempt | Resolution |
+|---|---|---|
+| `Get-ChildItem -Name` with multiple filename arguments failed in PowerShell | 1 | Replaced with explicit per-file `Test-Path` checks. |
+| `docs/plans/index.md` referenced by AGENTS but missing | 1 | Used the existing `docs/exec-plans/index.md` and `docs/exec-plans/README.md` planning convention instead. |
+| `ruff check` reported unsorted imports and one unused import after the split | 1 | Ran `uv run ruff check ... --fix`, then reran ruff and tests successfully. |
+
+## Verification
+
+| Command | Result |
+|---|---|
+| `uv run pytest tests/unit/agent/test_spec_graph.py -q --tb=short` | 3 passed |
+| `uv run pytest tests/unit/agent/test_spec_builder.py tests/unit/agent/test_anomaly_monitor_spec.py -q --tb=short` | 14 passed |
+| `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` | 113 passed |
+| `uv run ruff check src/yield_report/agent/spec_builder.py src/yield_report/agent/langgraph_spec_agent.py src/yield_report/agent/spec_graph tests/unit/agent/test_spec_graph.py` | passed |

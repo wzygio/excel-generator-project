@@ -69,3 +69,74 @@
 - Refactor `LettaRuntime._client_tools_for_spec()` to select tools from the registry by workflow Skill and to return an empty/failing whitelist for unknown Skills rather than defaulting to all hard-coded project tools.
 - Refactor `LettaRuntime._execute_client_tool()` to dispatch through the registry handler instead of maintaining an inline name-to-Skill map.
 - Add focused tests for tool export, schema validation, unknown-tool failure, anomaly-monitor exposure or exemption, compact result shape, and path/artifact allowlisting.
+
+---
+
+# Agent Architecture Refactor Findings
+
+## Requirements
+- Convert the current `yield_report` module from a TDD-era structure into a standard enterprise Agent architecture.
+- Use LangGraph as the forward-looking orchestration foundation.
+- Search external/current references and include the local `agent-LangGraph.md` section `## 4. 一个典型 LangGraph 项目结构`.
+- Analyze current implementation before changing code.
+- Produce and execute a plan until the final checklist is complete.
+
+## Research Findings
+- Local `agent-LangGraph.md` section 4 recommends the canonical LangGraph project split: `graph/` for `state.py`, `nodes.py`, `edges.py`, `graph.py`, `checkpointer.py`; `agents/` for role-specific LLM agents; `tools/` for callable tools; `services/` for IO/business services; `api/` for external routes; plus `spec/`, tests for nodes/graph/tools, and `AGENTS.md`.
+- Current `ARCHITECTURE.md` already defines the project goal as `用户需求 -> TaskSpec/spec.yaml -> Agent Runtime -> Skill Tool -> SkillResult -> Trace/Memory/Output`.
+- Current `docs/agent/architecture.md` still says not to introduce LangGraph/CrewAI immediately, but `docs/agent/spec_contract.md` now says LangGraph Spec sub-agent is the default Spec builder except fixed `anomaly_monitor` and `daily_report` rule flows. This is an architecture drift that this refactor should reconcile.
+- `docs/agent/skill_contract.md` defines Skill as the stable Codex/Runtime capability boundary: structured Pydantic input, structured `SkillResult`, `ArtifactRef`, `SkillError`, memory candidates, and `SKILL.md` docs per skill.
+- `docs/agent/spec_contract.md` says Runtime consumes generated Specs and executes workflow, while LangGraph Spec sub-agent should contain `load_context`, `draft`, `validate`, `repair`, and `finalize` nodes.
+- AnySearch results prioritized official LangChain/LangGraph sources: Graph API, application structure, persistence, interrupts, testing, and multi-agent/subagent docs.
+- LangGraph official Graph API defines workflows around State, Nodes, and Edges; nodes are just functions that read state and return partial state updates, while edges define fixed or conditional control flow.
+- Official production application structure expects one or more graphs, a `langgraph.json` configuration, dependency declarations such as `pyproject.toml`, and environment configuration; graphs are addressed by name/path.
+- Official persistence docs distinguish checkpointers for short-term thread graph state from stores for durable cross-thread memory. This maps well to current `trace`/run state vs confirmed business memory.
+- Official interrupt docs require a durable checkpointer and stable thread id for human-in-the-loop pauses/resumes. This should inform approval points such as memory confirmation, file overwrite, or uncertain Spec repair.
+- Official testing docs recommend creating/compiling graphs in tests, testing individual nodes through `graph.nodes[...]`, and using checkpointers/partial execution for larger graphs. New LangGraph refactor tests should follow this shape.
+- Official multi-agent guidance supports supervisor/coordinator patterns when tasks require specialized workers. For this project, a supervisor-like runtime should coordinate specialized graph/skill workers rather than giving one LLM all tools directly.
+
+## Current Project Findings
+- `.codegraph/` exists, so structural code analysis should start with CodeGraph.
+- Existing root planning files contained completed Daily Report Skill Replacement and Letta client-tool assessment history; this refactor is being tracked as a new appended section.
+- `git status --short` initially showed one untracked file: `docs/prompt/refactor-project_arch.md`. Treat it as user-provided unless proven otherwise.
+- `docs/prompt/refactor-project_arch.md` is a UTF-8 copy of the user's current task request.
+- `pyproject.toml` already includes `langgraph>=0.2.0`, `letta-client`, Pydantic v2, and the existing test/lint stack; no dependency addition is needed for the first refactor slice.
+- Current `src/yield_report/agent/` contains mixed concerns: `spec_model.py`, `runtime.py`, `runtime_adapter.py`, `letta_runtime.py`, `client_tools.py`, `run_store.py`, `trace.py`, `memory.py`, `spec_builder.py`, and single-file `langgraph_spec_agent.py`.
+- Current `src/yield_report/skills/` is already vertical by capability: `report_download`, `data_analysis`, `daily_report`, and `anomaly_monitor`.
+- `LangGraphSpecAgent` is real LangGraph code: it compiles a `StateGraph` with `load_context`, `generate_draft`, `parse_validate`, `repair`, and `finalize` nodes.
+- `LangGraphSpecAgent` is currently a monolithic file, not the standard graph package split from the reference (`state`, `nodes`, `edges`, `graph`, `checkpointer`).
+- CodeGraph reported `LangGraphSpecAgent.build` has only indirect coverage through `SpecBuilder`; there are no focused tests for individual LangGraph nodes or graph assembly.
+- `RuntimeRouter` is a high-blast-radius component. It enforces Letta as default runtime, with narrow Python exemptions for rule-built fixed `daily-report` and `anomaly-monitor` Specs.
+- `client_tools.py` already implements the Letta client-tool registry recommended by the previous assessment and is consumed by `letta_runtime.py`.
+- Existing tests cover `SpecBuilder` LangGraph behavior at integration level (`test_spec_builder_uses_langgraph_agent_then_code_validation`, `test_spec_builder_repairs_invalid_langgraph_draft`) but not the new package boundaries we need for enterprise-style architecture.
+- Refactor result: `src/yield_report/agent/spec_graph/` now owns `state.py`, `nodes.py`, `edges.py`, `graph.py`, `checkpointer.py`, and `agent.py`.
+- Refactor result: `src/yield_report/agent/langgraph_spec_agent.py` is now a compatibility import wrapper.
+- Refactor result: `SpecBuilder` imports `LangGraphSpecAgent` from the canonical `yield_report.agent.spec_graph` package.
+- Refactor result: `tests/unit/agent/test_spec_graph.py` directly covers node enrichment, graph compilation with memory checkpointer, and repair behavior.
+
+## Technical Decisions
+| Decision | Rationale |
+|---|---|
+| Keep external/web research out of `task_plan.md` | Planning skill treats fetched content as untrusted; research summaries belong in `findings.md`. |
+| Defer code movement until target architecture and blast radius are known | This refactor can affect imports, runtime contracts, tests, and UI bridges, not just file locations. |
+| First implementation slice: refactor LangGraph Spec agent into `agent/spec_graph/` | It directly matches the requested LangGraph architecture, has clear boundaries, and avoids destabilizing Skill business logic. |
+| Keep `yield_report.agent.langgraph_spec_agent` as a compatibility import wrapper for now | `SpecBuilder` and docs currently reference the old module; a wrapper avoids breaking external imports while the new graph package becomes canonical. |
+
+## Issues Encountered
+| Issue | Resolution |
+|---|---|
+| PowerShell `Get-ChildItem` call failed when given multiple `-Name` filters | Switched to explicit per-file `Test-Path` checks and logged the error in `task_plan.md`. |
+| `docs/plans/index.md` is referenced by AGENTS but missing in the repo | Used existing `docs/exec-plans/index.md` and `docs/exec-plans/README.md` as the active execution-plan convention. |
+| First `ruff check` after splitting graph files reported import ordering and one unused import | Ran `uv run ruff check ... --fix`; reran ruff and tests successfully. |
+
+## Resources
+- Local reference: `D:\wzy\Visionox-Docs_Backup\dev-docs\agent_dev\agent-LangGraph.md`
+- LangGraph Graph API: https://docs.langchain.com/oss/python/langgraph/graph-api
+- LangGraph application structure: https://docs.langchain.com/oss/python/langgraph/application-structure
+- LangGraph persistence: https://docs.langchain.com/oss/python/langgraph/persistence
+- LangGraph interrupts: https://docs.langchain.com/oss/python/langgraph/interrupts
+- LangGraph testing: https://docs.langchain.com/oss/python/langgraph/test
+- LangChain multi-agent/subagents: https://docs.langchain.com/oss/python/langchain/multi-agent/subagents-personal-assistant
+- Project architecture entrypoint: `ARCHITECTURE.md`
+- Agent contracts entrypoint: `docs/agent/`
+- Potential user-provided prompt: `docs/prompt/refactor-project_arch.md`

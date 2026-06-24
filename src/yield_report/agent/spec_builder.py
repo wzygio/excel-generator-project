@@ -10,9 +10,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from yield_report.agent.langgraph_spec_agent import LangGraphSpecAgent
 from yield_report.agent.run_id import RunIdFactory, normalize_capability, normalize_source
 from yield_report.agent.run_store import RunPaths, RunStore
+from yield_report.agent.spec_graph import LangGraphSpecAgent
 from yield_report.agent.spec_model import SkillCall, TaskSpec
 from yield_report.agent.spec_validation import (
     SpecValidationIssue,
