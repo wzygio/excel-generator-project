@@ -9,7 +9,14 @@ import yield_report.agent.runtime_adapter as runtime_adapter_module
 from scripts import run_task_spec as run_task_spec_module
 from yield_report.agent.letta_runtime import LettaRuntime, LettaRuntimeConfig
 from yield_report.agent.runtime_adapter import RuntimeRouter
-from yield_report.agent.spec_model import MemoryCandidate, RunContext, SkillResult, TaskSpec
+from yield_report.agent.spec_model import (
+    ArtifactRef,
+    MemoryCandidate,
+    RunContext,
+    SkillCall,
+    SkillResult,
+    TaskSpec,
+)
 
 
 def test_runtime_router_explicit_letta_uses_letta_runtime(tmp_path: Path) -> None:
@@ -780,6 +787,87 @@ def test_letta_runtime_returns_all_pending_approval_tool_calls(tmp_path: Path) -
         "call-report",
     ]
     assert all(approval["status"] == "success" for approval in approvals)
+
+
+def test_letta_runtime_fails_closed_for_unknown_workflow_tools(tmp_path: Path) -> None:
+    spec = TaskSpec(
+        run_id="run-unknown-workflow",
+        workflow=[
+            SkillCall(id="custom_step", skill="custom_unknown_skill", input={})
+        ],
+    )
+
+    tools = LettaRuntime(agent_id="agent-test")._client_tools_for_spec(spec)
+
+    assert tools == []
+
+
+def test_letta_runtime_scopes_daily_report_workflow_to_native_tool() -> None:
+    spec = TaskSpec(
+        run_id="run-daily-tools",
+        workflow=[
+            SkillCall(
+                id="generate_daily_report",
+                skill="daily_report",
+                input={"report_date": "2026-06-23"},
+            )
+        ],
+    )
+
+    tools = LettaRuntime(agent_id="agent-test")._client_tools_for_spec(spec)
+
+    assert {tool["name"] for tool in tools} == {"yield_daily_report"}
+
+
+def test_letta_runtime_returns_compact_client_tool_payload(tmp_path: Path) -> None:
+    output_path = tmp_path / "daily.xlsx"
+
+    class FakeProjectRuntime:
+        def run_call(self, call, context):
+            return SkillResult(
+                skill_name="daily_report",
+                success=True,
+                summary="日报生成完成。",
+                artifacts=[
+                    ArtifactRef(kind="excel", path=output_path, description="日报文件")
+                ],
+                data={"row_count": 12, "large_internal_payload": ["ignored"]},
+                warnings=["source reused"],
+            )
+
+    context = RunContext(run_id="run-compact-tool", workspace=tmp_path)
+    tool_results = []
+    tool_return, status = LettaRuntime(
+        agent_id="agent-test",
+        project_runtime=FakeProjectRuntime(),
+    )._execute_client_tool(
+        SimpleNamespace(
+            name="yield_daily_report",
+            arguments=json.dumps({"report_date": "2026-06-23"}, ensure_ascii=False),
+            tool_call_id="call-daily",
+        ),
+        TaskSpec(run_id="run-compact-tool"),
+        context,
+        tool_results,
+    )
+
+    payload = json.loads(tool_return)
+    assert status == "success"
+    assert payload == {
+        "status": "success",
+        "summary": "日报生成完成。",
+        "artifacts": [
+            {
+                "kind": "excel",
+                "path": str(output_path),
+                "description": "日报文件",
+            }
+        ],
+        "metrics": {"row_count": 12},
+        "warnings": ["source reused"],
+        "error": None,
+    }
+    assert tool_results[0][0].skill == "daily_report"
 
 
 def test_letta_runtime_keeps_run_successful_when_archival_memory_write_fails(

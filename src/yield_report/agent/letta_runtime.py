@@ -15,6 +15,11 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
+from yield_report.agent.client_tools import (
+    build_project_client_tool_registry,
+    execute_runtime_tool,
+    to_letta_client_tools,
+)
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.spec_model import (
     ArtifactRef,
@@ -26,72 +31,9 @@ from yield_report.agent.spec_model import (
 )
 from yield_report.agent.trace import TraceEvent
 
-PROJECT_CLIENT_TOOLS: list[dict[str, Any]] = [
-    {
-        "name": "yield_report_download",
-        "description": (
-            "Download or locate OLED yield source reports through the project's "
-            "report_download Skill. Use this before analysis when source files are missing or stale."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "report_type": {"type": "string", "description": "daily_yield or batch_yield"},
-                "end_date": {"type": "string", "description": "YYYY-MM-DD"},
-                "product_models": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Product model list such as M626 or M678",
-                },
-                "filters": {"type": "object", "description": "Optional report filters"},
-            },
-            "required": ["report_type"],
-        },
-    },
-    {
-        "name": "yield_data_analysis",
-        "description": (
-            "Analyze local Excel source files with the project's data_analysis Skill. "
-            "Use this for trends, deterioration, gap, and anomaly reason analysis. "
-            "Pass the exact user analysis request in analysis_goal."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "file_path": {"type": "string", "description": "Local Excel file path"},
-                "product_models": {"type": "array", "items": {"type": "string"}},
-                "metrics": {"type": "array", "items": {"type": "string"}},
-                "time_grain": {
-                    "type": "string",
-                    "description": "daily, weekly, monthly, or batch",
-                },
-                "requested_periods": {"type": "integer"},
-                "analysis_goal": {
-                    "type": "string",
-                    "description": "Exact natural-language analysis goal from the user.",
-                },
-            },
-            "required": ["analysis_goal"],
-        },
-    },
-    {
-        "name": "yield_daily_report",
-        "description": (
-            "Generate final daily report artifacts with the project's daily_report Skill. "
-            "Use only after source reports and analysis are ready."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "analysis_artifact_path": {"type": "string"},
-                "output_name": {"type": "string"},
-                "report_date": {"type": "string"},
-                "product_models": {"type": "array", "items": {"type": "string"}},
-            },
-            "required": ["report_date"],
-        },
-    },
-]
+PROJECT_CLIENT_TOOLS: list[dict[str, Any]] = to_letta_client_tools(
+    build_project_client_tool_registry()
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -140,6 +82,7 @@ class LettaRuntime:
         self.client = client
         self.agent_id = agent_id
         self.project_runtime = project_runtime or build_default_runtime()
+        self.client_tool_registry = build_project_client_tool_registry()
 
     def run_spec(self, spec: TaskSpec, context: RunContext) -> list[SkillResult]:
         tool_results: list[tuple[SkillCall, SkillResult]] = []
@@ -488,7 +431,7 @@ class LettaRuntime:
         conversation_id: str = "",
         client_tools: list[dict[str, Any]] | None = None,
     ) -> Any:
-        client_tools = client_tools or PROJECT_CLIENT_TOOLS
+        client_tools = client_tools or to_letta_client_tools(self.client_tool_registry)
         request_kwargs: dict[str, Any] = {
             "agent_id": agent_id,
             "messages": messages,
@@ -513,24 +456,30 @@ class LettaRuntime:
         response = client.agents.messages.create(**request_kwargs)
         return self._coerce_response(response)
 
-    @staticmethod
-    def _client_tools_for_spec(spec: TaskSpec) -> list[dict[str, Any]]:
+    def _client_tools_for_spec(self, spec: TaskSpec) -> list[dict[str, Any]]:
         workflow_skills = {call.skill for call in spec.workflow}
         if not workflow_skills:
-            return PROJECT_CLIENT_TOOLS
+            return to_letta_client_tools(self.client_tool_registry)
 
         allowed: set[str] = set()
-        if "report_download" in workflow_skills:
-            allowed.add("yield_report_download")
-        if "data_analysis" in workflow_skills:
-            allowed.update({"yield_report_download", "yield_data_analysis"})
-        if "daily_report" in workflow_skills:
-            allowed.update(
-                {"yield_report_download", "yield_data_analysis", "yield_daily_report"}
-            )
-        if not allowed:
-            return PROJECT_CLIENT_TOOLS
-        return [tool for tool in PROJECT_CLIENT_TOOLS if tool["name"] in allowed]
+        workflow_tool_map = {
+            "report_download": {"yield_report_download"},
+            "data_analysis": {"yield_report_download", "yield_data_analysis"},
+            "daily_report": {"yield_daily_report"},
+            "anomaly_monitor": {"yield_anomaly_monitor"},
+        }
+        for skill in workflow_skills:
+            tool_names = workflow_tool_map.get(skill)
+            if tool_names is None:
+                return []
+            allowed.update(tool_names)
+        return to_letta_client_tools(
+            [
+                tool
+                for name, tool in self.client_tool_registry.items()
+                if name in allowed
+            ]
+        )
 
     @staticmethod
     def _coerce_response(response: Any) -> Any:
@@ -564,23 +513,18 @@ class LettaRuntime:
             payload = {"error": f"Invalid tool arguments JSON: {exc}"}
             return json.dumps(payload, ensure_ascii=False), "error"
 
-        skill_name = {
-            "yield_report_download": "report_download",
-            "yield_data_analysis": "data_analysis",
-            "yield_daily_report": "daily_report",
-        }.get(name)
-        if skill_name is None:
+        try:
+            call, result, payload = execute_runtime_tool(
+                tool_name=name,
+                arguments=args,
+                registry=self.client_tool_registry,
+                project_runtime=self.project_runtime,
+                context=context,
+            )
+        except KeyError:
             payload = {"error": f"Unknown Letta client tool: {name}"}
             return json.dumps(payload, ensure_ascii=False), "error"
-
-        call = SkillCall(
-            id=f"letta_{name}",
-            skill=skill_name,
-            input=self._normalize_client_tool_input(name, args),
-        )
-        result = self.project_runtime.run_call(call, context)
         tool_results.append((call, result))
-        payload = result.model_dump(mode="json")
         return json.dumps(payload, ensure_ascii=False), "success" if result.success else "error"
 
     @staticmethod
