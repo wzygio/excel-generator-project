@@ -111,3 +111,7 @@
 | Agent / Skill | unit tests for Agent and Skill boundaries |
 | FineReport / 下载 | focused RPA and download tests; browser smoke only when portal flow changes |
 | UI | typecheck, build, and real browser smoke when UI behavior changes |
+
+## Daily Report Runtime Boundary
+
+`src/yield_report/skills/daily_report/` is the Python facade exposed to Agent Runtime. It calls the public `$task0-task4-orchestrator` CLI only. It must not directly depend on the per-task wrapper skills or on the internal report engine skill metadata; implementation details stay behind the orchestrator CLI.

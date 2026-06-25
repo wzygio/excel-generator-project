@@ -183,6 +183,8 @@ def run(request: ReportDownloadRequest, context: RunContext) -> SkillResult:
 
 ### 6.3 daily_report
 
+Runtime boundary: `daily_report` exposes the Agent Runtime interface and delegates execution to the public `$task0-task4-orchestrator` CLI. It must not directly call per-task wrapper skills or depend on the internal report engine skill metadata.
+
 职责：把分析结果写入标准日报模板并输出 Excel 文件。
 
 输入模型建议：

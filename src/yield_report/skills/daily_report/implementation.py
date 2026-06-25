@@ -749,7 +749,7 @@ def execute_daily_report(
     request: DailyReportRequest,
     context: RunContext | None = None,
 ) -> SkillResult:
-    """Run the native daily-report-generator pipeline and return a SkillResult."""
+    """Run the native Task0-Task4 orchestrator pipeline and return a SkillResult."""
     context = context or RunContext(run_id="manual-run", workspace=Path.cwd())
     from yield_report.skills.daily_report.native_pipeline import run_native_daily_report
 
@@ -763,7 +763,7 @@ def execute_legacy_daily_report(
     """Generate the legacy in-repo report implementation.
 
     Kept for focused helper tests; Runtime daily_report uses the native
-    daily-report-generator facade by default.
+    Task0-Task4 orchestrator facade by default.
     """
     context = context or RunContext(run_id="manual-run", workspace=Path.cwd())
     try:

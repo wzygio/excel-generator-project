@@ -1,9 +1,10 @@
-"""Native daily-report-generator facade for the daily_report skill."""
-# pyright: reportMissingImports=false
+"""Task0-Task4 orchestrator facade for the daily_report skill."""
 
 from __future__ import annotations
 
+import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -12,23 +13,23 @@ from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, S
 from yield_report.skills.daily_report.models import DailyReportRequest
 
 TOOL_NAME = "daily_report"
-GENERATOR_ROOT_ENV = "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"
+RUNTIME_NAME = "task0-task4-orchestrator"
+ORCHESTRATOR_ROOT_ENV = "YIELD_REPORT_TASK0_TASK4_ORCHESTRATOR_ROOT"
 DUTY_WORKSPACE_ENV = "YIELD_REPORT_DUTY_WORKSPACE"
-DEFAULT_GENERATOR_ROOT = Path.home() / ".agents" / "skills" / "daily-report-generator"
-DEFAULT_DUTY_WORKSPACE = Path(
-    "D:/wzy/\u5de5\u4f5c-\u503c\u73ed\u5de5\u4f5c/\u76f8\u5173\u6587\u4ef6"
-)
+DEFAULT_ORCHESTRATOR_ROOT = Path.home() / ".agents" / "skills" / "task0-task4-orchestrator"
+DEFAULT_DUTY_WORKSPACE = Path("D:/wzy/工作-值班工作/相关文件")
+ORCHESTRATOR_CLI = Path("scripts") / "daily_report_cli.py"
 TASK0_SCRIPT = Path("scripts") / "task0_report_download.py"
 
 
 def run_native_daily_report(request: DailyReportRequest, context: RunContext) -> SkillResult:
-    """Run the user-installed native daily-report-generator pipeline."""
+    """Run the user-facing Task0-Task4 orchestrator pipeline."""
     try:
         runner_request = _normalize_runner_request(request)
-        generator_root = _resolve_generator_root(request)
+        orchestrator_root = _resolve_orchestrator_root(request)
         workspace = _resolve_workspace(runner_request)
-        result = _run_generator(
-            generator_root=generator_root,
+        result = _run_orchestrator_cli(
+            orchestrator_root=orchestrator_root,
             workspace=workspace,
             request=runner_request,
             context=context,
@@ -41,17 +42,17 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
                     kind="excel",
                     path=output_file,
                     description="Native generated daily report workbook",
-                    metadata={"skill": TOOL_NAME, "runtime": "daily-report-generator"},
+                    metadata={"skill": TOOL_NAME, "runtime": RUNTIME_NAME},
                 )
             )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=True,
-            summary=f"Native daily-report pipeline completed: {output_file or workspace}",
+            summary=f"Task0-Task4 orchestrator completed: {output_file or workspace}",
             artifacts=artifacts,
             data={
-                "runtime": "daily-report-generator",
-                "generator_root": str(generator_root),
+                "runtime": RUNTIME_NAME,
+                "orchestrator_root": str(orchestrator_root),
                 "workspace": str(workspace),
                 "output_file": str(output_file) if output_file else "",
                 "workflow": _workflow_from_result(result),
@@ -63,9 +64,9 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
         return SkillResult(
             skill_name=TOOL_NAME,
             success=False,
-            summary=f"Native daily-report pipeline failed: {exc}",
+            summary=f"Task0-Task4 orchestrator failed: {exc}",
             data={
-                "runtime": "daily-report-generator",
+                "runtime": RUNTIME_NAME,
                 "workspace": str(_resolve_workspace(_normalize_runner_request(request))),
             },
             error=SkillError(
@@ -77,34 +78,47 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
         )
 
 
-def _run_generator(
+def _run_orchestrator_cli(
     *,
-    generator_root: Path,
+    orchestrator_root: Path,
     workspace: Path,
     request: DailyReportRequest,
     context: RunContext,
 ) -> dict[str, Any]:
-    if not generator_root.exists():
-        raise FileNotFoundError(f"daily-report-generator skill is missing: {generator_root}")
-    if str(generator_root) not in sys.path:
-        sys.path.insert(0, str(generator_root))
+    cli_path = orchestrator_root / ORCHESTRATOR_CLI
+    if not cli_path.exists():
+        raise FileNotFoundError(f"{RUNTIME_NAME} CLI is missing: {cli_path}")
 
-    from daily_report.config_loader import (
-        load_pipeline_config,  # type: ignore[reportMissingImports]
-    )
-    from daily_report.orchestrator import PipelineRunner  # type: ignore[reportMissingImports]
+    command = [
+        sys.executable,
+        str(cli_path),
+        "run",
+        "--workspace",
+        str(workspace),
+        "--mode",
+        "write",
+        "--snapshot-dir",
+        str(context.output_dir),
+    ]
+    if request.orchestrator_now:
+        command.extend(["--now", request.orchestrator_now])
+    if request.report_date:
+        command.extend(["--end-date", request.report_date])
 
-    config = load_pipeline_config(generator_root / "configs" / "pipeline.toml")
-    runner = PipelineRunner(
-        config,
-        workspace=workspace,
-        mode="write",
-        task_filter="all",
-        now=request.orchestrator_now,
-        end_date=request.report_date,
-        snapshot_dir=Path(context.output_dir),
+    env = os.environ.copy()
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    completed = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+        check=False,
     )
-    return dict(runner.run())
+    if completed.returncode != 0:
+        raise RuntimeError(_format_cli_failure(completed))
+    return _parse_cli_result(completed.stdout)
 
 
 def _normalize_runner_request(request: DailyReportRequest) -> DailyReportRequest:
@@ -115,11 +129,12 @@ def _normalize_runner_request(request: DailyReportRequest) -> DailyReportRequest
     )
 
 
-def _resolve_generator_root(request: DailyReportRequest) -> Path:
+def _resolve_orchestrator_root(request: DailyReportRequest) -> Path:
     configured = (
-        request.source_files.get("daily_report_generator_root")
-        or os.getenv(GENERATOR_ROOT_ENV)
-        or DEFAULT_GENERATOR_ROOT
+        request.source_files.get("task0_task4_orchestrator_root")
+        or request.source_files.get("orchestrator_root")
+        or os.getenv(ORCHESTRATOR_ROOT_ENV)
+        or DEFAULT_ORCHESTRATOR_ROOT
     )
     return Path(configured).expanduser().resolve()
 
@@ -142,6 +157,37 @@ def _resolve_workspace(request: DailyReportRequest) -> Path:
 
 def _is_native_duty_workspace(workspace: Path) -> bool:
     return (workspace / TASK0_SCRIPT).exists()
+
+
+def _parse_cli_result(stdout: str) -> dict[str, Any]:
+    text = stdout.strip()
+    if not text:
+        raise RuntimeError(f"{RUNTIME_NAME} CLI returned empty stdout")
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as exc:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end <= start:
+            raise RuntimeError(
+                f"{RUNTIME_NAME} CLI did not return JSON stdout: {text[-1000:]}"
+            ) from exc
+        parsed = json.loads(text[start : end + 1])
+    if not isinstance(parsed, dict):
+        raise RuntimeError(f"{RUNTIME_NAME} CLI returned non-object JSON")
+    return parsed
+
+
+def _format_cli_failure(completed: subprocess.CompletedProcess[str]) -> str:
+    stdout = completed.stdout.strip()
+    stderr = completed.stderr.strip()
+    details = []
+    if stderr:
+        details.append(f"stderr={stderr[-2000:]}")
+    if stdout:
+        details.append(f"stdout={stdout[-2000:]}")
+    suffix = "; ".join(details) if details else "no output"
+    return f"{RUNTIME_NAME} CLI failed with exit code {completed.returncode}: {suffix}"
 
 
 def _result_output_file(result: dict[str, Any]) -> Path | None:
