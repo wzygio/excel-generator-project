@@ -819,6 +819,85 @@ def test_letta_runtime_scopes_daily_report_workflow_to_native_tool() -> None:
     assert {tool["name"] for tool in tools} == {"yield_daily_report"}
 
 
+def test_letta_runtime_scopes_report_download_workflow_to_finereport_wrapper() -> None:
+    spec = TaskSpec(
+        run_id="run-report-download-tools",
+        workflow=[
+            SkillCall(
+                id="download_daily_yield",
+                skill="report_download",
+                input={"report_type": "daily_yield", "end_date": "2026-06-23"},
+            )
+        ],
+    )
+
+    tools = LettaRuntime(agent_id="agent-test")._client_tools_for_spec(spec)
+
+    assert {tool["name"] for tool in tools} == {"yield_report_download"}
+    assert "FineReport RPA" in tools[0]["description"]
+    assert tools[0]["parameters"]["properties"]["report_type"]
+
+
+def test_letta_report_download_tool_dispatches_to_report_download_skill(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "batch_yield.xlsx"
+
+    class FakeProjectRuntime:
+        def __init__(self) -> None:
+            self.calls = []
+
+        def run_call(self, call, context):
+            self.calls.append(call)
+            assert call.skill == "report_download"
+            assert call.input["report_type"] == "batch_yield"
+            assert call.input["product_models"] == ["M626"]
+            return SkillResult(
+                skill_name="report_download",
+                success=True,
+                summary="FineReport RPA downloaded batch yield report.",
+                artifacts=[
+                    ArtifactRef(
+                        kind="excel",
+                        path=output_path,
+                        description="批次良率源表",
+                    )
+                ],
+                data={"files": [{"file_path": str(output_path)}]},
+            )
+
+    fake_runtime = FakeProjectRuntime()
+    context = RunContext(run_id="run-letta-report-download", workspace=tmp_path)
+    tool_results = []
+    tool_return, status = LettaRuntime(
+        agent_id="agent-test",
+        project_runtime=fake_runtime,
+    )._execute_client_tool(
+        SimpleNamespace(
+            name="yield_report_download",
+            arguments=json.dumps(
+                {
+                    "report_type": "batch_yield",
+                    "end_date": "2026-06-23",
+                    "product_models": ["M626"],
+                },
+                ensure_ascii=False,
+            ),
+            tool_call_id="call-download",
+        ),
+        TaskSpec(run_id="run-letta-report-download"),
+        context,
+        tool_results,
+    )
+
+    payload = json.loads(tool_return)
+    assert status == "success"
+    assert payload["summary"] == "FineReport RPA downloaded batch yield report."
+    assert payload["artifacts"][0]["path"] == str(output_path)
+    assert fake_runtime.calls[0].id == "letta_yield_report_download"
+    assert tool_results[0][0].skill == "report_download"
+
+
 def test_letta_runtime_returns_compact_client_tool_payload(tmp_path: Path) -> None:
     output_path = tmp_path / "daily.xlsx"
 

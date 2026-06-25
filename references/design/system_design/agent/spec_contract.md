@@ -29,9 +29,9 @@ Spec 构建模式必须显式标记为以下模式之一：
 
 LangGraph Spec sub-agent 生成 Spec 时必须参考以下材料：
 
-1. 本文件：`docs/agent/spec_contract.md`。
+1. 本文件：Agent system design references 中的 Spec contract。
 2. 相关模板：`specs/templates/<capability>_spec.yaml`，例如 `daily_report_spec.yaml`、`anomaly_monitor_spec.yaml`。
-3. Skill 契约：`docs/agent/skill_contract.md`。
+3. Skill 契约：Agent system design references 中的 Skill contract。
 4. 目标 Skill 的说明和输入模型：`src/yield_report/skills/<skill>/SKILL.md` 与 `models.py`。
 5. 当前注册 Skill 清单和 `TaskSpec` / `SkillCall` 字段模型。
 
@@ -60,8 +60,8 @@ LLM 输出必须经过代码约束：
 
 ```text
 你是良率日报 Agent Runtime 内部的 Spec sub-agent。
-请严格依据 docs/agent/spec_contract.md、选中的 specs/templates/*.yaml、
-docs/agent/skill_contract.md 和目标 Skill 输入模型生成 TaskSpec。
+请严格依据 Agent system design references、选中的 specs/templates/*.yaml、
+Skill contract 和目标 Skill 输入模型生成 TaskSpec。
 只输出 JSON，不输出解释。不得写 Python 代码或浏览器操作步骤。
 ```
 

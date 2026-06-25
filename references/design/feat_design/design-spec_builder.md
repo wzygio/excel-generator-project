@@ -4,7 +4,7 @@
 
 Spec 是 Agent Runtime 的需求解析产物，也是 Runtime 执行前的结构化输入。当前机制采用 **LangGraph Spec sub-agent 作为默认 Spec 构建路径**，只有固定业务流程 `anomaly_monitor` 和 `daily_report` 可以在明确声明为固定流程时使用规则构建。
 
-本文件描述 Spec 的生成链路、模块职责和目录管理方式。Spec 字段、校验规则、`run_id` 格式、模板要求和固定流程白名单仍以 [`docs/agent/spec_contract.md`](../agent/spec_contract.md) 为唯一规范来源。
+本文件描述 Spec 的生成链路、模块职责和目录管理方式。Spec 字段、校验规则、`run_id` 格式、模板要求和固定流程白名单仍以 [Spec contract](../system_design/agent/spec_contract.md) 为唯一规范来源。
 
 ## 2. 设计边界
 
@@ -22,7 +22,7 @@ Spec 是 Agent Runtime 的需求解析产物，也是 Runtime 执行前的结构
 - Skill 输入输出 schema。
 - 模板 YAML 的逐字段要求。
 
-以上内容统一维护在 `docs/agent/spec_contract.md`、`docs/agent/skill_contract.md` 和 `specs/templates/` 中。
+以上内容统一维护在 Agent system design references 和 `specs/templates/` 中。
 
 ## 3. 构建链路
 
@@ -87,7 +87,7 @@ LangGraph 只负责 Spec 构建的状态机，不替代 Runtime 执行 Skill，�
 - 用户自然语言只能表达业务目标，不能直接成为 source 或 capability 的自由文本片段。
 - 旧式 `run-*` 运行标识不再作为有效新运行标识。
 
-精确命名格式、合法枚举和校验要求以 `docs/agent/spec_contract.md` 为准。
+精确命名格式、合法枚举和校验要求以 Agent system design references 为准。
 
 ## 7. 目录管理
 

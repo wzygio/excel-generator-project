@@ -6,7 +6,7 @@ This file is the project-level entrypoint for signals Codex can use to verify wo
 
 - Task runs should write `trace.jsonl`, `run_summary.json`, `memory_candidates.json`, and outputs under `specs/runs/<run_id>/`.
 - Skill results should expose artifacts, warnings, errors, and memory candidates through the Agent Runtime contracts.
-- Generated Harness audits and cleanup notes live under `docs/generated/`.
+- Generated Harness audits and cleanup notes live under `references/generated/`.
 
 ## Verification Entrypoints
 

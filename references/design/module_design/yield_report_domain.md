@@ -18,7 +18,7 @@
 | 数据分析 | `data_analysis` | 读取优先解密文件，执行趋势、异常、Gap、排序等分析，并返回结构化结论。 |
 | 日报生成 | `daily_report` | 根据分析结果和模板生成标准 Excel 日报。 |
 
-统一任务契约见 `docs/agent/spec_contract.md`，Skill 工具契约见 `docs/agent/skill_contract.md`。
+统一任务契约和 Skill 工具契约见 Agent system design references。
 
 ## 2. 业务流程
 

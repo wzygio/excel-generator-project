@@ -37,7 +37,8 @@ def build_project_client_tool_registry() -> dict[str, RuntimeTool]:
         RuntimeTool(
             name="yield_report_download",
             description=(
-                "Download or locate OLED yield source reports through the report_download Skill."
+                "Download or locate OLED yield source reports through the report_download "
+                "Skill, a thin wrapper around FineReport RPA."
             ),
             parameters=_schema_for(report_download_tool.request_model),
             skill_name=report_download_tool.name,

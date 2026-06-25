@@ -1,296 +1,113 @@
 # 良率日报自动生成系统架构
 
-## 1. 项目定位
+## 项目定位
 
-本项目是一个面向良率日报工作的自动化系统，当前主线分为三个用户可见模块：
+本项目是面向 OLED 良率日报工作的自动化系统。它把自然语言需求转成可追踪的任务规格，调用本地 Skill 与 FineReport RPA 下载源表，分析 Excel 数据，并生成可下载、可审计的良率报告产物。
 
-1. **报表下载**：解析自然语言需求，调用 FineReport RPA 下载源表到 `resources/`。
-2. **数据分析**：基于已下载 Excel 源表，提取 schema，选择代码执行或 LLM 直接分析策略。
-3. **日报生成**：面向最终 Excel 日报输出，当前 UI 已保留入口，完整 V2 编排仍待接入。
+本项目不是通用 BI 平台。优先选择显式、可测试、可追踪的报表工作流，而不是宽泛的自动推断。
 
-2026-06-01 的 Agent 架构重构决策：项目不再以 DDD 横向分层作为第一入口，而是以 **Spec 驱动 + Skill 工具 + Codex Agent 核心** 作为目标架构。当前已新增 `src/yield_report/agent/` 和 `src/yield_report/skills/`，旧 `application/core/infrastructure` 作为兼容实现继续保留，并由 Skill 包装调用。
-
-仓库内同时保留两代实现：
-
-| 代际 | 路径 | 状态 |
-|------|------|------|
-| V2 主线 | `ui/copilotkit-agent/`, `src/shared_kernel/`, `src/yield_report/` | 当前开发主线 |
-| V1 兼容 | `src/excel_generator_project/` | 旧版 Excel 日报生成流水线，作为兼容和参考存在 |
-| Agent 主线 | `src/yield_report/agent/`, `src/yield_report/skills/`, `docs/agent/`, `specs/templates/` | Codex/Agent 友好的目标结构 |
-
-## 2. Agent 目标架构
-
-目标运行链路：
+## 运行主链路
 
 ```text
 用户需求
-  -> TaskSpec / spec.yaml
+  -> TaskSpec
   -> Agent Runtime
   -> Skill Tool
   -> SkillResult
   -> Trace / Memory / Output
 ```
 
-核心原则：
+## 架构原则
 
 | 原则 | 说明 |
-|------|------|
-| Codex 作为 Agent 核心 | Codex 负责理解用户需求、维护 Spec、调用本地工具、在失败时修正流程。 |
-| Python Skill 承载稳定能力 | 高频、重复、可测试流程必须沉淀为 Python 工具，而不是让 LLM 每次自由发挥。 |
-| Spec 作为任务契约 | 用户修改流程时优先修改 `spec.yaml`，而不是改 UI 或 orchestrator 代码。 |
-| Trace 与 Memory 可追踪 | 每次运行应记录步骤、产物、错误和已确认的复用经验。 |
-| 渐进迁移 | 先新增 `agent/` 与 `skills/` 外壳，不立即删除旧分层模块。 |
+|---|---|
+| Spec 驱动 | 用户目标先固化为任务规格，运行时消费规格并产出 trace、memory 和 artifact。 |
+| Skill 承载稳定能力 | 高频、重复、可测试的报表能力沉淀为 Python Skill，而不是让模型每次自由发挥。 |
+| Letta / LangGraph 分工 | Letta 承载需要状态和工具调用的 Agent Runtime；LangGraph 承载 Spec 生成与修复图。 |
+| FineReport RPA 边界清晰 | 门户、浏览器、下载和 Excel IO 属于基础设施或 Skill 边界，不进入纯领域判断。 |
+| Harness 渐进披露 | 根文档只负责定位和路由，详细业务、设计、开发、测试资料进入 `references`。 |
+| CodeGraph 负责深定位 | 根架构只下探到二级路径；具体符号、调用链和文件级追踪交给 CodeGraph。 |
 
-目标文档：
+## 项目二级路径地图
 
-| 文档 | 说明 |
-|------|------|
-| `docs/agent/architecture.md` | Agent/Skill/Spec 目标架构与迁移策略 |
-| `docs/agent/skill_contract.md` | Skill 输入输出、错误、产物、memory 契约 |
-| `docs/agent/spec_contract.md` | Spec 文件字段、workflow、outputs、trace、memory 契约 |
-| `specs/templates/daily_report_spec.yaml` | 日报任务 Spec 模板 |
+| 路径 | 职责 |
+|---|---|
+| `app/` | 旧应用入口与兼容工具区。 |
+| `app/utils/` | 旧入口的辅助工具。 |
+| `config/` | 项目配置输入。 |
+| `config/products/` | 产品级配置。 |
+| `data/` | 本地数据与记忆缓存。 |
+| `data/memory/` | Agent 记忆相关数据。 |
+| `docs/` | 开发提示、历史文档和待迁移资料。 |
+| `docs/dev_prompt/` | 当前开发任务提示。 |
+| `docs/generated/` | 历史生成资料；新 Harness 生成资料迁往 references。 |
+| `output/` | 运行输出、下载和调试产物；通常不提交。 |
+| `output/downloads/` | 下载输出。 |
+| `output/logs/` | 日志输出。 |
+| `references/` | 当前 Harness 主目录。 |
+| `references/design/` | 系统、模块、功能设计引用。 |
+| `references/dev_references/` | 开发规范、限制、表结构和模板引用。 |
+| `references/test_references/` | 验收、测试、可观测性和调试引用。 |
+| `resources/` | 用户源表、模板和 RPA 下载结果。 |
+| `resources/decrypted_files/` | 解密后的 Excel 工作文件。 |
+| `scripts/` | 可执行脚本和工作台桥接入口。 |
+| `specs/` | TaskSpec 模板与运行记录。 |
+| `specs/runs/` | 单次任务运行目录。 |
+| `specs/templates/` | 可复用任务规格模板。 |
+| `src/` | Python 源码。 |
+| `src/shared_kernel/` | 跨业务共享配置、LLM 和基础设施能力。 |
+| `src/yield_report/` | 当前良率日报 Agent、Skill、应用、领域和基础设施实现。 |
+| `src/excel_generator_project/` | V1 兼容实现。 |
+| `tests/` | 自动化测试入口。 |
+| `tests/unit/` | 单元和边界测试。 |
+| `tests/integration/` | 集成测试。 |
+| `ui/` | 前端入口。 |
+| `ui/copilotkit-agent/` | CopilotKit Agent Workbench。 |
 
-目标目录：
+## 用户可见能力
 
-```text
-src/yield_report/
-├── agent/                # Spec、LangGraph Spec Graph、Runtime、Memory、Trace
-│   └── spec_graph/       # State、Nodes、Edges、Graph、Checkpointer、Agent facade
-├── skills/               # report_download、data_analysis、daily_report
-├── adapters/             # Task2 后续迁移：FineReport、Excel、LLM 适配器
-├── shared/               # Task2 后续迁移：yield_report 内部共享工具
-├── application/          # 当前兼容层
-├── core/                 # 当前兼容层
-└── infrastructure/       # 当前兼容层
-```
+| 能力 | 说明 |
+|---|---|
+| 报表下载 | 解析报表类型、日期和产品型号，调用 FineReport RPA 下载源表。 |
+| 数据分析 | 基于已下载 Excel 源表，选择代码执行或 LLM 直接分析策略。 |
+| 日报生成 | 调用日报生成 Skill，产出最终 Excel 日报和运行 trace。 |
+| 异常监控 | 通过固定工作流执行异常监控相关规格。 |
 
-## 3. 技术栈
+## Agent 边界
 
-| 组件 | 技术选型 |
-|------|----------|
-| UI | CopilotKit / Next.js |
-| 配置模型 | Pydantic V2 |
-| 配置加载 | PyYAML + python-dotenv |
-| LLM | DeepSeek(OpenAI SDK 兼容) / Gemini(google-genai) |
-| LLM 管理 | `shared_kernel.infrastructure.llm_handler.LLMManager` |
-| FineReport 自动化 | `fr_web_automation` + Playwright RPA |
-| 数据处理 | pandas |
-| Excel 读写 | openpyxl / xlsxwriter / pywin32(COM fallback) |
-| 包管理 | uv |
-| 测试 | pytest |
-| 质量工具 | ruff / pyright |
-| 任务契约 | YAML Spec |
-| Agent 核心 | Codex（外部编排），Python 项目提供可调用工具 |
+| 边界 | 说明 |
+|---|---|
+| Spec Builder | 从用户目标生成 TaskSpec；复杂修复走 LangGraph Spec 图。 |
+| Runtime Router | 根据任务类型选择 Letta Runtime 或受控 Python Skill Runtime。 |
+| Client Tools | 只暴露白名单业务能力，未知工具和未知 workflow fail closed。 |
+| Skill Registry | 汇总可调用业务 Skill，保持输入输出契约稳定。 |
+| Run Store | 保存任务规格、trace、summary、memory candidate 和 artifacts。 |
 
-## 4. 当前目录结构
+## Harness 边界
 
-```text
-yield-report-generator/
-├── ui/
-│   └── copilotkit-agent/               # CopilotKit Agent Workbench
-│       ├── app/page.tsx
-│       └── app/api/agent-runs/route.ts
-├── config/
-│   └── global.yaml                     # Pydantic V2 配置输入
-├── docs/
-│   └── agent/                          # Agent/Skill/Spec 目标架构与契约
-├── specs/
-│   └── templates/
-│       └── daily_report_spec.yaml      # 日报任务 Spec 模板
-├── src/
-│   ├── shared_kernel/
-│   │   ├── config.py                   # ConfigLoader
-│   │   ├── config_model.py             # AppConfig 等配置模型
-│   │   └── infrastructure/
-│   │       └── llm_handler.py          # LLMManager 单例
-│   ├── yield_report/
-│   │   ├── agent/                      # Codex/Runtime 调用契约与轻量运行时
-│   │   ├── skills/                     # 三个业务 Skill 入口
-│   │   ├── application/
-│   │   │   ├── orchestrator.py         # 报表下载/数据获取编排
-│   │   │   └── analysis_orchestrator.py # 数据分析编排
-│   │   ├── core/
-│   │   │   ├── query_parser.py         # 自然语言 -> ReportQueryRequest
-│   │   │   └── analysis_selector.py    # code / llm_direct 策略选择
-│   │   └── infrastructure/
-│   │       ├── finereport_client.py    # FineReport 下载客户端门面
-│   │       ├── yield_download_service.py # 良率报表 RPA 编排
-│   │       ├── yield_portal_adapter.py # 良率报表页面原子操作
-│   │       ├── local_file_loader.py    # 本地/网络源表加载
-│   │       ├── product_models.py       # spotfire 产品型号读取
-│   │       ├── code_generator.py       # Excel schema + pandas 代码生成
-│   │       └── code_executor.py        # 代码执行沙箱
-│   └── excel_generator_project/        # V1 兼容实现
-├── tests/
-│   └── unit/                           # 当前核心单元测试
-├── resources/                          # 源表、模板、RPA 下载结果
-└── output/                             # 日报输出
-```
+| 文档 | 角色 |
+|---|---|
+| `AGENTS.md` | 稳定的 Context Router 与 Iteration Router。 |
+| `ARCHITECTURE.md` | 二级路径项目地图和架构边界。 |
+| `references/` | 业务、设计、开发、测试和反馈引用。 |
+| `tests/` | Harness 与代码行为的可执行验证。 |
 
-## 5. UI 架构
+## 技术栈摘要
 
-`ui/copilotkit-agent` 是当前唯一前端入口。它使用 CopilotKit / Next.js 提供 Agent Workbench：
+| 分类 | 技术 |
+|---|---|
+| Python | Python 3.11+, Pydantic v2, pandas, openpyxl, xlsxwriter, pywin32 |
+| Agent | Letta client, LangGraph, local Skill Runtime |
+| LLM | OpenAI SDK 兼容提供商与 Gemini SDK，通过共享 LLM 管理器访问 |
+| RPA | Playwright, fr-web-automation |
+| UI | CopilotKit, Next.js |
+| 工程 | uv, pytest, ruff, pyright |
 
-```text
-用户输入
-  -> SpecBuilder 创建 specs/runs/<run_id>/spec.yaml
-  -> 运行步骤
-  -> 结果、Memory 候选与产物下载
-```
+## 验证入口
 
-前端通过 `/api/agent-runs` 调用 `scripts/agent_workbench_bridge.py`，后端统一走 RunStore、RuntimeRouter、Python Skills 与 Pi/OMP Runtime。
-
-## 6. 当前分层职责
-
-### 6.1 Shared Kernel
-
-`src/shared_kernel/` 提供跨领域基础能力：
-
-- `config_model.py`：`AppConfig`、`PathsConfig`、`LlmConfig` 等 Pydantic V2 模型。
-- `config.py`：配置加载，合并默认值、`config/global.yaml`、产品级 YAML 和 `.env`。
-- `infrastructure/llm_handler.py`：`LLMManager` 单例，统一 DeepSeek / Gemini 调用与重试。
-
-约束：业务模块不得直接创建 OpenAI/Gemini 客户端，必须通过 `llm_manager.chat()`。
-
-### 6.2 Yield Report / Core
-
-`src/yield_report/core/` 放纯领域判断：
-
-- `query_parser.py`：将用户自然语言解析为 `ReportQueryRequest`，包含报表类型、日期、产品型号、用户意图和不确定信息。
-- `analysis_selector.py`：判断分析需求应走 `code` 路径还是 `llm_direct` 路径。
-
-约束：Core 层不直接读写文件、不操作浏览器、不依赖 FineReport RPA。
-
-### 6.3 Yield Report / Application
-
-`src/yield_report/application/` 是编排层：
-
-- `DataAcquisitionOrchestrator`
-  - 调用 `QueryParser`
-  - 根据 `ReportType` 分发到 FineReport 下载或本地文件加载
-  - 返回 `UserQueryResult` 与 `AcquisitionResult`
-  - 对 FineReport 连接、下载、产品型号提取和非预期异常做结构化失败返回
-- `AnalysisOrchestrator`
-  - 定位 Excel 文件
-  - 提取 schema
-  - 调用 `AnalysisStrategySelector`
-  - 选择代码生成执行或 LLM 直接分析
-
-### 6.4 Yield Report / Infrastructure
-
-`src/yield_report/infrastructure/` 放 IO、浏览器、Excel 和执行环境：
-
-- `FinereportClient`：对外保持 `download_daily_yield_report()` / `download_batch_yield_report()` 接口，内部使用 RPA；下载成功后会将筛选条件追加到文件名，例如：
-  `V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M678.xlsx`
-- `YieldDownloadService`：项目层 FineReport RPA 编排，定义报表名、目录、标签、日期和产品型号筛选。
-- `YieldPortalAdapter`：继承 `fr_web_automation` 的 `OLEDPortalAdapter`，封装良率报表页面原子操作。
-- `LocalFileLoader`：保证 CT 异常表、目标拆解表、Gap 模板等本地/网络文件可用。
-- `product_models.py`：从 `resources/project_files/spotfire.xlsx` 读取产品型号。
-- `code_generator.py` / `code_executor.py`：为数据分析提供 schema 提取、代码生成和执行能力。
-
-## 7. 报表下载数据流
-
-```text
-用户输入
-  -> ui/copilotkit-agent
-  -> DataAcquisitionOrchestrator.process_user_query()
-  -> QueryParser.parse()
-  -> 根据 ReportType 分发
-  -> FinereportClient
-  -> YieldDownloadService
-  -> YieldPortalAdapter / fr_web_automation
-  -> FineReport 查询、导出
-  -> resources/*.xlsx
-  -> 文件名追加筛选条件
-  -> UserQueryResult 返回 UI
-```
-
-FineReport 相关配置来自 `.env`：
-
-```text
-FINEREPORT_HOST
-FINEREPORT_USERNAME
-FINEREPORT_PASSWORD
-FINEREPORT_ENTRY_UUID
-```
-
-内网访问要求：
-
-- `FinereportClient` 会将 FineReport host 加入 `NO_PROXY`，避免代理影响内网连接。
-- DeepSeek/OpenAI SDK 在 SOCKS 代理环境下需要 `socksio` 依赖。
-
-## 8. 数据分析数据流
-
-```text
-用户输入
-  -> ui/copilotkit-agent
-  -> AnalysisOrchestrator.analyze()
-  -> 定位 resources/ 下 Excel 文件
-  -> extract_schema()
-  -> AnalysisStrategySelector.decide()
-  -> code 路径: CodeGenerator -> CodeExecutor
-  -> llm_direct 路径: LLMManager.chat()
-  -> AnalysisResult 返回 UI
-```
-
-策略含义：
-
-| 策略 | 使用场景 | 说明 |
-|------|----------|------|
-| `code` | 筛选、聚合、排序、趋势等明确数据操作 | 先生成 pandas 代码，再执行 |
-| `llm_direct` | 原因分析、异常判断、建议等需要推理的请求 | 直接把 schema/数据摘要交给 LLM 分析 |
-
-## 9. 源表与文件约定
-
-| 文件 | 来源 | 当前用途 |
-|------|------|----------|
-| V3良率及不良率By月周天汇总报表 | FineReport | Gap / 日周月良率分析 |
-| V3良率及不良率By批次汇总报表 | FineReport | 批次恶化判断 |
-| CT良率异常波动管理表 | 网络共享路径 / 本地缓存 | 异常分析 |
-| 2026年良率目标拆解-1017版V05 - 无公式版.xlsx | `resources/` | 目标良率 |
-| 日良率Gap分析模板.xlsx | `resources/` | Gap 分析规则和模板 |
-| spotfire.xlsx | `resources/project_files/` | 产品型号来源 |
-
-## 10. 测试与验证
-
-当前关键测试：
-
-```bash
-uv run pytest tests/unit/test_query_parser.py -v --tb=short
-uv run pytest tests/unit/test_data_acquisition_orchestrator.py -v --tb=short
-uv run pytest tests/unit/test_yield_download_service.py -v --tb=short
-uv run pytest tests/unit/test_finereport_client.py -v --tb=short
-uv run pytest tests/unit/test_analysis_selector.py tests/unit/test_code_generator.py tests/unit/test_code_executor.py -v --tb=short
-```
-
-Agent 架构迁移后的新增测试目录：
-
-```text
-tests/unit/agent/
-tests/unit/skills/
-tests/integration/
-```
-
-常用质量检查：
-
-```bash
-uv run ruff check .
-uv run pyright
-```
-
-UI 验证：
-
-```bash
-cd ui/copilotkit-agent
-npm run typecheck
-npm run build
-npm run dev
-```
-
-## 11. 已知边界
-
-- CopilotKit Workbench 已接入 Spec run，日报生成 Skill 仍依赖当前 V2 源表与模板能力。
-- RuntimeRouter 已接入 Python Skill Runtime 与 Pi/OMP Runtime adapter；生产使用 Pi/OMP 时仍需模型配置和权限边界。
-- FineReport RPA 依赖内网、Chrome、`.env` 账号和 `fr_web_automation` 包。
-- `resources/` 中下载文件可能包含筛选条件后缀；后续分析模块应按 `config/global.yaml` 的 pattern 或业务描述匹配，而不是依赖完全固定文件名。
-- 自动同步脚本必须在 pull 前保护本地改动，并且日志不得写入仓库工作区。
+| 场景 | 入口 |
+|---|---|
+| Harness / 文档 | focused Harness tests, diff inspection, referenced-path checks |
+| Agent / Skill | unit tests for Agent and Skill boundaries |
+| FineReport / 下载 | focused RPA and download tests; browser smoke only when portal flow changes |
+| UI | typecheck, build, and real browser smoke when UI behavior changes |
