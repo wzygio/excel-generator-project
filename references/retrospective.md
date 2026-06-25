@@ -1,19 +1,44 @@
-# Harness Garbage Collection
+# Reflect Router
 
-This Agent-maintained file records periodic cleanup checks for the project Harness.
+This file defines the end-of-iteration Reflect mechanism. It should describe how the Harness reflects, not store run-specific results.
 
-## Cleanup Checklist
+## When To Read
 
-- Check AGENTS.md / `.roorules` for business-module details that should move to lower Harness files.
-- Verify links in the Harness index, design index, plans index, and observability reference.
-- Move completed execution plans from the active plans folder to the completed plans folder.
-- Remove or refresh stale generated summaries under `references/generated/`.
-- Confirm referenced commands, test paths, trace paths, and ignored runtime directories still exist.
+Read this file near the end of a substantial task, after implementation and verification, when deciding what should be preserved as Harness knowledge.
 
-## Current Status
+Do not keep this file in the default task context. Reflect is an end-stage mechanism and should stay lightweight.
 
-- Last generated: 2026-06-25 Harness refactor.
-- Latest check: `uv run python scripts/harness_check.py --write-audit` returned `ok`.
-- Known cleanup items:
-  - Review whether legacy empty `references/plan_references/` folders can be removed after Git/user review.
-  - Keep AGENTS root short; add new details to routed references instead.
+## Reflect Flow
+
+1. Review the active planning files for completed work, errors, decisions, and verification.
+2. Inspect the current diff and generated observations or audits.
+3. Separate durable mechanism changes from run-specific results.
+4. Promote stable knowledge to the correct reference area.
+5. Store generated or historical status under `references/generated/`.
+6. Keep `AGENTS.md` and index files short; route details into lower references.
+
+## Where To Write
+
+| Content | Target |
+|---|---|
+| Current task progress, attempts, and command results | Active `.planning/<plan-id>/progress.md` |
+| Discoveries, decisions, and reusable findings from the current task | Active `.planning/<plan-id>/findings.md` first, then promote if durable |
+| Stable architecture or contract decisions | `references/design/` |
+| Stable coding rules, restrictions, schemas, or templates | `references/dev_references/` |
+| Stable validation, observability, command, or debug guidance | `references/test_references/` |
+| Generated audits, cleanup notes, status snapshots, scans, or historical summaries | `references/generated/` |
+| Long-lived project plans | `references/plans/` or `references/exec-plans/` |
+
+## Promotion Criteria
+
+Promote a finding out of planning files only when it is:
+
+- reusable across future tasks,
+- tied to a stable project mechanism or contract,
+- not merely a one-run result,
+- safe to keep in repository context,
+- and easier for future agents to discover from a routed reference than from planning history.
+
+## Generated Output Rule
+
+Do not append status snapshots, latest check results, one-off cleanup items, or generated summaries to this file. Write those artifacts under `references/generated/` and link/promote only stable policy changes to the appropriate reference.

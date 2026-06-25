@@ -145,9 +145,14 @@ class _FakeFrame:
 class _FakePage:
     def __init__(self) -> None:
         self.waits: list[int] = []
+        self.url = "https://finereport.local/report"
+        self.frames: list[object] = []
 
     def wait_for_timeout(self, timeout: int) -> None:
         self.waits.append(timeout)
+
+    def screenshot(self, *, path: str, full_page: bool) -> None:
+        Path(path).write_bytes(b"png")
 
 
 def test_yield_portal_adapter_submits_date_with_tab_not_enter() -> None:
@@ -163,3 +168,18 @@ def test_yield_portal_adapter_submits_date_with_tab_not_enter() -> None:
     assert ("press", "Tab") in date_input.actions
     assert ("press", "Enter") not in date_input.actions
     assert "开始日期：" in frame.xpath
+
+
+def test_capture_debug_artifacts_uses_output_diagnostics_layout(tmp_path: Path) -> None:
+    service = YieldDownloadService.__new__(YieldDownloadService)
+    service.download_dir = tmp_path / "output" / "downloads" / "raw" / "finereport"
+    service.download_dir.mkdir(parents=True)
+    adapter = MagicMock()
+    adapter.page = _FakePage()
+    service._get_adapter = MagicMock(return_value=adapter)  # type: ignore[method-assign]
+
+    service._capture_debug_artifacts("daily_yield_failed")
+
+    assert list((tmp_path / "output" / "diagnostics" / "rpa" / "screenshots").glob("*.png"))
+    assert list((tmp_path / "output" / "diagnostics" / "rpa" / "console").glob("*.txt"))
+    assert not (tmp_path / "output" / "downloads" / "raw" / "rpa_debug").exists()

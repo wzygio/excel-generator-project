@@ -75,3 +75,34 @@
 
 ### Goal
 不断迭代优化该Skill，直到目标repo下的Harness架构与当前repo优化后的架构一致。
+
+---
+
+# Task：Harness优化
+
+## Step0：优化AGENTS.md和references
+1. AGENTS.md和references是否满足以下要求两条要求，如果不满足请进行优化：
+    - AGENTS.md-TaskRouter：每个顶层 index 只路由到文件夹，不直接堆细节。
+    - references-index.md：每个文件夹说明“何时读取、读哪些文件、对应哪些命令”。
+
+## Step1：优化Observation
+1. 请您查看当前的“output”中的结构，当前结构还不够清晰：
+    - “decrypted_files、downloads、logs”这种系统级类型名称和“rpa_debug、rpa_downloads、task2_smoke”这种业务级类型名称混杂
+2. 请您制定一套企业级的output架构，能够企业级项目所有可能的Runtime产出文件类别，让每一个产出文件都有清晰的存放位置。
+    - 并将该架构输出至如下路径：“D:\wzy\Visionox-Docs_Backup\dev-docs\dev-system_arch”
+3. 补充“coding_conventions.md”，增加如下规则：在编码时，将Runtime运行产物的输出路径设为“output”中的对应路径（这只是个描述，你编写规则时要写出文件类型与路径名称的映射）
+    - 文件路径：“references\dev_references\coding_spec\coding_conventions.md”
+
+## Step2: 优化Verify
+1. 优化“observability.md”：您提到了“运行 pytest/ruff/pyright/harness_check/业务 smoke，生成简洁 observation”，是否可以这样理解：将output中有Observation价值的路径添加到observability.md中，让output中的产物能够被应用到Agent编码中的observation阶段。
+    - 文件路径：“D:\wzy\Python\excel-generator-project\references\test_references\observability.md”
+
+## Step3：优化Reflect
+1. “retrospective.md”应该保存的是机制而不是结果：
+    - 因为reflect的机制（Iteration Router机制）随着拓展会更加复杂，但却只有在结束阶段才会调用，因此不应该常驻上下文。
+    - 文件路径：“D:\wzy\Python\excel-generator-project\references\retrospective.md”
+    - 将原有的输出路径从“retrospective.md”转为：“D:\wzy\Python\excel-generator-project\references\generated”
+
+# Workflow
+请思考以上建议，并给出优化方案，然后执行优化
+    

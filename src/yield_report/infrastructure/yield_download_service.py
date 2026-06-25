@@ -358,11 +358,14 @@ class YieldDownloadService(DownloadService):
         """保存 RPA 失败时的页面截图和可见 iframe 文本，便于定位帆软页面状态。"""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            debug_dir = self.download_dir.parent / "rpa_debug"
-            debug_dir.mkdir(parents=True, exist_ok=True)
+            output_root = _find_output_root(self.download_dir)
+            screenshot_dir = output_root / "diagnostics" / "rpa" / "screenshots"
+            console_dir = output_root / "diagnostics" / "rpa" / "console"
+            screenshot_dir.mkdir(parents=True, exist_ok=True)
+            console_dir.mkdir(parents=True, exist_ok=True)
 
-            screenshot_path = debug_dir / f"{timestamp}_{name}.png"
-            text_path = debug_dir / f"{timestamp}_{name}.txt"
+            screenshot_path = screenshot_dir / f"{timestamp}_{name}.png"
+            text_path = console_dir / f"{timestamp}_{name}.txt"
 
             adapter = self._get_adapter()
             adapter.page.screenshot(path=str(screenshot_path), full_page=True)
@@ -396,3 +399,12 @@ class YieldDownloadService(DownloadService):
     def _default_start_date() -> str:
         """默认开始日期：今天往前 90 天。"""
         return default_batch_start_date().isoformat()
+
+
+def _find_output_root(path: Path) -> Path:
+    """Find the nearest output root for runtime diagnostics."""
+    resolved = Path(path).resolve()
+    for candidate in [resolved, *resolved.parents]:
+        if candidate.name == "output":
+            return candidate
+    return resolved.parent

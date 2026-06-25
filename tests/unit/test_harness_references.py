@@ -40,6 +40,23 @@ def test_harness_indexes_route_to_folders_not_files() -> None:
     assert violations == []
 
 
+def test_harness_indexes_explain_read_guidance_and_commands() -> None:
+    """Every Harness index should say when to read it and what command surface applies."""
+    index_files = sorted((PROJECT_ROOT / "references").rglob("index.md"))
+
+    assert index_files, "references should contain Harness index.md files"
+
+    violations: list[str] = []
+    for index_file in index_files:
+        markdown = index_file.read_text(encoding="utf-8")
+        if "When To Read" not in markdown and "Read Guidance" not in markdown:
+            violations.append(f"{index_file.relative_to(PROJECT_ROOT)} missing read guidance")
+        if "Commands" not in markdown:
+            violations.append(f"{index_file.relative_to(PROJECT_ROOT)} missing commands guidance")
+
+    assert violations == []
+
+
 def test_architecture_stays_at_second_level_project_paths() -> None:
     """The root architecture map should stay shallow and delegate deep lookup."""
     architecture = (PROJECT_ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")

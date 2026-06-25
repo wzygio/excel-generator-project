@@ -29,7 +29,7 @@ This is not a generic BI platform. Prefer explicit, testable, traceable report w
 - If business rules, Spec fields, Skill contracts, or report behavior change, update the appropriate design reference rather than expanding this root file.
 - If coding conventions, dependency policy, or safety restrictions change, update `references/dev_references/`.
 - If validation commands, smoke flows, trace locations, or debugging practice changes, update `references/test_references/`.
-- After substantial work, update the active planning files and add feedback or cleanup notes to `references/retrospective.md` when the Harness itself evolved.
+- After substantial work, update the active planning files. Write generated feedback, audit, and cleanup notes under `references/generated/`; update `references/retrospective.md` only when the Reflect mechanism itself changes.
 - Keep Harness `index.md` files folder-only; do not list individual files in indexes.
 
 ## Safety Boundary

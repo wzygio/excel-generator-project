@@ -236,7 +236,7 @@ LABEL_PRODUCT_MODEL = "产品型号："
 
 失败定位：
 
-- RPA 下载失败时会保存截图和 iframe 文本到 `downloads/rpa_debug/`。
+- RPA 下载失败时会保存截图和 iframe 文本到 `output/diagnostics/rpa/screenshots/` 和 `output/diagnostics/rpa/console/`。
 - 这些调试文件不属于业务源表，不应作为日报输入。
 - 当 `report_type` 无法判断且本地也无法定位源表时，数据获取层只提取一个最关键关键词，并调用 FineReport 门户搜索；搜索框不支持模糊查询，因此不得一次拼接多个关键词。搜索结果向上返回为可恢复失败，等待用户或上层指定具体报表名。
 

@@ -13,6 +13,9 @@ from yield_report.infrastructure.analysis_file_resolver import (
 )
 from yield_report.infrastructure.analysis_memory import AnalysisMemoryCandidate
 
+DECRYPTED_OUTPUT = Path("output") / "artifacts" / "workbooks" / "decrypted"
+NORMALIZED_OUTPUT = Path("output") / "artifacts" / "workbooks" / "normalized"
+
 
 def _request() -> AnalysisQueryRequest:
     return AnalysisQueryRequest(
@@ -27,7 +30,7 @@ def _request() -> AnalysisQueryRequest:
 
 def test_resolver_prefers_decrypted_file(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = tmp_path / "output" / "decrypted_files"
+    decrypted = tmp_path / DECRYPTED_OUTPUT
     resources.mkdir()
     decrypted.mkdir(parents=True)
     plain = resources / "V3良率及不良率By月周天汇总报表.xlsx"
@@ -45,7 +48,7 @@ def test_resolver_prefers_decrypted_file(tmp_path: Path) -> None:
 
 def test_resolver_prefers_standard_xlsx_when_multiple_decrypted_candidates(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = tmp_path / "output" / "decrypted_files"
+    decrypted = tmp_path / DECRYPTED_OUTPUT
     decrypted.mkdir(parents=True)
     encrypted = decrypted / "V3良率及不良率By月周天汇总报表.xlsx"
     standard = decrypted / "V3良率及不良率By月周天汇总报表_decrypted.xlsx"
@@ -60,7 +63,8 @@ def test_resolver_prefers_standard_xlsx_when_multiple_decrypted_candidates(tmp_p
 
 def test_resolver_normalizes_nonstandard_file_inside_decrypted_dir(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = tmp_path / "output" / "decrypted_files"
+    decrypted = tmp_path / DECRYPTED_OUTPUT
+    normalized = tmp_path / NORMALIZED_OUTPUT
     decrypted.mkdir(parents=True)
     encrypted = decrypted / "V3良率及不良率By月周天汇总报表.xlsx"
     encrypted.write_bytes(b"\x00\x00\x00\x00encrypted")
@@ -76,8 +80,8 @@ def test_resolver_normalizes_nonstandard_file_inside_decrypted_dir(tmp_path: Pat
     resolver = AnalysisFileResolver(resources_dir=resources, decrypt_func=fake_decrypt)
     result = resolver.resolve(request=_request(), user_query="query")
 
-    assert calls == [(encrypted, decrypted / "_normalized")]
-    assert result.path == decrypted / "_normalized" / encrypted.name
+    assert calls == [(encrypted, normalized)]
+    assert result.path == normalized / encrypted.name
     assert result.was_decrypted is True
 
 
@@ -100,7 +104,7 @@ def test_resolver_decrypts_resource_file_when_needed(tmp_path: Path) -> None:
     result = resolver.resolve(request=_request(), user_query="query")
 
     assert calls == [source]
-    assert result.path == tmp_path / "output" / "decrypted_files" / source.name
+    assert result.path == tmp_path / DECRYPTED_OUTPUT / source.name
     assert result.was_decrypted is True
 
 
@@ -197,7 +201,7 @@ def test_resolver_calls_acquisition_when_no_local_file(tmp_path: Path) -> None:
 
     assert calls
     assert result.source == "download"
-    assert result.path == tmp_path / "output" / "decrypted_files" / downloaded.name
+    assert result.path == tmp_path / DECRYPTED_OUTPUT / downloaded.name
 
 
 def test_resolver_ignores_local_file_for_different_declared_product(tmp_path: Path) -> None:
@@ -240,7 +244,7 @@ def test_resolver_ignores_local_file_for_different_declared_product(tmp_path: Pa
 
     assert calls
     assert result.source == "download"
-    assert result.path == tmp_path / "output" / "decrypted_files" / downloaded.name
+    assert result.path == tmp_path / DECRYPTED_OUTPUT / downloaded.name
 
 
 def test_resolver_does_not_use_ct_exception_for_daily_yield_request(tmp_path: Path) -> None:
@@ -264,7 +268,7 @@ def test_resolver_does_not_use_ct_exception_for_daily_yield_request(tmp_path: Pa
 
 def test_resolver_does_not_treat_decrypted_priority_as_match(tmp_path: Path) -> None:
     resources = tmp_path / "resources"
-    decrypted = tmp_path / "output" / "decrypted_files"
+    decrypted = tmp_path / DECRYPTED_OUTPUT
     decrypted.mkdir(parents=True)
     unrelated = decrypted / "unrelated_target_file.xlsx"
     unrelated.write_bytes(b"PK\x03\x04")

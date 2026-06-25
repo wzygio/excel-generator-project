@@ -15,6 +15,8 @@ from yield_report.infrastructure.file_decryption import decrypt_excel_file
 
 logger = logging.getLogger(__name__)
 XLSX_MAGIC = b"PK\x03\x04"
+DECRYPTED_WORKBOOKS_OUTPUT = Path("artifacts") / "workbooks" / "decrypted"
+NORMALIZED_WORKBOOKS_OUTPUT = Path("artifacts") / "workbooks" / "normalized"
 
 
 class AnalysisFileResolveError(Exception):
@@ -55,7 +57,8 @@ class AnalysisFileResolver:
     ) -> None:
         self._resources_dir = resources_dir or Path("resources")
         self._output_dir = output_dir or _default_output_dir(self._resources_dir)
-        self._decrypted_dir = decrypted_dir or self._output_dir / "decrypted_files"
+        self._decrypted_dir = decrypted_dir or self._output_dir / DECRYPTED_WORKBOOKS_OUTPUT
+        self._normalized_dir = self._output_dir / NORMALIZED_WORKBOOKS_OUTPUT
         self._decrypt_func = decrypt_func
         self._acquisition_orchestrator = acquisition_orchestrator
 
@@ -230,7 +233,7 @@ class AnalysisFileResolver:
     def _iter_excel_files(self) -> list[Path]:
         files: list[Path] = []
         seen: set[str] = set()
-        for directory in [self._decrypted_dir, self._resources_dir]:
+        for directory in [self._decrypted_dir, self._normalized_dir, self._resources_dir]:
             if not directory.exists():
                 continue
             for path in sorted(directory.glob("*.xlsx")):
@@ -263,12 +266,11 @@ class AnalysisFileResolver:
             return output_path, True
 
         if self._is_inside_decrypted_dir(path):
-            normalized_dir = self._decrypted_dir / "_normalized"
-            existing = normalized_dir / path.name
+            existing = self._normalized_dir / path.name
             if existing.exists() and existing.is_file() and _is_standard_xlsx(existing):
                 return existing, False
             try:
-                output_path = self._decrypt_func(path, normalized_dir)
+                output_path = self._decrypt_func(path, self._normalized_dir)
             except Exception as exc:
                 raise AnalysisFileResolveError(
                     f"Failed to decrypt or normalize file {path}: {exc}"

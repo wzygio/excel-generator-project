@@ -41,6 +41,8 @@ from yield_report.infrastructure.yield_download_service import (
 
 logger = logging.getLogger(__name__)
 MAX_FILTER_SUFFIX_LENGTH = 120
+DECRYPTED_WORKBOOKS_OUTPUT = Path("artifacts") / "workbooks" / "decrypted"
+FINEREPORT_RAW_DOWNLOADS_OUTPUT = Path("downloads") / "raw" / "finereport"
 
 
 # ================================================================
@@ -137,7 +139,7 @@ class FinereportClient:
         Args:
             end_date: 结束日期 (默认今天)
             product_models: 产品型号列表 (默认全部)
-            save_dir: 保存目录 (默认 output/downloads/)
+            save_dir: 保存目录 (默认 output/downloads/raw/finereport/)
 
         Returns:
             Path: 下载文件的完整路径
@@ -178,7 +180,7 @@ class FinereportClient:
             start_date: 开始日期 (默认三个月前月初)
             end_date: 结束日期 (默认今天)
             product_models: 产品型号列表 (默认全部)
-            save_dir: 保存目录 (默认 output/downloads/)
+            save_dir: 保存目录 (默认 output/downloads/raw/finereport/)
 
         Returns:
             Path: 下载文件的完整路径
@@ -231,7 +233,7 @@ class FinereportClient:
             )
 
             # 配置 RPA 下载目录（生成物统一进入 output/）
-            self._rpa_download_dir = self._output_dir / "rpa_downloads"
+            self._rpa_download_dir = self._output_dir / FINEREPORT_RAW_DOWNLOADS_OUTPUT
             self._rpa_download_dir.mkdir(parents=True, exist_ok=True)
 
             rpa_config = WebAutomationConfig(
@@ -279,7 +281,7 @@ class FinereportClient:
 
     def _resolve_report_download_dir(self, save_dir: str | Path | None) -> Path:
         """解析原始报表下载保存目录。"""
-        directory = Path(save_dir) if save_dir else self._output_dir / "downloads"
+        directory = Path(save_dir) if save_dir else self._output_dir / FINEREPORT_RAW_DOWNLOADS_OUTPUT
         directory.mkdir(parents=True, exist_ok=True)
         return directory
 
@@ -344,8 +346,8 @@ class FinereportClient:
         return target_path
 
     def _decrypt_downloaded_file(self, file_path: Path) -> Path:
-        """将下载文件解密到 output/decrypted_files，并返回解密后的路径。"""
-        output_dir = self._output_dir / "decrypted_files"
+        """将下载文件解密到 output/artifacts/workbooks/decrypted，并返回解密后的路径。"""
+        output_dir = self._output_dir / DECRYPTED_WORKBOOKS_OUTPUT
         try:
             return decrypt_excel_file(file_path, output_dir)
         except FileDecryptionError as exc:

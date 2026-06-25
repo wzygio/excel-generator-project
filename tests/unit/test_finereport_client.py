@@ -6,6 +6,9 @@ from pathlib import Path
 
 from yield_report.infrastructure.finereport_client import FinereportClient
 
+DECRYPTED_OUTPUT = Path("output") / "artifacts" / "workbooks" / "decrypted"
+FINEREPORT_DOWNLOADS_OUTPUT = Path("output") / "downloads" / "raw" / "finereport"
+
 
 class FakeYieldDownloadService:
     """模拟 RPA 服务，只创建原始下载文件。"""
@@ -75,8 +78,8 @@ def test_daily_report_filename_appends_filter_conditions(tmp_path: Path) -> None
     )
 
     expected_name = "V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号M678.xlsx"
-    download_dir = tmp_path / "output" / "downloads"
-    assert result == tmp_path / "output" / "decrypted_files" / expected_name
+    download_dir = tmp_path / FINEREPORT_DOWNLOADS_OUTPUT
+    assert result == tmp_path / DECRYPTED_OUTPUT / expected_name
     assert result.exists()
     assert (download_dir / expected_name).exists()
     assert not (download_dir / "V3良率及不良率By月周天汇总报表.xlsx").exists()
@@ -101,12 +104,12 @@ def test_daily_report_download_accepts_month_count_filter(tmp_path: Path) -> Non
     )
 
     expected_name = "V3良率及不良率By月周天汇总报表_结束日期2026-06-15_产品型号M588_月数3.xlsx"
-    assert result == tmp_path / "output" / "decrypted_files" / expected_name
+    assert result == tmp_path / DECRYPTED_OUTPUT / expected_name
     assert service.daily_calls == [
         {
             "end_date": "2026-06-15",
             "product_models": ["M588"],
-            "save_dir": tmp_path / "output" / "downloads",
+            "save_dir": tmp_path / FINEREPORT_DOWNLOADS_OUTPUT,
             "month_count": 3,
         }
     ]
@@ -126,8 +129,8 @@ def test_batch_report_filename_appends_multiple_filter_conditions(tmp_path: Path
         "V3良率及不良率By批次汇总报表_开始日期2026-03-01_"
         "结束日期2026-05-01_产品型号M626+M673.xlsx"
     )
-    download_dir = tmp_path / "output" / "downloads"
-    assert result == tmp_path / "output" / "decrypted_files" / expected_name
+    download_dir = tmp_path / FINEREPORT_DOWNLOADS_OUTPUT
+    assert result == tmp_path / DECRYPTED_OUTPUT / expected_name
     assert result.exists()
     assert (download_dir / expected_name).exists()
     assert not (download_dir / "V3良率及不良率By批次汇总报表.xlsx").exists()
@@ -154,8 +157,7 @@ def test_filter_filename_uses_all_when_product_models_are_unspecified(
 
     assert result == (
         tmp_path
-        / "output"
-        / "decrypted_files"
+        / DECRYPTED_OUTPUT
         / "V3良率及不良率By月周天汇总报表_结束日期2026-05-01_产品型号全部.xlsx"
     )
 
