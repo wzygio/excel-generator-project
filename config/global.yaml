@@ -88,8 +88,8 @@ agent:
 # ---- 源表文件名校验规则 ----
 source_files:
   daily_yield:
-    description: "V3良率及不良率By月周天汇总报表"
-    pattern: "V3良率及不良率By月周天*"
+    description: "V3CT修正良率及不良率By月周天报表"
+    pattern: "V3CT修正良率及不良率By月周天*"
   batch_yield:
     description: "V3良率及不良率By批次汇总报表"
     pattern: "V3良率及不良率By批次*"

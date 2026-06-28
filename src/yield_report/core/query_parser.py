@@ -35,7 +35,7 @@ class ReportType(StrEnum):
     """报表类型枚举"""
 
     DAILY_YIELD = "daily_yield"
-    """V3良率及不良率By月周天汇总报表 - 用于 Gap 计算"""
+    """V3CT修正良率及不良率By月周天报表 - 用于 Gap 计算"""
 
     BATCH_YIELD = "batch_yield"
     """V3良率及不良率By批次汇总报表 - 用于批次恶化判断"""
@@ -53,7 +53,7 @@ class ReportType(StrEnum):
 # 报表类型元数据映射
 REPORT_TYPE_META: dict[ReportType, dict[str, str]] = {
     ReportType.DAILY_YIELD: {
-        "name": "V3良率及不良率By月周天汇总报表",
+        "name": "V3CT修正良率及不良率By月周天报表",
         "description": "按日月周维度汇总的良率及不良率数据，用于Gap计算",
         "source": "FineReport",
     },
@@ -139,7 +139,7 @@ SYSTEM_PROMPT = """你是一个智能的报表查询解析助手。你的任务�
 
 以下是用户可能请求下载的报表类型：
 
-1. **daily_yield** - "V3良率及不良率By月周天汇总报表": 按日月周维度汇总的良率及不良率数据，用于 Gap 计算。数据来源：FineReport。
+1. **daily_yield** - "V3CT修正良率及不良率By月周天报表": 按日月周维度汇总的良率及不良率数据，用于 Gap 计算。数据来源：FineReport。
    - 用户可能说：良率日报、月周天、daily yield、良率报表、V3良率、良率数据
    - 筛选条件: 结束日期(必选)、产品型号(可选)、月数(可选，默认通常为2，最近三个月应为3)
    - 默认日期规则: 上午10点前日度数据仍截止昨日；10点后截止今天。

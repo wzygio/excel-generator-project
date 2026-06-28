@@ -6,7 +6,7 @@ product_models.py: 产品型号列表提取工具
 根据 yield_report_domain.md 中的设计:
 - 数据来源: resources/project_files/spotfire.xlsx
 - 提取位置: Sheet1, 第一列
-- 用途: 作为"V3良率及不良率By月周天汇总报表"
+- 用途: 作为"V3CT修正良率及不良率By月周天报表"
   和"V3良率及不良率By批次汇总报表"的"产品型号"筛选参数
 
 加密兼容性:

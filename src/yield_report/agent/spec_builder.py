@@ -27,13 +27,13 @@ from yield_report.core.analysis_query_parser import (
 
 DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
 DEFAULT_TEMPLATE_REF = "docs/project_files/V3良率日报每日异常填报表.xlsx"
-DEFAULT_DAILY_YIELD_FILE_NAME = "V3良率及不良率By月周天汇总报表"
+DEFAULT_DAILY_YIELD_FILE_NAME = "V3CT修正良率及不良率By月周天报表"
 REGISTERED_SKILLS = {"report_download", "data_analysis", "daily_report", "anomaly_monitor"}
 RULE_BUILD_CAPABILITIES = {"anomaly-monitor", "daily-report"}
 PRODUCT_MODEL_PATTERN = re.compile(r"(?<![A-Z0-9])[A-Z]\d{3,4}(?![A-Z0-9])", re.IGNORECASE)
 LOCAL_SOURCE_FILES = {
     "spotfire": "resources/project_files/spotfire.xlsx",
-    "daily_yield": "resources/V3良率及不良率By月周天汇总报表.xlsx",
+    "daily_yield": "resources/V3CT修正良率及不良率By月周天报表.xlsx",
     "target_decomposition": "resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx",
     "ct_exception": "resources/CT良率异常波动管理表.xlsx",
     "code_mapping": "resources/大数据值班当日新增不良HL模板.xlsx",

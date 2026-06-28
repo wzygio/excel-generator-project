@@ -28,7 +28,7 @@ HEADER_SCAN_ROWS = 12
 DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
 
 SOURCE_PATTERNS: dict[str, list[str]] = {
-    "daily_yield": ["V3良率及不良率By月周天*.xlsx"],
+    "daily_yield": ["V3CT修正良率及不良率By月周天*.xlsx"],
     "target_decomposition": ["*良率目标拆解*.xlsx"],
     "gap_template": ["*Gap分析模板*.xlsx", "日良率Gap分析模板*.xlsx"],
     "ct_exception": ["CT良率异常波动管理表*.xlsx"],

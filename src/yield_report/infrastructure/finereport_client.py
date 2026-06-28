@@ -134,7 +134,7 @@ class FinereportClient:
         save_dir: str | Path | None = None,
     ) -> Path:
         """
-        下载"V3良率及不良率By月周天汇总报表"。
+        下载"V3CT修正良率及不良率By月周天报表"。
 
         Args:
             end_date: 结束日期 (默认今天)

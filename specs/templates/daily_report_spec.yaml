@@ -49,7 +49,7 @@ inputs:
     - alias: spotfire
       path: resources/spotfire.xlsx
     - alias: daily_yield
-      path: resources/V3良率及不良率By月周天汇总报表.xlsx
+      path: resources/V3CT修正良率及不良率By月周天报表.xlsx
     - alias: target_decomposition
       path: resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx
     - alias: ct_exception

@@ -247,7 +247,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     file_path=file_path,
                 )
             )
@@ -255,7 +255,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     error_message=f"FineReport 连接失败: {e}",
                 )
             )
@@ -263,7 +263,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     error_message=f"下载失败: {e}",
                 )
             )
@@ -271,7 +271,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     error_message=f"产品型号提取失败: {e}",
                 )
             )
@@ -280,7 +280,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     error_message=f"获取失败: {e}",
                 )
             )
@@ -445,7 +445,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     file_path=fr_results_daily,
                 )
             )
@@ -453,7 +453,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By月周天汇总报表",
+                    file_description="V3CT修正良率及不良率By月周天报表",
                     error_message=str(e),
                 )
             )

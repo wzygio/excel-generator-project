@@ -35,12 +35,12 @@ logger = logging.getLogger(__name__)
 # ================================================================
 
 # 报表名称（必须与 FineReport 门户中的名称精确匹配）
-DAILY_YIELD_REPORT_NAME = "V3良率及不良率By月周天汇总报表"
+DAILY_YIELD_REPORT_NAME = "V3CT修正良率及不良率By月周天报表"
 BATCH_YIELD_REPORT_NAME = "V3良率及不良率By批次汇总报表"
 YIELD_REPORT_DIRECTORY = "目录/良率监控/综合良率"
 
 # 默认保存文件名
-DAILY_YIELD_FILENAME = "V3良率及不良率By月周天汇总报表.xlsx"
+DAILY_YIELD_FILENAME = "V3CT修正良率及不良率By月周天报表.xlsx"
 BATCH_YIELD_FILENAME = "V3良率及不良率By批次汇总报表.xlsx"
 
 # 参数面板标签文本（可通过此处调整以适配实际 UI）
