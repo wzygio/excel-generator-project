@@ -71,3 +71,27 @@
 - First `ruff check` reported import ordering and one unused import; ran `uv run ruff check ... --fix`, then reran targeted ruff successfully.
 - Ran `git diff --check`; no whitespace errors were reported, only Git LF-to-CRLF warnings for touched files.
 - Removed test-created `src/yield_report/agent/spec_graph/__pycache__/` after verifying it was inside the workspace.
+
+## 2026-07-02
+- Started Pydantic AI Runtime migration with `planning-with-files`.
+- Restored existing root planning files and confirmed previous plan sections are complete historical work.
+- Ran planning session catchup; it produced no unsynced-context output.
+- Checked `git status --short`; only pre-existing modified file is `docs/dev_docs/Python-良率日报生成器-v2.xmind`.
+- Read `$daily-report-generator` skill contract and confirmed it exposes a stable CLI suitable for future agentic skill invocation.
+- Used CodeGraph earlier in the thread to map `LettaRuntime`, `RuntimeRouter`, `AgentRuntime`, `client_tools`, and the LangGraph Spec graph.
+- Looked up official Pydantic AI documentation because Context7 tools were not exposed in this session.
+- Appended the Pydantic AI Runtime Migration Plan and findings.
+- Added `pydantic-ai-slim[openai]>=2.3.0` through `uv add`, updating `pyproject.toml` and `uv.lock`.
+- Refactored `client_tools.py` so Letta and Pydantic AI share workflow-to-tool selection.
+- Added `src/yield_report/agent/pydantic_ai_runtime.py` with structured Pydantic AI output, controlled `run_project_tool`, fail-closed tool selection, run summary writing, and memory candidate writing.
+- Updated `RuntimeRouter` so default non-exempt runs use Pydantic AI, while explicit `runtime=letta` still uses Letta.
+- Updated config model and `config/global.yaml` so `agent.default_runtime` defaults to `pydantic_ai`.
+- Updated `scripts/run_task_spec.py` to accept `--runtime pydantic_ai`.
+- Added `tests/unit/agent/test_pydantic_ai_runtime.py`.
+- Added generated architecture design at `docs/generated/agent-runtime-pydantic-ai-migration.md`.
+- Verification passed: `uv run pytest tests/unit/agent/test_pydantic_ai_runtime.py tests/unit/test_config_loader.py -q --tb=short` (30 passed).
+- Verification passed: `uv run pytest tests/unit/agent/test_letta_runtime.py tests/unit/agent/test_omp_runtime.py tests/unit/agent/test_spec_builder.py -q --tb=short` (48 passed).
+- Verification passed: `uv run pytest tests/unit/agent tests/unit/test_config_loader.py -q --tb=short` (105 passed).
+- Verification passed: touched-file `uv run ruff check ...`.
+- Broader `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` reported 119 passed and 2 failures in external `daily-report-generator` Skill tests, unrelated to Runtime migration code touched here.
+- `git diff --check` passed with LF-to-CRLF warnings only.

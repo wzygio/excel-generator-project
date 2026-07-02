@@ -20,7 +20,7 @@ ArgsNormalizer = Callable[[dict[str, Any]], dict[str, Any]]
 
 @dataclass(frozen=True)
 class RuntimeTool:
-    """Local business capability exposed to Letta as a client tool."""
+    """Local business capability exposed to agent runtimes as a client tool."""
 
     name: str
     description: str
@@ -31,8 +31,16 @@ class RuntimeTool:
     normalize_args: ArgsNormalizer = lambda args: dict(args)
 
 
+WORKFLOW_TOOL_MAP: dict[str, set[str]] = {
+    "report_download": {"yield_report_download"},
+    "data_analysis": {"yield_report_download", "yield_data_analysis"},
+    "daily_report": {"yield_daily_report"},
+    "anomaly_monitor": {"yield_anomaly_monitor"},
+}
+
+
 def build_project_client_tool_registry() -> dict[str, RuntimeTool]:
-    """Return the approved Letta client tools for project business Skills."""
+    """Return approved runtime client tools for project business Skills."""
     tools = [
         RuntimeTool(
             name="yield_report_download",
@@ -79,6 +87,23 @@ def build_project_client_tool_registry() -> dict[str, RuntimeTool]:
     return {tool.name: tool for tool in tools}
 
 
+def select_runtime_tools_for_skills(
+    workflow_skills: set[str],
+    registry: dict[str, RuntimeTool],
+) -> list[RuntimeTool]:
+    """Select fail-closed runtime tools for declared workflow skills."""
+    if not workflow_skills:
+        return list(registry.values())
+
+    allowed: set[str] = set()
+    for skill in workflow_skills:
+        tool_names = WORKFLOW_TOOL_MAP.get(skill)
+        if tool_names is None:
+            return []
+        allowed.update(tool_names)
+    return [tool for name, tool in registry.items() if name in allowed]
+
+
 def to_letta_client_tools(registry: dict[str, RuntimeTool] | list[RuntimeTool]) -> list[dict[str, Any]]:
     tools = registry.values() if isinstance(registry, dict) else registry
     return [
@@ -98,6 +123,7 @@ def execute_runtime_tool(
     registry: dict[str, RuntimeTool],
     project_runtime: Any,
     context: RunContext,
+    call_id_prefix: str = "runtime",
 ) -> tuple[SkillCall, SkillResult, dict[str, Any]]:
     tool = registry.get(tool_name)
     if tool is None:
@@ -105,7 +131,7 @@ def execute_runtime_tool(
     normalized = tool.normalize_args(arguments)
     tool.request_model(**normalized)
     call = SkillCall(
-        id=f"letta_{tool.name}",
+        id=f"{call_id_prefix}_{tool.name}",
         skill=tool.skill_name,
         input=normalized,
     )

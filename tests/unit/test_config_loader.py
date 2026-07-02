@@ -204,8 +204,39 @@ class TestAppConfigModel:
         assert cfg.version == "0.1.0"
         assert cfg.debug is False
         assert cfg.paths.base_dir == "."
-        assert cfg.agent.default_runtime == "letta"
+        assert cfg.agent.default_runtime == "pydantic_ai"
+        assert cfg.agent.pydantic_ai.enabled is True
         assert cfg.agent.letta.enabled is True
+
+    def test_agent_pydantic_ai_config(self):
+        """Agent Runtime 配置应支持 Pydantic AI。"""
+        cfg = AppConfig.model_validate(
+            {
+                "agent": {
+                    "default_runtime": "pydantic_ai",
+                    "pydantic_ai": {
+                        "enabled": True,
+                        "model": "deepseek-chat",
+                        "base_url": "https://api.deepseek.com",
+                        "api_key_env": "DEEPSEEK_API_KEY",
+                        "request_limit": 33,
+                        "max_tool_calls": 9,
+                        "tool_timeout_seconds": 120,
+                        "require_tool_use_for_workflow": True,
+                    },
+                }
+            }
+        )
+
+        assert cfg.agent.default_runtime == "pydantic_ai"
+        assert cfg.agent.pydantic_ai.enabled is True
+        assert cfg.agent.pydantic_ai.model == "deepseek-chat"
+        assert cfg.agent.pydantic_ai.base_url == "https://api.deepseek.com"
+        assert cfg.agent.pydantic_ai.api_key_env == "DEEPSEEK_API_KEY"
+        assert cfg.agent.pydantic_ai.request_limit == 33
+        assert cfg.agent.pydantic_ai.max_tool_calls == 9
+        assert cfg.agent.pydantic_ai.tool_timeout_seconds == 120
+        assert cfg.agent.pydantic_ai.require_tool_use_for_workflow is True
 
     def test_extra_fields_ignored(self):
         """额外的字段应被忽略。"""

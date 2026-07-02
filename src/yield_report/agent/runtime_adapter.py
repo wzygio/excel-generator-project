@@ -12,6 +12,11 @@ from yield_report.agent.letta_runtime import (
     LettaRuntimeConfig,
     LettaRuntimeUnavailableError,
 )
+from yield_report.agent.pydantic_ai_runtime import (
+    PydanticAIRuntime,
+    PydanticAIRuntimeConfig,
+    PydanticAIRuntimeUnavailableError,
+)
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.spec_model import RunContext, SkillResult, TaskSpec
 
@@ -60,7 +65,8 @@ PYTHON_EXEMPT_CAPABILITIES = {"daily-report", "anomaly-monitor"}
 class RuntimeRouter:
     """Choose the single Agent runtime, with narrow fixed-flow exemptions.
 
-    Letta is the required Agent runtime. Deterministic Python Skill execution is
+    Pydantic AI is the default Agent runtime. Letta remains available as an
+    explicit optional stateful runtime. Deterministic Python Skill execution is
     allowed only for rule-built, fixed business workflows whose capability is
     explicitly exempted by project policy.
     """
@@ -70,11 +76,15 @@ class RuntimeRouter:
         python_runtime: SpecRuntime | None = None,
         omp_runtime: SpecRuntime | None = None,
         letta_runtime: SpecRuntime | None = None,
+        pydantic_ai_runtime: SpecRuntime | None = None,
         default_runtime: str | None = None,
     ) -> None:
         del omp_runtime
         self.python_runtime = python_runtime or PythonSkillRuntime()
         self.letta_runtime = letta_runtime or LettaRuntime(config=_configured_letta_runtime_config())
+        self.pydantic_ai_runtime = pydantic_ai_runtime or PydanticAIRuntime(
+            config=_configured_pydantic_ai_runtime_config()
+        )
         self.default_runtime = (default_runtime or _configured_default_runtime()).lower().strip()
 
     def run_spec(
@@ -86,18 +96,22 @@ class RuntimeRouter:
         requested = (requested_runtime or "auto").lower().strip()
         if requested == "letta":
             return self._run_letta(spec, context)
+        if requested in {"pydantic_ai", "pydantic-ai", "pydantic"}:
+            return self._run_pydantic_ai(spec, context)
         if requested == "python":
             return self._run_python_exemption(spec, context)
         if requested in {"omp", "pi"}:
-            raise RuntimeError("OMP/Pi runtime is disabled. Use the Letta Agent Runtime.")
+            raise RuntimeError("OMP/Pi runtime is disabled. Use Pydantic AI or Letta.")
 
         runtime_hint = str(spec.constraints.get("runtime") or "").lower()
         if runtime_hint in {"python", "python_skill", "python_skills"}:
             return self._run_python_exemption(spec, context)
         if runtime_hint == "letta":
             return self._run_letta(spec, context)
+        if runtime_hint in {"pydantic_ai", "pydantic-ai", "pydantic"}:
+            return self._run_pydantic_ai(spec, context)
         if runtime_hint in {"omp", "pi"}:
-            raise RuntimeError("TaskSpec requests disabled OMP/Pi runtime. Use Letta.")
+            raise RuntimeError("TaskSpec requests disabled OMP/Pi runtime. Use Pydantic AI or Letta.")
 
         if requested == "auto":
             return self._run_default(spec, context)
@@ -107,12 +121,16 @@ class RuntimeRouter:
     def _run_default(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
         if _is_python_exempt_spec(spec):
             return self._run_python_exemption(spec, context)
-        if self.default_runtime not in {"", "auto", "letta"}:
+        if self.default_runtime in {"", "auto", "pydantic_ai", "pydantic-ai", "pydantic"}:
+            return self._run_pydantic_ai(spec, context)
+        if self.default_runtime == "letta":
+            return self._run_letta(spec, context)
+        if self.default_runtime == "python":
             raise RuntimeError(
                 "Configured default runtime is disabled by policy: "
-                f"{self.default_runtime}. Use letta."
+                f"{self.default_runtime}. Use pydantic_ai or letta."
             )
-        return self._run_letta(spec, context)
+        raise RuntimeError(f"Unsupported default runtime: {self.default_runtime}")
 
     def _run_python_exemption(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
         if not _is_python_exempt_spec(spec):
@@ -130,12 +148,19 @@ class RuntimeRouter:
             raise RuntimeError(str(exc)) from exc
         return RuntimeRunResult(runtime="letta", results=results)
 
+    def _run_pydantic_ai(self, spec: TaskSpec, context: RunContext) -> RuntimeRunResult:
+        try:
+            results = self.pydantic_ai_runtime.run_spec(spec, context)
+        except PydanticAIRuntimeUnavailableError as exc:
+            raise RuntimeError(str(exc)) from exc
+        return RuntimeRunResult(runtime="pydantic_ai", results=results)
+
 
 def _configured_default_runtime() -> str:
     try:
         return app_config.get().agent.default_runtime
     except Exception:
-        return "letta"
+        return "pydantic_ai"
 
 
 def _is_python_exempt_spec(spec: TaskSpec) -> bool:
@@ -191,4 +216,33 @@ def _configured_letta_runtime_config() -> LettaRuntimeConfig:
         background_runs=getattr(settings, "background_runs", defaults.background_runs),
         timeout_seconds=settings.timeout_seconds,
         max_tool_rounds=settings.max_tool_rounds,
+    )
+
+
+def _configured_pydantic_ai_runtime_config() -> PydanticAIRuntimeConfig:
+    try:
+        cfg = app_config.get()
+        settings = cfg.agent.pydantic_ai
+        llm_settings = cfg.llm.deepseek
+    except Exception:
+        return PydanticAIRuntimeConfig()
+
+    defaults = PydanticAIRuntimeConfig()
+    return PydanticAIRuntimeConfig(
+        model=settings.model or llm_settings.model_name or defaults.model,
+        base_url=settings.base_url or llm_settings.base_url or defaults.base_url,
+        api_key_env=settings.api_key_env,
+        api_key=llm_settings.api_key,
+        request_limit=getattr(settings, "request_limit", defaults.request_limit),
+        max_tool_calls=getattr(settings, "max_tool_calls", defaults.max_tool_calls),
+        tool_timeout_seconds=getattr(
+            settings,
+            "tool_timeout_seconds",
+            defaults.tool_timeout_seconds,
+        ),
+        require_tool_use_for_workflow=getattr(
+            settings,
+            "require_tool_use_for_workflow",
+            defaults.require_tool_use_for_workflow,
+        ),
     )

@@ -186,20 +186,42 @@ class LettaAgentRuntimeConfig(BaseModel):
     max_tool_rounds: int = Field(default=20, description="最大 client-side tool 调用轮数")
 
 
+class PydanticAIAgentRuntimeConfig(BaseModel):
+    """Pydantic AI Agent Runtime 配置"""
+
+    enabled: bool = Field(default=True, description="是否启用 Pydantic AI runtime")
+    model: str = Field(default="", description="Pydantic AI runtime 模型名；为空时复用 llm.deepseek.model_name")
+    base_url: str = Field(default="", description="OpenAI-compatible API base URL；为空时复用 llm.deepseek.base_url")
+    api_key_env: str = Field(default="DEEPSEEK_API_KEY", description="API key 环境变量名")
+    request_limit: int = Field(default=30, description="Pydantic AI 单次 run 最大请求数")
+    max_tool_calls: int = Field(default=20, description="Pydantic AI 单次 run 最大工具调用数")
+    tool_timeout_seconds: float | None = Field(default=None, description="单个工具调用超时秒数")
+    require_tool_use_for_workflow: bool = Field(
+        default=True,
+        description="存在 TaskSpec workflow 时要求 Agent 至少调用一次项目工具",
+    )
+
+
 class AgentConfig(BaseModel):
     """Agent Runtime 配置"""
 
-    default_runtime: str = Field(default="letta", description="默认 runtime: letta / auto")
+    default_runtime: str = Field(
+        default="pydantic_ai",
+        description="默认 runtime: pydantic_ai / letta / auto",
+    )
+    pydantic_ai: PydanticAIAgentRuntimeConfig = Field(
+        default_factory=PydanticAIAgentRuntimeConfig
+    )
     letta: LettaAgentRuntimeConfig = Field(default_factory=LettaAgentRuntimeConfig)
 
     @field_validator("default_runtime")
     @classmethod
     def validate_default_runtime(cls, value: str) -> str:
-        allowed = {"letta", "auto"}
-        normalized = value.lower()
+        allowed = {"pydantic_ai", "pydantic-ai", "pydantic", "letta", "auto"}
+        normalized = value.lower().strip()
         if normalized not in allowed:
             raise ValueError(f"default_runtime 必须为 {allowed} 之一，当前值: {value}")
-        return normalized
+        return "pydantic_ai" if normalized in {"pydantic-ai", "pydantic"} else normalized
 
 
 class AppConfig(BaseModel):

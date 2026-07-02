@@ -62,7 +62,16 @@ report:
 
 # ---- Agent Runtime 配置 ----
 agent:
-  default_runtime: "letta"
+  default_runtime: "pydantic_ai"
+  pydantic_ai:
+    enabled: true
+    model: "deepseek-chat"
+    base_url: "https://api.deepseek.com"
+    api_key_env: "DEEPSEEK_API_KEY"
+    request_limit: 30
+    max_tool_calls: 20
+    tool_timeout_seconds:
+    require_tool_use_for_workflow: true
   letta:
     enabled: true
     base_url: ""

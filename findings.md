@@ -140,3 +140,44 @@
 - Project architecture entrypoint: `ARCHITECTURE.md`
 - Agent contracts entrypoint: `docs/agent/`
 - Potential user-provided prompt: `docs/prompt/refactor-project_arch.md`
+
+---
+
+# Pydantic AI Runtime Migration Findings
+
+## Requirements
+- Keep the existing LangGraph Spec Builder untouched.
+- Migrate default runtime behavior from Letta to Pydantic AI.
+- Preserve Letta as an explicit optional runtime.
+- Preserve deterministic Python runtime exemptions for fixed rule-built workflows.
+- Write the migrated architecture design under `docs/generated`.
+
+## External Documentation Findings
+- Pydantic AI Agents are the primary interface for LLM interaction and bundle instructions, function tools/toolsets, structured output, dependencies, model, model settings, and capabilities.
+- Pydantic AI supports synchronous `agent.run_sync()` and asynchronous `agent.run()` execution, plus streaming/event APIs for deeper observability.
+- Pydantic AI function tools can be registered with `@agent.tool`, `@agent.tool_plain`, or the `tools=` / `toolsets=` Agent arguments.
+- Pydantic AI is model-agnostic and supports OpenAI plus OpenAI-compatible providers such as DeepSeek through `OpenAIChatModel` and providers.
+- Official install guidance for OpenAI-compatible use is `pydantic-ai-slim[openai]`; the full `pydantic-ai` package is also valid.
+
+## Current Project Findings
+- Current `RuntimeRouter` defaults to Letta except for Python fixed-flow exemptions.
+- Current `LettaRuntime` is already an adapter over local project Skills through `client_tools.py`; Data Analyzer itself is still a local Skill and `AnalysisOrchestrator`.
+- Current `client_tools.py` is provider-specific in naming (`to_letta_client_tools`) but its `RuntimeTool` registry and `execute_runtime_tool()` are reusable for a Pydantic AI runtime.
+- `pyproject.toml` currently includes `letta-client` and `langgraph`, but does not include Pydantic AI.
+- `config/global.yaml` currently sets `agent.default_runtime: "letta"`.
+- `AgentConfig.validate_default_runtime()` currently only allows `letta` and `auto`, so configuration must be updated before Pydantic AI can become default.
+
+## Migration Results
+- `PydanticAIRuntime` is now implemented as the default non-exempt runtime adapter.
+- `LettaRuntime` remains available through explicit runtime selection and still shares the same local Skill dispatch registry.
+- The runtime tool registry is now provider-neutral enough for both Letta and Pydantic AI to select tools from the same workflow skill map.
+- `AgentConfig` now allows `pydantic_ai`, `pydantic-ai`, `pydantic`, `letta`, and `auto`, while still rejecting Python as a default downgrade runtime.
+- `config/global.yaml` now sets `agent.default_runtime: "pydantic_ai"` and keeps `agent.letta` as optional configuration.
+- The migrated architecture design is written to `docs/generated/agent-runtime-pydantic-ai-migration.md`.
+
+## Verification Findings
+- Focused migration tests passed: 30 passed for Pydantic AI runtime and config.
+- Legacy runtime tests passed: 48 passed for Letta, OMP router behavior, and Spec Builder.
+- Agent/config suite passed: 105 passed.
+- Touched-file ruff check passed.
+- Broad Agent+Skills suite has two unrelated failures in external `daily-report-generator` Skill tests: one missing `yield_type` attribute on a test namespace and one command expectation mismatch for `--download-sources`.

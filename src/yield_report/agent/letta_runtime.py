@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from yield_report.agent.client_tools import (
     build_project_client_tool_registry,
     execute_runtime_tool,
+    select_runtime_tools_for_skills,
     to_letta_client_tools,
 )
 from yield_report.agent.registry import build_default_runtime
@@ -458,27 +459,8 @@ class LettaRuntime:
 
     def _client_tools_for_spec(self, spec: TaskSpec) -> list[dict[str, Any]]:
         workflow_skills = {call.skill for call in spec.workflow}
-        if not workflow_skills:
-            return to_letta_client_tools(self.client_tool_registry)
-
-        allowed: set[str] = set()
-        workflow_tool_map = {
-            "report_download": {"yield_report_download"},
-            "data_analysis": {"yield_report_download", "yield_data_analysis"},
-            "daily_report": {"yield_daily_report"},
-            "anomaly_monitor": {"yield_anomaly_monitor"},
-        }
-        for skill in workflow_skills:
-            tool_names = workflow_tool_map.get(skill)
-            if tool_names is None:
-                return []
-            allowed.update(tool_names)
         return to_letta_client_tools(
-            [
-                tool
-                for name, tool in self.client_tool_registry.items()
-                if name in allowed
-            ]
+            select_runtime_tools_for_skills(workflow_skills, self.client_tool_registry)
         )
 
     @staticmethod
@@ -520,6 +502,7 @@ class LettaRuntime:
                 registry=self.client_tool_registry,
                 project_runtime=self.project_runtime,
                 context=context,
+                call_id_prefix="letta",
             )
         except KeyError:
             payload = {"error": f"Unknown Letta client tool: {name}"}

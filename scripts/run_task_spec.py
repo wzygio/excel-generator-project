@@ -28,9 +28,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--runtime",
         default="auto",
-        choices=["auto", "letta", "python"],
+        choices=["auto", "pydantic_ai", "letta", "python"],
         help=(
-            "Runtime to use. auto/letta use the stateful Letta Agent Runtime. "
+            "Runtime to use. auto uses the default Pydantic AI Agent Runtime. "
+            "letta is available as an explicit optional stateful runtime. "
             "python is allowed only for fixed business exemptions."
         ),
     )

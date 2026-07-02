@@ -1,6 +1,7 @@
 """Agent-facing contracts and runtime helpers for the yield report project."""
 
 from yield_report.agent.letta_runtime import LettaRuntime, LettaRuntimeConfig
+from yield_report.agent.pydantic_ai_runtime import PydanticAIRuntime, PydanticAIRuntimeConfig
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.run_id import RunIdFactory
 from yield_report.agent.runtime import AgentRuntime
@@ -20,6 +21,8 @@ __all__ = [
     "ArtifactRef",
     "LettaRuntime",
     "LettaRuntimeConfig",
+    "PydanticAIRuntime",
+    "PydanticAIRuntimeConfig",
     "RunContext",
     "RuntimeRouter",
     "RunIdFactory",

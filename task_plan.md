@@ -116,3 +116,59 @@ Complete
 | `uv run pytest tests/unit/agent/test_spec_builder.py tests/unit/agent/test_anomaly_monitor_spec.py -q --tb=short` | 14 passed |
 | `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` | 113 passed |
 | `uv run ruff check src/yield_report/agent/spec_builder.py src/yield_report/agent/langgraph_spec_agent.py src/yield_report/agent/spec_graph tests/unit/agent/test_spec_graph.py` | passed |
+
+---
+
+# Pydantic AI Runtime Migration Plan
+
+## Goal
+Migrate the default Agent Runtime from Letta to a lightweight Pydantic AI based runtime while preserving the LangGraph Spec Builder and keeping Letta Runtime as an explicit optional runtime.
+
+## Requirements
+- Do not migrate or rewrite the LangGraph/Spec Builder path.
+- Keep `LettaRuntime` available for explicit `runtime=letta` runs.
+- Make Pydantic AI the default runtime for non-exempt Agent tasks.
+- Preserve deterministic Python runtime exemptions for rule-built `daily-report` and `anomaly-monitor` specs.
+- Keep Skill execution traceable through existing `TaskSpec`, `SkillResult`, `Trace`, artifact, and memory-candidate contracts.
+- Output the migrated architecture design under `docs/generated`.
+
+## Phases
+
+| Phase | Status | Purpose |
+|---|---|---|
+| 1. Restore context and plan | complete | Read existing planning files, inspect current state, and append this migration plan. |
+| 2. Runtime baseline and docs | complete | Use CodeGraph and official Pydantic AI docs to map current runtime boundaries and required API surface. |
+| 3. Implement Pydantic AI runtime | complete | Add Pydantic AI runtime adapter, configuration, tool dispatch, and fail-closed output handling. |
+| 4. Preserve optional Letta | complete | Update router/config/tests so Letta remains callable but no longer default. |
+| 5. Architecture documentation | complete | Write the post-migration architecture design to `docs/generated`. |
+| 6. Verification | complete | Run focused runtime/config tests, lint touched files, and record results. |
+
+## Decisions Made
+
+| Decision | Rationale |
+|---|---|
+| Keep Spec Builder unchanged | The user explicitly requires the existing LangGraph-based Spec Builder architecture to stay in place. |
+| Keep Letta optional | Letta still has value for external stateful/API-backed tasks, but should not be the stable default runtime. |
+| Build a runtime adapter first, not a broad autonomous shell agent | The project needs traceable, fail-closed business Skill execution before general Codex-like CLI autonomy. |
+| Use `pydantic-ai-slim[openai]` | Official docs recommend this lightweight package for OpenAI-compatible providers, matching the current DeepSeek-compatible setup. |
+
+## Verification
+
+| Command | Result |
+|---|---|
+| `uv run pytest tests/unit/agent/test_pydantic_ai_runtime.py tests/unit/test_config_loader.py -q --tb=short` | 30 passed |
+| `uv run pytest tests/unit/agent/test_letta_runtime.py tests/unit/agent/test_omp_runtime.py tests/unit/agent/test_spec_builder.py -q --tb=short` | 48 passed |
+| `uv run pytest tests/unit/agent tests/unit/test_config_loader.py -q --tb=short` | 105 passed |
+| `uv run ruff check ...` on touched runtime/config/test/script files | passed |
+| `uv run pytest tests/unit/agent tests/unit/skills -q --tb=short` | 119 passed, 2 failed in external `daily-report-generator` Skill tests |
+| `git diff --check` | passed; only Git LF-to-CRLF warnings |
+
+## Errors Encountered
+
+| Error | Attempt | Resolution |
+|---|---|---|
+| Context7 tools were not exposed after tool discovery | 1 | Used official Pydantic documentation via web lookup and recorded the source in findings. |
+| PowerShell rejected Bash-style `python - <<'PY'` heredoc | 1 | Switched to a PowerShell here-string piped into `uv run python -`. |
+| Search scope accidentally included `.env` | 1 | Do not include `.env` or secret-bearing files in further searches, generated docs, or summaries. |
+| Generated architecture document did not exist yet | 1 | Create `docs/generated/agent-runtime-pydantic-ai-migration.md` as the requested output. |
+| Broad `tests/unit/agent tests/unit/skills` run failed in external `daily-report-generator` Skill tests | 1 | Treat as residual unrelated failure; focused Runtime/config tests pass and no migration code touched the external Skill script. |
