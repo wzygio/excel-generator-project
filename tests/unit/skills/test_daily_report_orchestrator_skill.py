@@ -16,7 +16,7 @@ def test_daily_report_skill_delegates_to_native_pipeline(
 ) -> None:
     calls: list[tuple[DailyReportRequest, RunContext]] = []
     duty_workspace = tmp_path / "duty"
-    output_path = duty_workspace / "V3良率日报每日异常填报表-20260623-16：00.xlsx"
+    output_path = duty_workspace / "daily-report.xlsx"
 
     def fake_run_native_daily_report(
         request: DailyReportRequest,
@@ -26,19 +26,19 @@ def test_daily_report_skill_delegates_to_native_pipeline(
         return SkillResult(
             skill_name="daily_report",
             success=True,
-            summary=f"Native daily-report pipeline completed: {output_path}",
+            summary=f"daily-report-generator completed: {output_path}",
             artifacts=[
                 ArtifactRef(
                     kind="excel",
                     path=output_path,
-                    description="Native generated daily report workbook",
+                    description="Generated daily report workbook",
                 )
             ],
             data={
-                "runtime": "task0-task4-orchestrator",
+                "runtime": "daily-report-generator",
                 "workspace": str(duty_workspace),
                 "output_file": str(output_path),
-                "workflow": ["task0", "task1", "task2", "task3", "task4"],
+                "workflow": ["mod0", "mod1", "mod2", "mod3", "mod4"],
             },
         )
 
@@ -51,17 +51,17 @@ def test_daily_report_skill_delegates_to_native_pipeline(
     result = tool.run(
         DailyReportRequest(
             report_date="2026-06-23",
-            orchestrator_workspace=duty_workspace,
-            orchestrator_now="2026-06-23 16:00",
+            generator_workspace=duty_workspace,
+            generator_now="2026-06-23 16:00",
         ),
         RunContext(run_id="run-native", workspace=tmp_path),
     )
 
     assert result.success is True
     assert Path(result.artifacts[0].path) == output_path
-    assert result.data["runtime"] == "task0-task4-orchestrator"
+    assert result.data["runtime"] == "daily-report-generator"
     assert calls[0][0].report_date == "2026-06-23"
-    assert calls[0][0].orchestrator_workspace == duty_workspace
+    assert calls[0][0].generator_workspace == duty_workspace
 
 
 def test_agent_runtime_runs_daily_report_native_facade(
@@ -69,7 +69,7 @@ def test_agent_runtime_runs_daily_report_native_facade(
     tmp_path: Path,
 ) -> None:
     duty_workspace = tmp_path / "duty"
-    output_path = duty_workspace / "V3良率日报每日异常填报表-20260623-16：00.xlsx"
+    output_path = duty_workspace / "daily-report.xlsx"
 
     def fake_run_native_daily_report(
         request: DailyReportRequest,
@@ -78,16 +78,16 @@ def test_agent_runtime_runs_daily_report_native_facade(
         return SkillResult(
             skill_name="daily_report",
             success=True,
-            summary="Native daily-report pipeline completed.",
+            summary="daily-report-generator completed.",
             artifacts=[
                 ArtifactRef(
                     kind="excel",
                     path=output_path,
-                    description="Native generated daily report workbook",
+                    description="Generated daily report workbook",
                 )
             ],
             data={
-                "runtime": "task0-task4-orchestrator",
+                "runtime": "daily-report-generator",
                 "workspace": str(duty_workspace),
                 "output_file": str(output_path),
             },
@@ -100,15 +100,15 @@ def test_agent_runtime_runs_daily_report_native_facade(
     )
     spec = TaskSpec(
         run_id="run-daily-native",
-        user_goal="生成 2026-06-23 良率日报",
+        user_goal="Generate 2026-06-23 daily report",
         workflow=[
             SkillCall(
                 id="generate_daily_report",
                 skill="daily_report",
                 input={
                     "report_date": "2026-06-23",
-                    "orchestrator_workspace": str(duty_workspace),
-                    "orchestrator_now": "2026-06-23 16:00",
+                    "generator_workspace": str(duty_workspace),
+                    "generator_now": "2026-06-23 16:00",
                 },
                 save_as="daily_report_file",
             )
@@ -127,39 +127,34 @@ def test_native_facade_ignores_invalid_agent_workspace(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
-    default_workspace = tmp_path / "duty"
-    (default_workspace / "scripts").mkdir(parents=True)
-    (default_workspace / "scripts" / "task0_report_download.py").write_text("", encoding="utf-8")
     invalid_workspace = tmp_path / "project"
-    invalid_workspace.mkdir()
-    orchestrator_root = tmp_path / "task0-task4-orchestrator"
-    orchestrator_root.mkdir()
-    output_path = default_workspace / "V3良率日报每日异常填报表-20260623-16：00.xlsx"
+    generator_root = tmp_path / "daily-report-generator"
+    generator_root.mkdir()
+    output_path = tmp_path / "daily-report.xlsx"
     calls: list[Path] = []
 
-    def fake_run_orchestrator_cli(**kwargs) -> dict[str, object]:
+    def fake_run_generator_cli(**kwargs) -> dict[str, object]:
         calls.append(kwargs["workspace"])
         return {
             "status": "success",
             "workbook_path": str(output_path),
-            "tasks": [{"task_id": "task0"}],
+            "mods": [{"mod_id": "mod0"}],
         }
 
-    monkeypatch.setattr(native_pipeline, "DEFAULT_DUTY_WORKSPACE", default_workspace)
-    monkeypatch.setattr(native_pipeline, "_run_orchestrator_cli", fake_run_orchestrator_cli)
+    monkeypatch.setattr(native_pipeline, "_run_generator_cli", fake_run_generator_cli)
 
     result = native_pipeline.run_native_daily_report(
         DailyReportRequest(
             report_date="2026-06-23",
-            orchestrator_workspace=invalid_workspace,
-            source_files={"task0_task4_orchestrator_root": orchestrator_root},
+            generator_workspace=invalid_workspace,
+            source_files={"daily_report_generator_root": generator_root},
         ),
         RunContext(run_id="run-native-invalid-workspace", workspace=tmp_path),
     )
 
     assert result.success is True
-    assert calls == [default_workspace.resolve()]
-    assert Path(result.data["workspace"]) == default_workspace.resolve()
+    assert calls == [tmp_path.resolve()]
+    assert Path(result.data["workspace"]) == tmp_path.resolve()
 
 
 def test_native_facade_uses_report_date_for_runner_now(
@@ -167,30 +162,28 @@ def test_native_facade_uses_report_date_for_runner_now(
     tmp_path: Path,
 ) -> None:
     duty_workspace = tmp_path / "duty"
-    (duty_workspace / "scripts").mkdir(parents=True)
-    (duty_workspace / "scripts" / "task0_report_download.py").write_text("", encoding="utf-8")
-    orchestrator_root = tmp_path / "task0-task4-orchestrator"
-    orchestrator_root.mkdir()
-    output_path = duty_workspace / "V3良率日报每日异常填报表-20260623-16：00.xlsx"
+    duty_workspace.mkdir()
+    generator_root = tmp_path / "daily-report-generator"
+    generator_root.mkdir()
+    output_path = duty_workspace / "daily-report.xlsx"
     calls: list[str | None] = []
 
-    def fake_run_orchestrator_cli(**kwargs) -> dict[str, object]:
-        calls.append(kwargs["request"].orchestrator_now)
+    def fake_run_generator_cli(**kwargs) -> dict[str, object]:
+        calls.append(kwargs["request"].generator_now)
         return {
             "status": "success",
             "workbook_path": str(output_path),
-            "tasks": [{"task_id": "task0"}],
+            "mods": [{"mod_id": "mod0"}],
         }
 
-    monkeypatch.setattr(native_pipeline, "DEFAULT_DUTY_WORKSPACE", duty_workspace)
-    monkeypatch.setattr(native_pipeline, "_run_orchestrator_cli", fake_run_orchestrator_cli)
+    monkeypatch.setattr(native_pipeline, "_run_generator_cli", fake_run_generator_cli)
 
     result = native_pipeline.run_native_daily_report(
         DailyReportRequest(
             report_date="2026-06-23",
-            orchestrator_workspace=duty_workspace,
-            orchestrator_now="2026-06-24T16:00:00",
-            source_files={"task0_task4_orchestrator_root": orchestrator_root},
+            generator_workspace=duty_workspace,
+            generator_now="2026-06-24T16:00:00",
+            source_files={"daily_report_generator_root": generator_root},
         ),
         RunContext(run_id="run-native-report-date-now", workspace=tmp_path),
     )
@@ -199,18 +192,17 @@ def test_native_facade_uses_report_date_for_runner_now(
     assert calls == ["2026-06-23 16:00"]
 
 
-def test_native_facade_calls_task0_task4_orchestrator_cli(
+def test_native_facade_calls_daily_report_generator_cli(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
     duty_workspace = tmp_path / "duty"
-    (duty_workspace / "scripts").mkdir(parents=True)
-    (duty_workspace / "scripts" / "task0_report_download.py").write_text("", encoding="utf-8")
-    orchestrator_root = tmp_path / "task0-task4-orchestrator"
-    cli_path = orchestrator_root / "scripts" / "daily_report_cli.py"
+    duty_workspace.mkdir()
+    generator_root = tmp_path / "daily-report-generator"
+    cli_path = generator_root / "scripts" / "daily_report_cli.py"
     cli_path.parent.mkdir(parents=True)
     cli_path.write_text("", encoding="utf-8")
-    output_path = duty_workspace / "V3良率日报每日异常填报表-20260623-16：00.xlsx"
+    output_path = duty_workspace / "daily-report.xlsx"
     captured: dict[str, object] = {}
 
     def fake_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
@@ -223,7 +215,7 @@ def test_native_facade_calls_task0_task4_orchestrator_cli(
                 {
                     "status": "success",
                     "workbook_path": str(output_path),
-                    "tasks": [{"task_id": "task0"}, {"task_id": "task4"}],
+                    "mods": [{"mod_id": "mod0"}, {"mod_id": "mod4"}],
                 },
                 ensure_ascii=False,
             ),
@@ -235,21 +227,27 @@ def test_native_facade_calls_task0_task4_orchestrator_cli(
     result = native_pipeline.run_native_daily_report(
         DailyReportRequest(
             report_date="2026-06-23",
-            orchestrator_workspace=duty_workspace,
-            source_files={"task0_task4_orchestrator_root": orchestrator_root},
+            generator_workspace=duty_workspace,
+            source_files={"daily_report_generator_root": generator_root},
         ),
-        RunContext(run_id="run-native-orchestrator-cli", workspace=tmp_path),
+        RunContext(run_id="run-native-generator-cli", workspace=tmp_path),
     )
 
     command = captured["command"]
     assert isinstance(command, list)
     assert result.success is True
-    assert result.data["runtime"] == "task0-task4-orchestrator"
+    assert result.data["runtime"] == "daily-report-generator"
+    assert result.data["generator_root"] == str(generator_root.resolve())
+    assert result.data["output_dir"] == str(
+        tmp_path / "output" / "artifacts" / "reports" / "generated"
+    )
     assert str(cli_path.resolve()) in command
     assert "--workspace" in command
     assert str(duty_workspace.resolve()) in command
+    assert "--output-dir" in command
+    assert str(tmp_path / "output" / "artifacts" / "reports" / "generated") in command
     assert "--now" in command
     assert "2026-06-23 16:00" in command
     assert "--end-date" in command
     assert "2026-06-23" in command
-    assert result.data["workflow"] == ["task0", "task4"]
+    assert result.data["workflow"] == ["mod0", "mod4"]

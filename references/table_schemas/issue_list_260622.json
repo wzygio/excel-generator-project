@@ -1,0 +1,244 @@
+[
+  {
+    "file_name": "量产品Issue List-260622.xlsx#CT异常波动调查",
+    "sheet_name": "CT异常波动调查",
+    "description": "量产品 Issue List 主数据表；记录 CT 异常波动通报、回复、责任归属、状态及改善/监控/固化措施。",
+    "columns": [
+      {
+        "index": 0,
+        "name": "no",
+        "type": "integer",
+        "required": true,
+        "description": "序号。"
+      },
+      {
+        "index": 1,
+        "name": "周别",
+        "type": "string",
+        "required": true,
+        "description": "周别标签，样例为 W1、W2。"
+      },
+      {
+        "index": 2,
+        "name": "通报日期",
+        "type": "string",
+        "format": "datetime",
+        "required": true
+      },
+      {
+        "index": 3,
+        "name": "产品",
+        "type": "string",
+        "required": true
+      },
+      {
+        "index": 4,
+        "name": "不良",
+        "type": "string",
+        "required": true
+      },
+      {
+        "index": 5,
+        "name": "不良站点",
+        "type": "string",
+        "required": true
+      },
+      {
+        "index": 6,
+        "name": "日良损",
+        "type": "number",
+        "format": "percentage",
+        "description": "多数单元格为百分比小数；少数复合不良行以中文百分比文本记录。"
+      },
+      {
+        "index": 7,
+        "name": "当月",
+        "type": "number",
+        "format": "percentage",
+        "description": "多数单元格为百分比小数；少数复合不良行以中文百分比文本记录。"
+      },
+      {
+        "index": 8,
+        "name": "当周",
+        "type": "number",
+        "format": "percentage",
+        "description": "多数单元格为百分比小数；少数复合不良行以中文百分比文本记录。"
+      },
+      {
+        "index": 9,
+        "name": "本批次",
+        "type": "number",
+        "format": "percentage",
+        "description": "多数单元格为百分比小数；少数复合不良行以中文百分比文本记录。"
+      },
+      {
+        "index": 10,
+        "name": "异常通报",
+        "type": "string",
+        "description": "多行异常通报文本。"
+      },
+      {
+        "index": 11,
+        "name": "工艺整合&工艺 回复的改善及挽救进展",
+        "type": "string",
+        "description": "多行工艺回复及处置进展文本。"
+      },
+      {
+        "index": 12,
+        "name": "异常对接人",
+        "type": "string"
+      },
+      {
+        "index": 13,
+        "name": "责任厂别",
+        "type": "string"
+      },
+      {
+        "index": 14,
+        "name": "大数据反馈人",
+        "type": "string"
+      },
+      {
+        "index": 15,
+        "name": "状态",
+        "type": "string",
+        "enum": [
+          "Close",
+          "Open",
+          "Monitor"
+        ]
+      },
+      {
+        "index": 16,
+        "name": "备注",
+        "type": "string"
+      },
+      {
+        "index": 17,
+        "name": "异常站点/平台/腔室",
+        "type": "string"
+      },
+      {
+        "index": 18,
+        "name": "固定膜位",
+        "type": "string"
+      },
+      {
+        "index": 19,
+        "name": "异常原因",
+        "type": "string"
+      },
+      {
+        "index": 20,
+        "name": "改善措施",
+        "type": "string"
+      },
+      {
+        "index": 21,
+        "name": "监控措施",
+        "type": "string"
+      },
+      {
+        "index": 22,
+        "name": "固化措施",
+        "type": "string"
+      },
+      {
+        "index": 23,
+        "name": "未命名列_24",
+        "type": "string",
+        "description": "Excel X 列无表头；共有 52 个非空值，主要为百分比文本，存在 Excel 错误码。"
+      }
+    ]
+  },
+  {
+    "file_name": "量产品Issue List-260622.xlsx#Sheet1",
+    "sheet_name": "Sheet1",
+    "description": "单格备注页；A1 保存一段异常原因、监控、影响范围、改善措施、责任部门等多行文本。",
+    "columns": [
+      {
+        "index": 0,
+        "name": "内容",
+        "type": "string",
+        "description": "原 sheet 只有 A1 一个多行文本单元格，无表头。"
+      }
+    ]
+  },
+  {
+    "file_name": "量产品Issue List-260622.xlsx#关闭率统计-By厂:透视计数区",
+    "sheet_name": "关闭率统计-By厂",
+    "description": "关闭率统计左侧透视计数区；对应 A:D 列，按责任厂别统计 Close、OPEN 和总计。",
+    "columns": [
+      {
+        "index": 0,
+        "name": "行标签",
+        "type": "string",
+        "required": true,
+        "description": "责任厂别或总计。"
+      },
+      {
+        "index": 1,
+        "name": "Close",
+        "type": "integer"
+      },
+      {
+        "index": 2,
+        "name": "OPEN",
+        "type": "integer"
+      },
+      {
+        "index": 3,
+        "name": "总计",
+        "type": "integer"
+      }
+    ]
+  },
+  {
+    "file_name": "量产品Issue List-260622.xlsx#关闭率统计-By厂:关闭率明细区",
+    "sheet_name": "关闭率统计-By厂",
+    "description": "关闭率统计右侧明细区；对应 G:M 列，按通报类型和责任厂别输出关闭率及规格线。",
+    "columns": [
+      {
+        "index": 0,
+        "name": "通报类型",
+        "type": "string",
+        "required": true,
+        "description": "样例为 CT。"
+      },
+      {
+        "index": 1,
+        "name": "行标签",
+        "type": "string",
+        "required": true,
+        "description": "总计、责任厂别或分组标签。"
+      },
+      {
+        "index": 2,
+        "name": "Close",
+        "type": "integer"
+      },
+      {
+        "index": 3,
+        "name": "OPEN",
+        "type": "integer"
+      },
+      {
+        "index": 4,
+        "name": "总计",
+        "type": "integer"
+      },
+      {
+        "index": 5,
+        "name": "关闭率",
+        "type": "number",
+        "format": "percentage"
+      },
+      {
+        "index": 6,
+        "name": "规格线",
+        "type": "number",
+        "format": "percentage"
+      }
+    ]
+  }
+]

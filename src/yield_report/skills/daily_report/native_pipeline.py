@@ -1,4 +1,4 @@
-"""Task0-Task4 orchestrator facade for the daily_report skill."""
+"""daily-report-generator facade for the daily_report skill."""
 
 from __future__ import annotations
 
@@ -13,24 +13,25 @@ from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, S
 from yield_report.skills.daily_report.models import DailyReportRequest
 
 TOOL_NAME = "daily_report"
-RUNTIME_NAME = "task0-task4-orchestrator"
-ORCHESTRATOR_ROOT_ENV = "YIELD_REPORT_TASK0_TASK4_ORCHESTRATOR_ROOT"
+RUNTIME_NAME = "daily-report-generator"
+GENERATOR_ROOT_ENV = "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"
 DUTY_WORKSPACE_ENV = "YIELD_REPORT_DUTY_WORKSPACE"
-DEFAULT_ORCHESTRATOR_ROOT = Path.home() / ".agents" / "skills" / "task0-task4-orchestrator"
-DEFAULT_DUTY_WORKSPACE = Path("D:/wzy/工作-值班工作/相关文件")
-ORCHESTRATOR_CLI = Path("scripts") / "daily_report_cli.py"
-TASK0_SCRIPT = Path("scripts") / "task0_report_download.py"
+DEFAULT_GENERATOR_ROOT = Path.home() / ".agents" / "skills" / RUNTIME_NAME
+DEFAULT_REPORT_OUTPUT_DIR = Path("output") / "artifacts" / "reports" / "generated"
+GENERATOR_CLI = Path("scripts") / "daily_report_cli.py"
 
 
 def run_native_daily_report(request: DailyReportRequest, context: RunContext) -> SkillResult:
-    """Run the user-facing Task0-Task4 orchestrator pipeline."""
+    """Run the user-facing daily-report-generator pipeline."""
     try:
         runner_request = _normalize_runner_request(request)
-        orchestrator_root = _resolve_orchestrator_root(request)
-        workspace = _resolve_workspace(runner_request)
-        result = _run_orchestrator_cli(
-            orchestrator_root=orchestrator_root,
+        generator_root = _resolve_generator_root(request)
+        workspace = _resolve_workspace(runner_request, context=context)
+        output_dir = _resolve_output_dir(runner_request, context=context, workspace=workspace)
+        result = _run_generator_cli(
+            generator_root=generator_root,
             workspace=workspace,
+            output_dir=output_dir,
             request=runner_request,
             context=context,
         )
@@ -41,19 +42,20 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
                 ArtifactRef(
                     kind="excel",
                     path=output_file,
-                    description="Native generated daily report workbook",
+                    description="Generated daily report workbook",
                     metadata={"skill": TOOL_NAME, "runtime": RUNTIME_NAME},
                 )
             )
         return SkillResult(
             skill_name=TOOL_NAME,
             success=True,
-            summary=f"Task0-Task4 orchestrator completed: {output_file or workspace}",
+            summary=f"{RUNTIME_NAME} completed: {output_file or workspace}",
             artifacts=artifacts,
             data={
                 "runtime": RUNTIME_NAME,
-                "orchestrator_root": str(orchestrator_root),
+                "generator_root": str(generator_root),
                 "workspace": str(workspace),
+                "output_dir": str(output_dir),
                 "output_file": str(output_file) if output_file else "",
                 "workflow": _workflow_from_result(result),
                 "native_result": result,
@@ -64,10 +66,10 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
         return SkillResult(
             skill_name=TOOL_NAME,
             success=False,
-            summary=f"Task0-Task4 orchestrator failed: {exc}",
+            summary=f"{RUNTIME_NAME} failed: {exc}",
             data={
                 "runtime": RUNTIME_NAME,
-                "workspace": str(_resolve_workspace(_normalize_runner_request(request))),
+                "workspace": str(_resolve_workspace(_normalize_runner_request(request), context=context)),
             },
             error=SkillError(
                 code="daily_report.native_pipeline.failed",
@@ -78,14 +80,15 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
         )
 
 
-def _run_orchestrator_cli(
+def _run_generator_cli(
     *,
-    orchestrator_root: Path,
+    generator_root: Path,
     workspace: Path,
+    output_dir: Path,
     request: DailyReportRequest,
     context: RunContext,
 ) -> dict[str, Any]:
-    cli_path = orchestrator_root / ORCHESTRATOR_CLI
+    cli_path = generator_root / GENERATOR_CLI
     if not cli_path.exists():
         raise FileNotFoundError(f"{RUNTIME_NAME} CLI is missing: {cli_path}")
 
@@ -97,11 +100,14 @@ def _run_orchestrator_cli(
         str(workspace),
         "--mode",
         "write",
+        "--output-dir",
+        str(output_dir),
         "--snapshot-dir",
-        str(context.output_dir),
+        str(_resolve_context_output_dir(context)),
     ]
-    if request.orchestrator_now:
-        command.extend(["--now", request.orchestrator_now])
+    run_at = request.generator_now or request.orchestrator_now
+    if run_at:
+        command.extend(["--now", run_at])
     if request.report_date:
         command.extend(["--end-date", request.report_date])
 
@@ -124,39 +130,61 @@ def _run_orchestrator_cli(
 def _normalize_runner_request(request: DailyReportRequest) -> DailyReportRequest:
     if not request.report_date:
         return request
+    run_at = f"{request.report_date} 16:00"
     return request.model_copy(
-        update={"orchestrator_now": f"{request.report_date} 16:00"},
+        update={"generator_now": run_at, "orchestrator_now": run_at},
     )
 
 
-def _resolve_orchestrator_root(request: DailyReportRequest) -> Path:
+def _resolve_generator_root(request: DailyReportRequest) -> Path:
     configured = (
-        request.source_files.get("task0_task4_orchestrator_root")
+        request.source_files.get("daily_report_generator_root")
+        or request.source_files.get("generator_root")
         or request.source_files.get("orchestrator_root")
-        or os.getenv(ORCHESTRATOR_ROOT_ENV)
-        or DEFAULT_ORCHESTRATOR_ROOT
+        or os.getenv(GENERATOR_ROOT_ENV)
+        or DEFAULT_GENERATOR_ROOT
     )
     return Path(configured).expanduser().resolve()
 
 
-def _resolve_workspace(request: DailyReportRequest) -> Path:
+def _resolve_workspace(request: DailyReportRequest, *, context: RunContext) -> Path:
     candidates = [
+        request.generator_workspace,
         request.orchestrator_workspace,
+        request.source_files.get("generator_workspace"),
         request.source_files.get("orchestrator_workspace"),
         os.getenv(DUTY_WORKSPACE_ENV),
-        DEFAULT_DUTY_WORKSPACE,
+        context.workspace,
     ]
     for configured in candidates:
         if not configured:
             continue
         workspace = Path(configured).expanduser().resolve()
-        if _is_native_duty_workspace(workspace):
+        if workspace.exists() and workspace.is_dir():
             return workspace
-    return Path(DEFAULT_DUTY_WORKSPACE).expanduser().resolve()
+    return context.workspace.resolve()
 
 
-def _is_native_duty_workspace(workspace: Path) -> bool:
-    return (workspace / TASK0_SCRIPT).exists()
+def _resolve_output_dir(
+    request: DailyReportRequest,
+    *,
+    context: RunContext,
+    workspace: Path,
+) -> Path:
+    configured = request.output_dir or request.source_files.get("generator_output_dir")
+    if configured:
+        output_dir = Path(configured).expanduser()
+        if not output_dir.is_absolute():
+            output_dir = workspace / output_dir
+        return output_dir.resolve()
+    return (context.workspace / DEFAULT_REPORT_OUTPUT_DIR).resolve()
+
+
+def _resolve_context_output_dir(context: RunContext) -> Path:
+    output_dir = Path(context.output_dir).expanduser()
+    if not output_dir.is_absolute():
+        output_dir = context.workspace / output_dir
+    return output_dir.resolve()
 
 
 def _parse_cli_result(stdout: str) -> dict[str, Any]:
@@ -199,11 +227,17 @@ def _result_output_file(result: dict[str, Any]) -> Path | None:
 
 
 def _workflow_from_result(result: dict[str, Any]) -> list[str]:
-    tasks = result.get("tasks")
-    if not isinstance(tasks, list):
+    steps = result.get("mods")
+    if not isinstance(steps, list):
+        steps = result.get("tasks")
+    if not isinstance(steps, list):
         return []
+
     workflow: list[str] = []
-    for task in tasks:
-        if isinstance(task, dict) and task.get("task_id"):
-            workflow.append(str(task["task_id"]))
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        step_id = step.get("mod_id") or step.get("task_id")
+        if step_id:
+            workflow.append(str(step_id))
     return workflow

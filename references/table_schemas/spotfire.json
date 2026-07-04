@@ -1,0 +1,112 @@
+{
+  "file_name": "spotfire.xlsx",
+  "description": "产品良率与CT异常数据统计表",
+  "columns": [
+    {
+      "index": 0,
+      "name": "产品类型",
+      "type": "string",
+      "required": true
+    },
+    {
+      "index": 1,
+      "name": "产品",
+      "type": "string",
+      "required": true
+    },
+    {
+      "index": 2,
+      "name": "日期",
+      "type": "string",
+      "format": "date-yyyymmdd",
+      "required": true
+    },
+    {
+      "index": 3,
+      "name": "目标",
+      "type": "number",
+      "format": "percentage"
+    },
+    {
+      "index": 4,
+      "name": "良率",
+      "type": "number",
+      "format": "percentage"
+    },
+    {
+      "index": 5,
+      "name": "是否达标",
+      "type": "string",
+      "enum": [
+        "达标",
+        "不达标"
+      ]
+    },
+    {
+      "index": 6,
+      "name": "当日GAP",
+      "type": "number",
+      "format": "percentage"
+    },
+    {
+      "index": 7,
+      "name": "CT_投入数",
+      "type": "integer",
+      "description": "CT分类下的投入数"
+    },
+    {
+      "index": 8,
+      "name": "CT_ratio",
+      "type": "number",
+      "format": "percentage"
+    },
+    {
+      "index": 9,
+      "name": "CT_当日异常",
+      "type": "string"
+    },
+    {
+      "index": 10,
+      "name": "CT_已知异常",
+      "type": "string"
+    },
+    {
+      "index": 11,
+      "name": "CT_TOP3_Group",
+      "type": "string"
+    },
+    {
+      "index": 12,
+      "name": "CT_TOP_GROUP_辅助",
+      "type": "string"
+    },
+    {
+      "index": 13,
+      "name": "CT_最新填报日期",
+      "type": "string",
+      "format": "date-yyyymmdd"
+    },
+    {
+      "index": 14,
+      "name": "CT_最新填报",
+      "type": "string"
+    },
+    {
+      "index": 15,
+      "name": "CT_前一次填报日期",
+      "type": "string",
+      "format": "date-yyyymmdd"
+    },
+    {
+      "index": 16,
+      "name": "CT_前一次填报",
+      "type": "string"
+    },
+    {
+      "index": 17,
+      "name": "CT_最优良率",
+      "type": "number",
+      "format": "percentage"
+    }
+  ]
+}
