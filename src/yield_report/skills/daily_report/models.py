@@ -22,6 +22,7 @@ class DailyReportRequest(BaseModel):
     output_name: str | None = None
     emit_intermediate_artifacts: bool = True
     use_llm_polishing: bool = False
+    generator_root: Path | None = None
     generator_workspace: Path | None = None
     orchestrator_workspace: Path | None = None
     generator_now: str | None = None

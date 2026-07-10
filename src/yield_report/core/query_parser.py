@@ -21,11 +21,14 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterator, Mapping
 from datetime import date, datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import SourceFileConfig
 from shared_kernel.infrastructure.llm_handler import llm_manager
 
 logger = logging.getLogger(__name__)
@@ -35,7 +38,7 @@ class ReportType(StrEnum):
     """报表类型枚举"""
 
     DAILY_YIELD = "daily_yield"
-    """V3CT修正良率及不良率By月周天报表 - 用于 Gap 计算"""
+    """Daily/weekly/monthly yield source used for Gap analysis."""
 
     BATCH_YIELD = "batch_yield"
     """V3良率及不良率By批次汇总报表 - 用于批次恶化判断"""
@@ -50,34 +53,59 @@ class ReportType(StrEnum):
     """日良率Gap分析模板 - 提供规则与模板"""
 
 
-# 报表类型元数据映射
-REPORT_TYPE_META: dict[ReportType, dict[str, str]] = {
-    ReportType.DAILY_YIELD: {
-        "name": "V3CT修正良率及不良率By月周天报表",
-        "description": "按日月周维度汇总的良率及不良率数据，用于Gap计算",
-        "source": "FineReport",
-    },
-    ReportType.BATCH_YIELD: {
-        "name": "V3良率及不良率By批次汇总报表",
-        "description": "按批次汇总的良率及不良率数据，用于判断最新批次是否恶化",
-        "source": "FineReport",
-    },
-    ReportType.CT_EXCEPTION: {
-        "name": "CT良率异常波动管理表",
-        "description": "CT工程不良率异常波动的管理记录表",
-        "source": "网络共享路径",
-    },
-    ReportType.TARGET_DECOMPOSITION: {
-        "name": "良率目标拆解表",
-        "description": "各产品型号的良率目标值拆解",
-        "source": "本地文件",
-    },
-    ReportType.GAP_TEMPLATE: {
-        "name": "日良率Gap分析模板",
-        "description": "Gap分析的标准模板",
-        "source": "本地文件",
-    },
-}
+def build_report_type_meta(
+    source_files: Mapping[str, SourceFileConfig] | None = None,
+) -> dict[ReportType, dict[str, str]]:
+    """Build the legacy report metadata view from validated source settings."""
+    catalog = source_files if source_files is not None else ConfigLoader().get().source_files
+    metadata: dict[ReportType, dict[str, str]] = {}
+    for report_type in ReportType:
+        source = catalog.get(report_type.value)
+        if source is None or not source.description.strip():
+            raise ValueError(f"source_files.{report_type.value}.description is not configured")
+        metadata[report_type] = {
+            "name": source.description,
+            "description": source.purpose,
+            "source": source.source,
+        }
+    return metadata
+
+
+class _ConfiguredReportTypeMeta(Mapping[ReportType, dict[str, str]]):
+    """Lazy compatibility mapping backed by the current validated config."""
+
+    def _data(self) -> dict[ReportType, dict[str, str]]:
+        return build_report_type_meta()
+
+    def __getitem__(self, key: ReportType) -> dict[str, str]:
+        return self._data()[key]
+
+    def __iter__(self) -> Iterator[ReportType]:
+        return iter(self._data())
+
+    def __len__(self) -> int:
+        return len(self._data())
+
+
+REPORT_TYPE_META: Mapping[ReportType, dict[str, str]] = _ConfiguredReportTypeMeta()
+
+
+def _format_report_types(source_files: Mapping[str, SourceFileConfig]) -> str:
+    lines: list[str] = []
+    for index, report_type in enumerate(ReportType, start=1):
+        source = source_files.get(report_type.value)
+        if source is None or not source.description.strip():
+            raise ValueError(f"source_files.{report_type.value}.description is not configured")
+        lines.append(
+            f'{index}. **{report_type.value}** - "{source.description}": '
+            f"{source.purpose}。数据来源：{source.source}。"
+        )
+        if source.aliases:
+            lines.append(f"   - 用户可能说：{'、'.join(source.aliases)}")
+        if source.filters:
+            lines.append(f"   - 筛选条件：{'、'.join(source.filters)}")
+        lines.extend(f"   - {guidance}" for guidance in source.query_guidance)
+    return "\n".join(lines)
 
 
 class ReportQueryRequest(BaseModel):
@@ -133,29 +161,13 @@ class QueryParserError(Exception):
     """查询解析失败"""
 
 
-SYSTEM_PROMPT = """你是一个智能的报表查询解析助手。你的任务是将用户的自然语言查询转换为结构化的 JSON 参数。
+SYSTEM_PROMPT_TEMPLATE = """你是一个智能的报表查询解析助手。你的任务是将用户的自然语言查询转换为结构化的 JSON 参数。
 
 ## 可用的报表类型
 
 以下是用户可能请求下载的报表类型：
 
-1. **daily_yield** - "V3CT修正良率及不良率By月周天报表": 按日月周维度汇总的良率及不良率数据，用于 Gap 计算。数据来源：FineReport。
-   - 用户可能说：良率日报、月周天、daily yield、良率报表、V3良率、良率数据
-   - 筛选条件: 结束日期(必选)、产品型号(可选)、月数(可选，默认通常为2，最近三个月应为3)
-   - 默认日期规则: 上午10点前日度数据仍截止昨日；10点后截止今天。
-
-2. **batch_yield** - "V3良率及不良率By批次汇总报表": 按批次汇总的良率及不良率数据，用于判断最新批次是否恶化。数据来源：FineReport。
-   - 用户可能说：批次报表、batch yield、批次良率、按批次
-   - 筛选条件: 开始日期(默认今天往前90天)、结束日期(默认今天；上午10点前为昨日)、产品型号(可选)
-
-3. **ct_exception** - "CT良率异常波动管理表": CT工程不良率异常波动的管理记录。数据来源：网络共享文件。
-   - 用户可能说：CT异常、异常管理表、CT良率异常、异常波动
-
-4. **target_decomposition** - "良率目标拆解表": 各产品型号的良率目标值。数据来源：本地文件。
-   - 用户可能说：目标拆解、良率目标、target、目标表
-
-5. **gap_template** - "日良率Gap分析模板": Gap分析标准模板。数据来源：本地文件。
-   - 用户可能说：Gap模板、分析模板、Gap分析模板
+{report_types}
 
 ## 参数提取规则
 
@@ -194,12 +206,19 @@ class QueryParser:
     使用 LLMManager 进行 LLM 调用。
     """
 
-    def __init__(self, provider: str | None = None) -> None:
+    def __init__(
+        self,
+        provider: str | None = None,
+        source_files: Mapping[str, SourceFileConfig] | None = None,
+    ) -> None:
         """
         Args:
             provider: LLM 供应商 ("deepseek" 或 "gemini")，默认从 config 读取
         """
         self._provider = provider
+        self._source_files = dict(
+            source_files if source_files is not None else ConfigLoader().get().source_files
+        )
 
     def parse(
         self,
@@ -223,7 +242,10 @@ class QueryParser:
 
         # 构建带有日期上下文的 prompt
         today = date.today()
-        prompt = SYSTEM_PROMPT.format(today_date=today.isoformat())
+        prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            report_types=_format_report_types(self._source_files),
+            today_date=today.isoformat(),
+        )
 
         try:
             response_text = llm_manager.chat(

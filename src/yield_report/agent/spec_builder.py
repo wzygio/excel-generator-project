@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
 
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import SourceFileConfig
 from yield_report.agent.run_id import RunIdFactory, normalize_capability, normalize_source
 from yield_report.agent.run_store import RunPaths, RunStore
 from yield_report.agent.spec_graph import LangGraphSpecAgent
@@ -25,28 +27,19 @@ from yield_report.core.analysis_query_parser import (
     metric_for_time_grain,
 )
 
-DEFAULT_SECTIONS = ["gap", "trend", "known_exception", "new_exception"]
-DEFAULT_TEMPLATE_REF = "docs/project_files/V3良率日报每日异常填报表.xlsx"
-DEFAULT_DAILY_YIELD_FILE_NAME = "V3CT修正良率及不良率By月周天报表"
 REGISTERED_SKILLS = {"report_download", "data_analysis", "daily_report", "anomaly_monitor"}
 RULE_BUILD_CAPABILITIES = {"anomaly-monitor", "daily-report"}
 PRODUCT_MODEL_PATTERN = re.compile(r"(?<![A-Z0-9])[A-Z]\d{3,4}(?![A-Z0-9])", re.IGNORECASE)
-LOCAL_SOURCE_FILES = {
-    "spotfire": "resources/project_files/spotfire.xlsx",
-    "daily_yield": "resources/V3CT修正良率及不良率By月周天报表.xlsx",
-    "target_decomposition": "resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx",
-    "ct_exception": "resources/CT良率异常波动管理表.xlsx",
-    "code_mapping": "resources/大数据值班当日新增不良HL模板.xlsx",
-}
-ANOMALY_DATA_SOURCE_DIR = (
-    "//10.71.7.15/"
-    "大数据共享/"
-    "12.良率监控日报自动化"
+LOCAL_SOURCE_ALIASES = (
+    "spotfire",
+    "daily_yield",
+    "target_decomposition",
+    "ct_exception",
+    "code_mapping",
 )
-ANOMALY_SPOTFIRE_FILE = "D:/wzy/工作-值班工作/相关文件/resources/spotfire.xlsx"
-ANOMALY_SOURCE_FILES = {
-    "data_source_dir": ANOMALY_DATA_SOURCE_DIR,
-    "spotfire": ANOMALY_SPOTFIRE_FILE,
+ANOMALY_SOURCE_ALIASES = {
+    "data_source_dir": "data_source_dir",
+    "spotfire": "anomaly_spotfire",
 }
 
 
@@ -87,6 +80,7 @@ class SpecBuilder:
         today: date | None = None,
         llm_converter: LlmConverter | None = None,
         clock: Callable[[], datetime] | None = None,
+        source_files: Mapping[str, SourceFileConfig] | None = None,
     ) -> None:
         self.store = store or RunStore()
         self.today = today or date.today()
@@ -94,6 +88,13 @@ class SpecBuilder:
             (lambda: datetime.combine(self.today, time.min)) if today is not None else datetime.now
         )
         self._llm_converter = llm_converter
+        catalog = source_files if source_files is not None else ConfigLoader().get().source_files
+        self._source_files = dict(catalog)
+        self._local_source_files = self._configured_source_paths(LOCAL_SOURCE_ALIASES)
+        self._anomaly_source_files = {
+            runtime_alias: self._source_path(config_alias)
+            for runtime_alias, config_alias in ANOMALY_SOURCE_ALIASES.items()
+        }
 
     def build(self, request: SpecBuildRequest) -> SpecBuildResult:
         """Create a run directory, write ``spec.yaml``, and return the TaskSpec."""
@@ -217,7 +218,6 @@ class SpecBuilder:
     ) -> TaskSpec:
         report_date = self._resolve_report_date(request)
         product_models = self._resolve_product_models(request)
-        sections = _normalize_sections(request.sections) or DEFAULT_SECTIONS
         if not product_models and not request.allow_all_products:
             warnings.append("缺少产品型号，需要用户确认。")
 
@@ -247,7 +247,7 @@ class SpecBuilder:
                 "fixed_flow": True,
             },
             inputs=self._build_inputs(report_date, product_models),
-            workflow=self._build_workflow(report_date, product_models, sections),
+            workflow=self._build_workflow(report_date),
             outputs=_build_outputs(),
             memory={
                 "reuse_policy": "confirmed_only",
@@ -319,7 +319,7 @@ class SpecBuilder:
                 "reports": [],
                 "local_files": [
                     {"alias": alias, "path": path}
-                    for alias, path in ANOMALY_SOURCE_FILES.items()
+                    for alias, path in self._anomaly_source_files.items()
                 ],
             },
             workflow=[
@@ -330,7 +330,7 @@ class SpecBuilder:
                         "report_date": report_date,
                         "product_models": product_models,
                         "mode": "detect",
-                        "source_files": ANOMALY_SOURCE_FILES,
+                        "source_files": self._anomaly_source_files,
                         "write_ledgers": False,
                         "push_notifications": True,
                     },
@@ -408,7 +408,7 @@ class SpecBuilder:
                     }
                 ],
                 "local_files": [
-                    {"alias": "daily_yield", "path": LOCAL_SOURCE_FILES["daily_yield"]},
+                    {"alias": "daily_yield", "path": self._source_path("daily_yield")},
                 ],
             },
             workflow=[
@@ -489,7 +489,8 @@ class SpecBuilder:
                 "date_range": {"start": start_date, "end": report_date},
                 "reports": reports,
                 "local_files": [
-                    {"alias": alias, "path": path} for alias, path in LOCAL_SOURCE_FILES.items()
+                    {"alias": alias, "path": path}
+                    for alias, path in self._local_source_files.items()
                 ],
             },
             workflow=[
@@ -582,36 +583,30 @@ class SpecBuilder:
                 },
             ],
             "local_files": [
-                {"alias": alias, "path": path} for alias, path in LOCAL_SOURCE_FILES.items()
+                {"alias": alias, "path": path}
+                for alias, path in self._local_source_files.items()
             ],
         }
 
     @staticmethod
-    def _build_workflow(
-        report_date: str,
-        product_models: list[str],
-        sections: list[str],
-    ) -> list[SkillCall]:
+    def _build_workflow(report_date: str) -> list[SkillCall]:
         return [
             SkillCall(
                 id="generate_daily_report",
                 skill="daily_report",
-                input={
-                    "report_date": report_date,
-                    "template_ref": DEFAULT_TEMPLATE_REF,
-                    "product_models": product_models,
-                    "source_files": LOCAL_SOURCE_FILES,
-                    "sections": sections,
-                    "analysis_results": [],
-                    "output_name": "daily_report_output.xlsx",
-                    "emit_intermediate_artifacts": True,
-                    "download_sources": False,
-                    "run_inspection": False,
-                    "task0_timeout_seconds": 90,
-                },
+                input={"report_date": report_date},
                 save_as="daily_report_file",
             ),
         ]
+
+    def _configured_source_paths(self, aliases: tuple[str, ...]) -> dict[str, str]:
+        return {alias: self._source_path(alias) for alias in aliases}
+
+    def _source_path(self, alias: str) -> str:
+        source = self._source_files.get(alias)
+        if source is None or not source.default_path.strip():
+            raise ValueError(f"source_files.{alias}.default_path is not configured")
+        return source.default_path
 
 
 def _parse_goal_date(text: str, today: date) -> str:
@@ -642,11 +637,6 @@ def _date_from_parts(parts: tuple[str, str, str]) -> date:
 
 def _date_from_match(match: re.Match[str]) -> date:
     return _date_from_parts((match.group(1), match.group(2), match.group(3)))
-
-
-def _normalize_sections(sections: list[str]) -> list[str]:
-    normalized = [item.strip() for item in sections if item and item.strip()]
-    return list(dict.fromkeys(normalized))
 
 
 def _build_outputs() -> dict[str, Any]:

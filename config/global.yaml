@@ -63,6 +63,12 @@ report:
 # ---- Agent Runtime 配置 ----
 agent:
   default_runtime: "pydantic_ai"
+  daily_report:
+    generator_root: "~/.agents/skills/daily-report-generator"
+    cli_path: "scripts/daily_report_cli.py"
+    output_dir: "output/artifacts/reports/generated"
+    generator_root_env: "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"
+    workspace_env: "YIELD_REPORT_DUTY_WORKSPACE"
   pydantic_ai:
     enabled: true
     model: "deepseek-chat"
@@ -99,15 +105,87 @@ source_files:
   daily_yield:
     description: "V3CT修正良率及不良率By月周天报表"
     pattern: "V3CT修正良率及不良率By月周天*"
+    filename: "V3CT修正良率及不良率By月周天报表.xlsx"
+    default_path: "resources/V3CT修正良率及不良率By月周天报表.xlsx"
+    purpose: "按日月周维度汇总良率及不良率，用于 Gap 计算"
+    source: "FineReport"
+    aliases: ["良率日报", "月周天", "daily yield", "V3良率", "良率数据"]
+    filters: ["结束日期", "产品型号", "月数"]
+    query_guidance:
+      - "月数未指定时通常使用 2；最近三个月使用 3"
+      - "上午 10 点前日度数据截止昨日，10 点后截止今天"
   batch_yield:
     description: "V3良率及不良率By批次汇总报表"
     pattern: "V3良率及不良率By批次*"
+    filename: "V3良率及不良率By批次汇总报表.xlsx"
+    purpose: "按批次汇总良率及不良率，用于判断最新批次是否恶化"
+    source: "FineReport"
+    aliases: ["批次报表", "batch yield", "批次良率", "按批次"]
+    filters: ["开始日期", "结束日期", "产品型号"]
+    query_guidance:
+      - "开始日期默认今天往前 90 天"
+      - "上午 10 点前结束日期为昨日，10 点后为今天"
   ct_exception:
     description: "CT异常管理表"
     pattern: "CT良率异常波动管理表*"
+    filename: "CT良率异常波动管理表.xlsx"
+    default_path: "resources/CT良率异常波动管理表.xlsx"
+    purpose: "CT 工程不良率异常波动管理记录"
+    source: "网络共享路径"
+    aliases: ["CT异常", "异常管理表", "CT良率异常", "异常波动"]
   target_decomposition:
     description: "良率目标拆解表"
     pattern: "*良率目标拆解*"
+    filename: "2026年良率目标拆解-1017版V05 - 无公式版.xlsx"
+    default_path: "resources/2026年良率目标拆解-1017版V05 - 无公式版.xlsx"
+    purpose: "各产品型号的良率目标值拆解"
+    source: "本地文件"
+    aliases: ["目标拆解", "良率目标", "target", "目标表"]
   gap_template:
     description: "日良率Gap分析模板"
     pattern: "*Gap分析模板*"
+    default_path: "docs/project_files/V3良率日报每日异常填报表.xlsx"
+    purpose: "Gap 分析规则与模板"
+    source: "本地文件"
+    aliases: ["Gap模板", "分析模板", "Gap分析模板"]
+  spotfire:
+    description: "Spotfire 良率分析源表"
+    pattern: "spotfire*"
+    filename: "spotfire.xlsx"
+    default_path: "resources/project_files/spotfire.xlsx"
+    purpose: "产品型号与良率分析辅助数据"
+    source: "本地文件"
+  code_mapping:
+    description: "大数据值班当日新增不良 HL 模板"
+    pattern: "*当日新增不良HL模板*"
+    filename: "大数据值班当日新增不良HL模板.xlsx"
+    default_path: "resources/大数据值班当日新增不良HL模板.xlsx"
+    purpose: "异常代码映射"
+    source: "本地文件"
+  data_source_dir:
+    description: "良率监控日报自动化共享目录"
+    default_path: "//10.71.7.15/大数据共享/12.良率监控日报自动化"
+    purpose: "异常监控默认数据目录"
+    source: "网络共享路径"
+  anomaly_spotfire:
+    description: "异常监控 Spotfire 源表"
+    filename: "spotfire.xlsx"
+    default_path: "D:/wzy/工作-值班工作/相关文件/resources/spotfire.xlsx"
+    purpose: "异常监控产品与站点辅助数据"
+    source: "本地文件"
+
+# ---- FineReport 下载适配配置（账号、密码等秘密仍只放 .env） ----
+report_download:
+  finereport:
+    report_directory: "目录/良率监控/综合良率"
+    labels:
+      end_date: "结束日期："
+      start_date: "开始日期："
+      product_model: "产品型号："
+      month_count: "月数："
+    report_wait_timeout_ms: 180000
+    browser:
+      headless: false
+      timeout_ms: 120000
+      slow_mo_ms: 100
+      channel: "chrome"

@@ -8,8 +8,6 @@ This is not a generic BI platform. Prefer explicit, testable, traceable report w
 
 ## Code Intelligence Policy
 
-- Use CodeGraph as the default project code graph when `.codegraph/` exists. Prefer CodeGraph MCP tools or equivalent CLI commands for structural code questions before grepping or reading source files directly.
-- Understand-Anything is disabled for this project. Do not run `understand-anything:*` skills or rebuild its generated graph unless the user explicitly re-enables it.
 - Keep `ARCHITECTURE.md` shallow. Use it for project map and ownership boundaries; use CodeGraph for symbol, caller, callee, and file-level tracing.
 
 ## Context Router

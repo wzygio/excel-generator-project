@@ -116,6 +116,65 @@ class TrendAnalysisConfig(BaseModel):
     consecutive_weeks: int = Field(default=3, description="连续周数")
 
 
+class SourceFileConfig(BaseModel):
+    """One Agent-owned source report/catalog entry."""
+
+    description: str = Field(default="", description="用户可见的报表或源文件名称")
+    pattern: str = Field(default="", description="本地文件名匹配模式")
+    filename: str = Field(default="", description="下载或落盘时使用的文件名")
+    default_path: str = Field(default="", description="Agent 默认读取路径")
+    purpose: str = Field(default="", description="该源表在 Agent 工作流中的用途")
+    source: str = Field(default="", description="源表来源，例如 FineReport 或本地文件")
+    aliases: list[str] = Field(default_factory=list, description="自然语言识别别名")
+    filters: list[str] = Field(default_factory=list, description="查询筛选参数说明")
+    query_guidance: list[str] = Field(default_factory=list, description="查询参数提取提示")
+
+
+class FineReportParameterLabelsConfig(BaseModel):
+    """FineReport parameter labels used by the portal adapter."""
+
+    end_date: str = ""
+    start_date: str = ""
+    product_model: str = ""
+    month_count: str = ""
+
+
+class FineReportBrowserConfig(BaseModel):
+    """Non-secret browser behavior for FineReport automation."""
+
+    headless: bool = False
+    timeout_ms: int = Field(default=120000, gt=0)
+    slow_mo_ms: int = Field(default=100, ge=0)
+    channel: str = ""
+
+
+class FineReportDownloadConfig(BaseModel):
+    """Non-secret FineReport download adapter settings."""
+
+    report_directory: str = ""
+    labels: FineReportParameterLabelsConfig = Field(
+        default_factory=FineReportParameterLabelsConfig
+    )
+    report_wait_timeout_ms: int = Field(default=180000, gt=0)
+    browser: FineReportBrowserConfig = Field(default_factory=FineReportBrowserConfig)
+
+
+class ReportDownloadConfig(BaseModel):
+    """External report acquisition settings."""
+
+    finereport: FineReportDownloadConfig = Field(default_factory=FineReportDownloadConfig)
+
+
+class DailyReportAgentConfig(BaseModel):
+    """Agent integration settings for the public daily-report generator."""
+
+    generator_root: str = ""
+    cli_path: str = ""
+    output_dir: str = ""
+    generator_root_env: str = ""
+    workspace_env: str = ""
+
+
 class ReportConfig(BaseModel):
     """报告生成配置"""
 
@@ -213,6 +272,7 @@ class AgentConfig(BaseModel):
         default_factory=PydanticAIAgentRuntimeConfig
     )
     letta: LettaAgentRuntimeConfig = Field(default_factory=LettaAgentRuntimeConfig)
+    daily_report: DailyReportAgentConfig = Field(default_factory=DailyReportAgentConfig)
 
     @field_validator("default_runtime")
     @classmethod
@@ -235,6 +295,14 @@ class AppConfig(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig, description="日志配置")
     report: ReportConfig = Field(default_factory=ReportConfig, description="报告配置")
     agent: AgentConfig = Field(default_factory=AgentConfig, description="Agent Runtime 配置")
+    source_files: dict[str, SourceFileConfig] = Field(
+        default_factory=dict,
+        description="Agent 源表目录",
+    )
+    report_download: ReportDownloadConfig = Field(
+        default_factory=ReportDownloadConfig,
+        description="外部报表下载配置",
+    )
     products: list[ProductConfig] = Field(default_factory=list, description="产品列表")
 
     model_config = {"extra": "ignore"}  # 忽略未定义的额外字段

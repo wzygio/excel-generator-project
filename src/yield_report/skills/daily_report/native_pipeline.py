@@ -9,33 +9,32 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import DailyReportAgentConfig
 from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
 from yield_report.skills.daily_report.models import DailyReportRequest
 
 TOOL_NAME = "daily_report"
 RUNTIME_NAME = "daily-report-generator"
-GENERATOR_ROOT_ENV = "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"
-DUTY_WORKSPACE_ENV = "YIELD_REPORT_DUTY_WORKSPACE"
-DEFAULT_GENERATOR_ROOT = Path.home() / ".agents" / "skills" / RUNTIME_NAME
-DEFAULT_REPORT_OUTPUT_DIR = Path("output") / "artifacts" / "reports" / "generated"
-GENERATOR_CLI = Path("scripts") / "daily_report_cli.py"
 
 
 def run_native_daily_report(request: DailyReportRequest, context: RunContext) -> SkillResult:
     """Run the user-facing daily-report-generator pipeline."""
     try:
-        runner_request = _normalize_runner_request(request)
-        generator_root = _resolve_generator_root(request)
-        workspace = _resolve_workspace(runner_request, context=context)
-        output_dir = _resolve_output_dir(runner_request, context=context, workspace=workspace)
+        settings = _load_runtime_settings()
+        generator_root = _resolve_generator_root(request, settings=settings)
+        workspace = _resolve_workspace(request, settings=settings)
+        output_dir = _resolve_output_dir(request, context=context, settings=settings)
         result = _run_generator_cli(
             generator_root=generator_root,
             workspace=workspace,
             output_dir=output_dir,
-            request=runner_request,
+            request=request,
             context=context,
+            settings=settings,
         )
         output_file = _result_output_file(result)
+        result_workspace = result.get("workspace") or workspace
         artifacts = []
         if output_file is not None:
             artifacts.append(
@@ -49,12 +48,12 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
         return SkillResult(
             skill_name=TOOL_NAME,
             success=True,
-            summary=f"{RUNTIME_NAME} completed: {output_file or workspace}",
+            summary=f"{RUNTIME_NAME} completed: {output_file or result_workspace or generator_root}",
             artifacts=artifacts,
             data={
                 "runtime": RUNTIME_NAME,
                 "generator_root": str(generator_root),
-                "workspace": str(workspace),
+                "workspace": str(result_workspace) if result_workspace else "",
                 "output_dir": str(output_dir),
                 "output_file": str(output_file) if output_file else "",
                 "workflow": _workflow_from_result(result),
@@ -67,10 +66,7 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
             skill_name=TOOL_NAME,
             success=False,
             summary=f"{RUNTIME_NAME} failed: {exc}",
-            data={
-                "runtime": RUNTIME_NAME,
-                "workspace": str(_resolve_workspace(_normalize_runner_request(request), context=context)),
-            },
+            data={"runtime": RUNTIME_NAME},
             error=SkillError(
                 code="daily_report.native_pipeline.failed",
                 message=str(exc),
@@ -83,12 +79,19 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
 def _run_generator_cli(
     *,
     generator_root: Path,
-    workspace: Path,
+    workspace: Path | None,
     output_dir: Path,
     request: DailyReportRequest,
     context: RunContext,
+    settings: DailyReportAgentConfig,
 ) -> dict[str, Any]:
-    cli_path = generator_root / GENERATOR_CLI
+    configured_cli = settings.cli_path.strip()
+    if not configured_cli:
+        raise ValueError("agent.daily_report.cli_path is not configured")
+    cli_path = Path(configured_cli).expanduser()
+    if not cli_path.is_absolute():
+        cli_path = generator_root / cli_path
+    cli_path = cli_path.resolve()
     if not cli_path.exists():
         raise FileNotFoundError(f"{RUNTIME_NAME} CLI is missing: {cli_path}")
 
@@ -96,8 +99,6 @@ def _run_generator_cli(
         sys.executable,
         str(cli_path),
         "run",
-        "--workspace",
-        str(workspace),
         "--mode",
         "write",
         "--output-dir",
@@ -105,6 +106,8 @@ def _run_generator_cli(
         "--snapshot-dir",
         str(_resolve_context_output_dir(context)),
     ]
+    if workspace is not None:
+        command.extend(["--workspace", str(workspace)])
     run_at = request.generator_now or request.orchestrator_now
     if run_at:
         command.extend(["--now", run_at])
@@ -127,57 +130,57 @@ def _run_generator_cli(
     return _parse_cli_result(completed.stdout)
 
 
-def _normalize_runner_request(request: DailyReportRequest) -> DailyReportRequest:
-    if not request.report_date:
-        return request
-    run_at = f"{request.report_date} 16:00"
-    return request.model_copy(
-        update={"generator_now": run_at, "orchestrator_now": run_at},
-    )
+def _load_runtime_settings() -> DailyReportAgentConfig:
+    return ConfigLoader().get().agent.daily_report
 
 
-def _resolve_generator_root(request: DailyReportRequest) -> Path:
-    configured = (
-        request.source_files.get("daily_report_generator_root")
-        or request.source_files.get("generator_root")
-        or request.source_files.get("orchestrator_root")
-        or os.getenv(GENERATOR_ROOT_ENV)
-        or DEFAULT_GENERATOR_ROOT
-    )
+def _resolve_generator_root(
+    request: DailyReportRequest,
+    *,
+    settings: DailyReportAgentConfig,
+) -> Path:
+    env_name = settings.generator_root_env.strip()
+    configured = request.generator_root or (os.getenv(env_name) if env_name else None)
+    configured = configured or settings.generator_root
+    if not configured:
+        raise ValueError("agent.daily_report.generator_root is not configured")
     return Path(configured).expanduser().resolve()
 
 
-def _resolve_workspace(request: DailyReportRequest, *, context: RunContext) -> Path:
+def _resolve_workspace(
+    request: DailyReportRequest,
+    *,
+    settings: DailyReportAgentConfig,
+) -> Path | None:
+    env_name = settings.workspace_env.strip()
     candidates = [
         request.generator_workspace,
         request.orchestrator_workspace,
-        request.source_files.get("generator_workspace"),
-        request.source_files.get("orchestrator_workspace"),
-        os.getenv(DUTY_WORKSPACE_ENV),
-        context.workspace,
+        os.getenv(env_name) if env_name else None,
     ]
     for configured in candidates:
         if not configured:
             continue
         workspace = Path(configured).expanduser().resolve()
-        if workspace.exists() and workspace.is_dir():
-            return workspace
-    return context.workspace.resolve()
+        if not workspace.exists() or not workspace.is_dir():
+            raise NotADirectoryError(f"Configured generator workspace is invalid: {workspace}")
+        return workspace
+    return None
 
 
 def _resolve_output_dir(
     request: DailyReportRequest,
     *,
     context: RunContext,
-    workspace: Path,
+    settings: DailyReportAgentConfig,
 ) -> Path:
-    configured = request.output_dir or request.source_files.get("generator_output_dir")
-    if configured:
-        output_dir = Path(configured).expanduser()
-        if not output_dir.is_absolute():
-            output_dir = workspace / output_dir
-        return output_dir.resolve()
-    return (context.workspace / DEFAULT_REPORT_OUTPUT_DIR).resolve()
+    configured = request.output_dir or settings.output_dir
+    if not configured:
+        raise ValueError("agent.daily_report.output_dir is not configured")
+    output_dir = Path(configured).expanduser()
+    if not output_dir.is_absolute():
+        output_dir = context.workspace / output_dir
+    return output_dir.resolve()
 
 
 def _resolve_context_output_dir(context: RunContext) -> Path:
@@ -222,7 +225,8 @@ def _result_output_file(result: dict[str, Any]) -> Path | None:
     output = result.get("workbook_path")
     if not output:
         artifacts = result.get("artifacts") if isinstance(result.get("artifacts"), dict) else {}
-        output = artifacts.get("output") or artifacts.get("workbook") if artifacts else None
+        if artifacts:
+            output = artifacts.get("output") or artifacts.get("workbook")
     return Path(output).resolve() if output else None
 
 

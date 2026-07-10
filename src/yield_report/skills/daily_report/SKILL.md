@@ -9,10 +9,10 @@ Do not duplicate the generator's business rules here.
 
 ## Inputs
 - `report_date`: Report date.
-- `source_files`: Optional alias-to-path mapping. Supported generator aliases are `daily_report_generator_root`, `generator_root`, `orchestrator_root`, `generator_workspace`, `orchestrator_workspace`, and `generator_output_dir`.
-- `generator_workspace`: Optional run root. Defaults to the current repo workspace from `RunContext`.
-- `output_dir`: Optional generated workbook directory. Defaults to `output/artifacts/reports/generated` under the current repo.
-- `generator_now`: Optional deterministic run time, for example `2026-06-15 16:00`.
+- `generator_root`: Optional explicit installation override for the public skill.
+- `generator_workspace`: Optional compatibility run-root override. When omitted, the public CLI uses its own installed skill root.
+- `output_dir`: Optional generated workbook directory override. The Agent default comes from validated project configuration.
+- `generator_now`: Optional explicit deterministic run time. `report_date` does not synthesize or replace it.
 - Other request fields are accepted for compatibility with existing specs and UI payloads, but this wrapper does not interpret daily-report business data.
 
 ## Outputs
@@ -24,8 +24,8 @@ Do not duplicate the generator's business rules here.
 - `data.native_result`: raw JSON returned by the external generator CLI.
 
 ## Workflow
-1. Resolve the repo run root, generated workbook directory, and `$daily-report-generator` root.
-2. Run `C:\Users\V0141351\.agents\skills\daily-report-generator\scripts\daily_report_cli.py run --workspace <repo> --output-dir <repo>\output\artifacts\reports\generated --mode write`.
+1. Resolve Agent integration settings through the project's Pydantic configuration.
+2. Run the public `scripts/daily_report_cli.py run --output-dir <agent-output> --mode write` entry point. Pass `--workspace` only for an explicit compatibility override.
 3. Parse the generator JSON result.
 4. Return the generated workbook as the Excel artifact.
 
