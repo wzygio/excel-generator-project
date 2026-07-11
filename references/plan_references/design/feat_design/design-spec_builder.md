@@ -68,6 +68,8 @@ LangGraph 只负责 Spec 构建的状态机，不替代 Runtime 执行 Skill，�
 - `anomaly_monitor`
 - `daily_report`
 
+固定 `daily_report` 的 `SkillCall.input` 只生成公共 facade 所需的 `report_date`。模板、章节、源表、分析结果、输出文件名和 Mod 参数属于公共 `$daily-report-generator`，不得嵌入项目 Spec。
+
 进入规则构建必须同时满足：
 
 - 请求显式声明为固定业务流程。

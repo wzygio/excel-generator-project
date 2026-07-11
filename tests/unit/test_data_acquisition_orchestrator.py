@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
+from shared_kernel.config import ConfigLoader
 from yield_report.application.orchestrator import DataAcquisitionOrchestrator
 from yield_report.core.query_parser import ReportQueryRequest, ReportType
 
@@ -27,11 +28,13 @@ class FakeFinereportClient:
         self,
         end_date: str,
         product_models: list[str] | None,
+        month_count: int | None = None,
     ) -> Path:
         self.daily_calls.append(
             {
                 "end_date": end_date,
                 "product_models": product_models,
+                "month_count": month_count,
             }
         )
         return Path("resources/V3良率及不良率By月周天汇总报表.xlsx")
@@ -71,7 +74,11 @@ def test_task2_query_injected_into_report_download_interface() -> None:
         ensure_ascii=False,
     )
 
-    orchestrator = DataAcquisitionOrchestrator()
+    source_files = dict(ConfigLoader().get().source_files)
+    source_files["daily_yield"] = source_files["daily_yield"].model_copy(
+        update={"description": "Configured Daily Report"}
+    )
+    orchestrator = DataAcquisitionOrchestrator(source_files=source_files)
     fake_client = FakeFinereportClient()
     orchestrator._finereport_client = fake_client  # type: ignore[assignment]
 
@@ -88,11 +95,12 @@ def test_task2_query_injected_into_report_download_interface() -> None:
     assert result.parsed_request.product_models == ["M678"]
     assert result.summary == "✅ 成功获取 1/1 份文件"
     assert len(result.results) == 1
-    assert result.results[0].file_description == "V3良率及不良率By月周天汇总报表"
+    assert result.results[0].file_description == "Configured Daily Report"
     assert fake_client.daily_calls == [
         {
             "end_date": "2026-06-01",
             "product_models": ["M678"],
+            "month_count": None,
         }
     ]
     assert fake_client.batch_calls == []
@@ -118,6 +126,7 @@ def test_daily_yield_defaults_to_yesterday_before_ten() -> None:
         {
             "end_date": "2026-06-01",
             "product_models": None,
+            "month_count": None,
         }
     ]
 

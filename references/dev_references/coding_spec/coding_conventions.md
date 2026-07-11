@@ -3,6 +3,8 @@
 - Add `from __future__ import annotations` to new Python modules.
 - Use type annotations for new functions and methods.
 - Update Pydantic config models before changing configuration files.
+- Keep Agent-owned report names, file patterns/default paths, portal labels/timeouts, and external-skill locations in `config/global.yaml`; consume them through typed `AppConfig` sections rather than mirrored Python constants.
+- Do not copy public-skill business configuration into this project. Project wrappers may adapt public CLI inputs/results only.
 - Keep Core logic mostly pure; browser, Excel, filesystem, and network IO belong in infrastructure or adapters.
 - Use the shared LLM manager for LLM calls; do not instantiate provider clients in business code.
 - Keep existing public entrypoints compatible unless the user explicitly asks for a breaking refactor.

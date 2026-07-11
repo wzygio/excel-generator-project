@@ -4,7 +4,7 @@
 Make the project-local `daily_report` skill a thin Agent wrapper over the public `daily-report-generator` CLI, remove project-owned duplication of daily-report business logic, and relocate remaining hard-coded Agent configuration into validated Pydantic-backed configuration at the correct project boundary.
 
 ## Current Phase
-Phase 3
+Complete
 
 ## Phases
 
@@ -22,22 +22,22 @@ Phase 3
 - **Status:** complete
 
 ### Phase 3: Implementation
-- [ ] Replace local daily-report generation logic with delegation to the public CLI.
-- [ ] Move Agent-owned configuration to the correct configuration/reference location and load it through Pydantic.
-- [ ] Remove or isolate duplicated business logic and scattered literals without disturbing unrelated user changes.
-- [ ] Update affected architecture/design/development references.
-- **Status:** in_progress
+- [x] Replace local daily-report generation logic with delegation to the public CLI.
+- [x] Move Agent-owned configuration to the correct configuration/reference location and load it through Pydantic.
+- [x] Remove or isolate duplicated business logic and scattered literals without disturbing unrelated user changes.
+- [x] Update affected architecture/design/development references.
+- **Status:** complete
 
 ### Phase 4: Tests and Verification
-- [ ] Add or update focused tests for wrapper command construction, config validation, and caller behavior.
-- [ ] Run targeted tests, lint/type checks where configured, and relevant smoke verification.
-- [ ] Search again for prohibited hard-coded business values and inspect the final diff.
-- **Status:** pending
+- [x] Add or update focused tests for wrapper command construction, config validation, and caller behavior.
+- [x] Run targeted tests, lint/type checks where configured, and relevant smoke verification.
+- [x] Search again for prohibited hard-coded business values and inspect the final diff.
+- **Status:** complete
 
 ### Phase 5: Handoff
-- [ ] Record final ownership decisions, changed files, validation evidence, and any residual risks.
-- [ ] Mark all planning artifacts complete.
-- **Status:** pending
+- [x] Record final ownership decisions, changed files, validation evidence, and any residual risks.
+- [x] Mark all planning artifacts complete.
+- **Status:** complete
 
 ## Key Decisions
 | Decision | Rationale |
@@ -59,6 +59,24 @@ Phase 3
 | A combined planning-file patch referenced a decision row in the wrong file. | 1 | Located the exact rows with `rg` and split the correction into exact-file patches. |
 | `uv run` could not read the user-level uv cache under the managed filesystem profile. | 1 | Use the repository's existing `.venv\\Scripts\\python.exe` and `.venv\\Scripts\\pytest.exe` directly for validation. |
 | The first broad `SpecBuilder` patch assumed a one-line `_normalize_sections` implementation. | 1 | Located exact contexts with `rg` and split the refactor into smaller patches. |
+| Focused tests retained one obsolete assertion that fixed-flow `daily_report` receives `sections`. | 1 | Updated the test to assert the new minimal public-wrapper payload; production behavior is intentional. |
+| The same SpecBuilder test had a second obsolete `analysis_results` assertion immediately after the first. | 2 | Removed the remaining legacy assertion and kept one exact-payload assertion. |
+| Parallel verification used an expected no-match `rg` command whose exit code 1 rejected the combined tool call and hid pytest output. | 1 | Check for any surviving pytest process, then rerun sequentially with explicit no-match handling. |
+| Direct Pyright invocation did not discover the workspace virtual environment and reported only missing third-party imports. | 1 | Rerun with `--pythonpath .venv\\Scripts\\python.exe`; treat environment-resolution failures separately from source type errors. |
+| Pyright still reported the identical missing imports with explicit `--pythonpath`. | 2 | Inspect supported CLI/environment configuration and use a different venv-resolution mechanism for the third attempt. |
+| A combined Pyright-help/config search named optional config files that do not exist, causing `rg` exit 2 and hiding help output. | 1 | The useful result showed `[tool.pyright]` has `venv` but no `venvPath`; apply the focused configuration fix directly. |
+| A later parallel legacy-runner audit again paired a potentially no-match `rg` with a file read, repeating the rejected-call pattern. | 2 | Stop parallelizing no-match searches; run the file read and normalized-exit search sequentially. |
+| Ruff found one import-order issue after adding `ConfigLoader` to the Streamlit app. | 1 | Apply Ruff's mechanical import fix, then rerun the focused app checks. |
+| Guessed `tests/unit/test_local_file_loader.py`, which does not exist. | 1 | Locate loader coverage by symbol search before adding/updating tests. |
+| The first LocalFileLoader refactor patch mismatched escaped backslashes in the module docstring. | 1 | Leave the docstring out of the structural patch and apply smaller exact regions. |
+| A follow-up cosmetic loader-docstring patch hit the same escaped-path mismatch. | 2 | Stop editing that non-executable historical description; the constants and runtime path ownership are already removed. |
+| Full unit run exposed eager SpecBuilder source validation in a non-fixed LLM flow. | 1 | Resolve configured source paths lazily only in rule-built workflows that consume them. |
+| Black-box data analysis still lost source metadata after changing the process working directory. | 2 | Make the default `ConfigLoader` directory project-root-relative instead of current-working-directory-relative. |
+| Root architecture boundary used a third-level source path and failed the shallow-map Harness rule. | 1 | Refer to the `daily_report` facade by component name without embedding a deep project path. |
+| Harness tests also fail on the user's pre-existing reference-tree deletion/reorganization. | 1 | Do not recreate or revert unrelated reference directories; report this independent baseline failure after fixing task-owned checks. |
+| A combined planning/config patch contained an empty hunk separator. | 1 | Split the exact planning and source patches without an empty hunk. |
+| The first config-loader regression patch guessed the test method name. | 1 | Located the exact module-singleton test and inserted the CWD regression beside it. |
+| Appending another shell expression after PowerShell stop-parsing caused the planning checker to receive malformed trailing arguments and report no plan. | 1 | Rerun the previously successful checker command alone; keep diff checking separate. |
 
 ## Notes
 - The previously active plan `2026-07-06-nanobot-runtime-analysis` is complete and unrelated.

@@ -183,25 +183,24 @@ def run(request: ReportDownloadRequest, context: RunContext) -> SkillResult:
 
 ### 6.3 daily_report
 
-Runtime boundary: `daily_report` exposes the Agent Runtime interface and delegates execution to the public `$daily-report-generator` CLI. The wrapper uses the current repo as the default run root and writes generated workbooks under `output/artifacts/reports/generated` unless the request overrides `output_dir`. It must not contain report-generation business rules, directly call per-task wrapper skills, or depend on internal generator metadata.
+Runtime boundary: `daily_report` exposes the Agent Runtime interface and delegates execution to the public `$daily-report-generator` CLI. It omits `--workspace` by default so the public CLI uses its installed skill root. Agent integration paths are Pydantic-backed configuration; explicit request fields are compatibility overrides. The wrapper must not contain report-generation business rules, directly call per-task wrapper skills, or depend on internal generator metadata.
 
-职责：把分析结果写入标准日报模板并输出 Excel 文件。
+职责：调用公共 CLI，解析其 JSON 结果并返回生成的 Excel artifact。
 
 输入模型建议：
 
 | 字段 | 说明 |
 |------|------|
 | `report_date` | 日报日期。 |
-| `template_ref` | 模板路径或模板类型。 |
-| `sections` | 需要写入的日报章节。 |
-| `analysis_results` | 上游分析结果引用。 |
-| `output_name` | 可选输出文件名。 |
+| `generator_root` | 可选公共 skill 安装路径覆盖。 |
+| `generator_workspace` | 可选兼容 workspace 覆盖；默认不传。 |
+| `generator_now` | 可选显式确定性运行时刻；不得由 `report_date` 推导。 |
+| `output_dir` | 可选 Agent 交付目录覆盖。 |
 
 输出要求：
 
 - 返回日报 Excel 路径。
-- 返回写入章节摘要。
-- 返回缺失数据或人工确认项。
+- 返回公共生成器 workflow、warnings 和原始 JSON 摘要。
 
 ## 7. 错误码约定
 
@@ -219,7 +218,7 @@ Runtime boundary: `daily_report` exposes the Agent Runtime interface and delegat
 | `report_download.remote.finereport_timeout` | FineReport 查询或导出超时。 |
 | `data_analysis.file.no_matching_report` | 本地和下载链路都未找到匹配报表。 |
 | `data_analysis.execution.generated_code_failed` | 生成代码执行失败。 |
-| `daily_report.template.missing_section` | 模板中缺少目标写入区域。 |
+| `daily_report.native_pipeline.failed` | 公共 CLI 调用、JSON 解析或文件产物解析失败。 |
 
 ## 8. Memory 约定
 

@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 from fr_web_automation.config import BrowserConfig, WebAutomationConfig
 
 from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import AppConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,
@@ -80,9 +81,10 @@ class FinereportClient:
     线程安全：每个实例独立维护浏览器会话，不共享状态。
     """
 
-    def __init__(self) -> None:
+    def __init__(self, app_config: AppConfig | None = None) -> None:
         # 从 .env 加载 FineReport 配置
         load_dotenv()
+        app_config = app_config or ConfigLoader().get()
 
         # 绕过内网代理（必须）：将 FineReport 服务器地址加入 NO_PROXY
         host = os.getenv("FINEREPORT_HOST", "")
@@ -115,8 +117,10 @@ class FinereportClient:
                 f"FineReport 配置不完整，请在 .env 文件中设置: {', '.join(missing)}"
             )
 
-        self._resources_dir: Path = self._resolve_resources_dir()
-        self._output_dir: Path = self._resolve_output_dir()
+        self._resources_dir = Path(app_config.paths.resources_dir)
+        self._output_dir = Path(app_config.paths.output_dir)
+        self._download_settings = app_config.report_download.finereport
+        self._source_files = dict(app_config.source_files)
 
         # RPA 下载服务（懒加载）
         self._rpa_service: _YieldDownloadService | None = None
@@ -134,7 +138,7 @@ class FinereportClient:
         save_dir: str | Path | None = None,
     ) -> Path:
         """
-        下载"V3CT修正良率及不良率By月周天报表"。
+        下载配置目录中的日度良率源报表。
 
         Args:
             end_date: 结束日期 (默认今天)
@@ -174,7 +178,7 @@ class FinereportClient:
         save_dir: str | Path | None = None,
     ) -> Path:
         """
-        下载"V3良率及不良率By批次汇总报表"。
+        下载配置目录中的批次良率源报表。
 
         Args:
             start_date: 开始日期 (默认三个月前月初)
@@ -228,9 +232,7 @@ class FinereportClient:
         """获取或创建 RPA 下载服务（懒加载 + 单例复用）。"""
         if self._rpa_service is None:
             # 构建入口 URL，使用目录页面
-            portal_url = (
-                f"{self._host}/webroot/decision#directory"
-            )
+            portal_url = f"{self._host}/webroot/decision#directory"
 
             # 配置 RPA 下载目录（生成物统一进入 output/）
             self._rpa_download_dir = self._output_dir / FINEREPORT_RAW_DOWNLOADS_OUTPUT
@@ -238,10 +240,10 @@ class FinereportClient:
 
             rpa_config = WebAutomationConfig(
                 browser=BrowserConfig(
-                    headless=False,
-                    timeout=120000,
-                    slow_mo=100,
-                    channel="chrome",  # 使用系统 Chrome，避免下载捆绑 Chromium
+                    headless=self._download_settings.browser.headless,
+                    timeout=self._download_settings.browser.timeout_ms,
+                    slow_mo=self._download_settings.browser.slow_mo_ms,
+                    channel=self._download_settings.browser.channel or None,
                 ),
                 download_dir=str(self._rpa_download_dir),
             )
@@ -251,6 +253,8 @@ class FinereportClient:
                 portal_url=portal_url,
                 username=self._username,
                 password=self._password,
+                settings=self._download_settings,
+                source_files=self._source_files,
             )
 
         return self._rpa_service

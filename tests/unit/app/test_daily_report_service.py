@@ -50,22 +50,29 @@ def test_generate_daily_report_returns_downloadable_artifact(tmp_path: Path) -> 
     assert calls[0][1].workspace == tmp_path
 
 
-def test_generate_daily_report_preflight_blocks_missing_target_workbook(
+def test_generate_daily_report_does_not_preflight_agent_repo_business_files(
     tmp_path: Path,
 ) -> None:
-    def fail_runner(*_args, **_kwargs) -> SkillResult:
-        raise AssertionError("runner should not be called when preflight fails")
+    calls = []
+
+    def fake_runner(request, context: RunContext) -> SkillResult:
+        calls.append((request, context))
+        return SkillResult(
+            skill_name="daily_report",
+            success=True,
+            summary="delegated",
+        )
 
     result = generate_daily_report(
         DailyReportFormInput(report_date="2026-07-03"),
         workspace=tmp_path,
-        runner=fail_runner,
+        runner=fake_runner,
     )
 
-    assert result.success is False
-    assert result.summary == "运行环境预检失败"
-    assert "目标表" in result.error_message
-    assert "resources" in result.error_message
+    assert result.success is True
+    assert result.summary == "delegated"
+    assert calls[0][0].source_files == {}
+    assert calls[0][0].generator_workspace is None
 
 
 def test_list_generated_reports_returns_recent_excel_files(tmp_path: Path) -> None:

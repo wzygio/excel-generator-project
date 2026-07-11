@@ -9,23 +9,28 @@ from pathlib import Path
 import streamlit as st
 
 from app.daily_report_service import (
-    DEFAULT_REPORT_OUTPUT_DIR,
     DailyReportFormInput,
     DailyReportRunView,
     DownloadableReport,
+    default_report_output_dir,
     generate_daily_report,
     list_generated_reports,
 )
+from shared_kernel.config import ConfigLoader
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXCEL_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 def default_generator_root() -> Path:
-    configured = os.getenv("DAILY_REPORT_GENERATOR_ROOT")
+    settings = ConfigLoader().get().agent.daily_report
+    env_name = settings.generator_root_env.strip()
+    configured = os.getenv(env_name) if env_name else None
     if configured:
         return Path(configured).expanduser()
-    return Path.home() / ".agents" / "skills" / "daily-report-generator"
+    if not settings.generator_root.strip():
+        raise ValueError("agent.daily_report.generator_root is not configured")
+    return Path(settings.generator_root).expanduser()
 
 
 def format_size(size_bytes: int) -> str:
@@ -52,9 +57,9 @@ def main() -> None:
 
     with st.sidebar:
         st.subheader("运行设置")
-        generator_workspace_text = st.text_input("运行目录", value=str(REPO_ROOT))
+        generator_workspace_text = st.text_input("兼容运行目录（可选）", value="")
         generator_root_text = st.text_input("Skill目录", value=str(default_generator_root()))
-        output_dir_text = st.text_input("输出目录", value=str(DEFAULT_REPORT_OUTPUT_DIR))
+        output_dir_text = st.text_input("输出目录", value=str(default_report_output_dir()))
 
     left, right = st.columns([0.46, 0.54], gap="large")
 
@@ -102,7 +107,11 @@ def _run_generation(
     generator_root = Path(generator_root_text).expanduser() if generator_root_text.strip() else None
     form = DailyReportFormInput(
         report_date=report_date.isoformat(),
-        generator_workspace=Path(generator_workspace_text).expanduser(),
+        generator_workspace=(
+            Path(generator_workspace_text).expanduser()
+            if generator_workspace_text.strip()
+            else None
+        ),
         generator_root=generator_root,
         output_dir=Path(output_dir_text).expanduser(),
         generator_now=generator_now or None,

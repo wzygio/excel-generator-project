@@ -114,4 +114,4 @@
 
 ## Daily Report Runtime Boundary
 
-`src/yield_report/skills/daily_report/` is the Python facade exposed to Agent Runtime. It calls the public `$daily-report-generator` CLI only, using the current repo as the default run root and `output/artifacts/reports/generated` as the default workbook output directory. It must not contain report-generation business rules, directly call per-task wrapper skills, or depend on internal generator metadata; implementation details stay behind the generator CLI.
+The project `daily_report` Skill is the Python facade exposed to Agent Runtime. It calls only the public `$daily-report-generator` CLI and normally omits `--workspace`, allowing that CLI to use its installed skill root and owned configs/resources. The Agent-side installation path and delivery output directory come from validated `agent.daily_report` configuration; an explicit request may provide compatibility overrides. The facade must not contain report-generation business rules, directly call per-task wrapper skills, or depend on internal generator metadata.

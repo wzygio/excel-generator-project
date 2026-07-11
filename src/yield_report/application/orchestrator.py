@@ -24,11 +24,13 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import SourceFileConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,
@@ -38,6 +40,7 @@ from yield_report.core.query_parser import (
     QueryParserError,
     ReportQueryRequest,
     ReportType,
+    build_report_type_meta,
 )
 from yield_report.infrastructure.finereport_client import (
     FinereportClient,
@@ -106,16 +109,26 @@ class DataAcquisitionOrchestrator:
         self,
         llm_provider: str | None = None,
         clock: Callable[[], datetime] | None = None,
+        source_files: Mapping[str, SourceFileConfig] | None = None,
     ) -> None:
         """
         Args:
             llm_provider: LLM 供应商 ("deepseek" / "gemini")，默认从 config 读取
         """
         configure_yield_report_logging()
-        self._query_parser = QueryParser(provider=llm_provider)
+        catalog = source_files if source_files is not None else ConfigLoader().get().source_files
+        self._source_files = dict(catalog)
+        self._report_type_meta = build_report_type_meta(self._source_files)
+        self._query_parser = QueryParser(
+            provider=llm_provider,
+            source_files=self._source_files,
+        )
         self._clock = clock
         self._finereport_client: FinereportClient | None = None
-        self._local_file_loader = LocalFileLoader()
+        self._local_file_loader = LocalFileLoader(source_files=self._source_files)
+
+    def _report_description(self, report_type: ReportType) -> str:
+        return self._report_type_meta[report_type]["name"]
 
     # ================================================================
     # 公共接口
@@ -229,6 +242,7 @@ class DataAcquisitionOrchestrator:
     ) -> list[AcquisitionResult]:
         """获取月周天汇总报表。"""
         results: list[AcquisitionResult] = []
+        description = self._report_description(ReportType.DAILY_YIELD)
 
         try:
             # 获取产品型号列表
@@ -247,7 +261,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=description,
                     file_path=file_path,
                 )
             )
@@ -255,7 +269,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=description,
                     error_message=f"FineReport 连接失败: {e}",
                 )
             )
@@ -263,7 +277,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=description,
                     error_message=f"下载失败: {e}",
                 )
             )
@@ -271,7 +285,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=description,
                     error_message=f"产品型号提取失败: {e}",
                 )
             )
@@ -280,7 +294,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=description,
                     error_message=f"获取失败: {e}",
                 )
             )
@@ -293,6 +307,7 @@ class DataAcquisitionOrchestrator:
     ) -> list[AcquisitionResult]:
         """获取批次汇总报表。"""
         results: list[AcquisitionResult] = []
+        description = self._report_description(ReportType.BATCH_YIELD)
 
         try:
             # 获取产品型号列表
@@ -312,7 +327,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=description,
                     file_path=file_path,
                 )
             )
@@ -320,7 +335,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=description,
                     error_message=f"FineReport 连接失败: {e}",
                 )
             )
@@ -328,7 +343,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=description,
                     error_message=f"下载失败: {e}",
                 )
             )
@@ -336,7 +351,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=description,
                     error_message=f"产品型号提取失败: {e}",
                 )
             )
@@ -345,7 +360,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=description,
                     error_message=f"获取失败: {e}",
                 )
             )
@@ -355,13 +370,14 @@ class DataAcquisitionOrchestrator:
     def _acquire_ct_exception(self) -> list[AcquisitionResult]:
         """获取 CT 异常管理表。"""
         results: list[AcquisitionResult] = []
+        description = self._report_description(ReportType.CT_EXCEPTION)
 
         try:
             file_path = self._local_file_loader.ensure_ct_exception_file()
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="CT良率异常波动管理表",
+                    file_description=description,
                     file_path=file_path,
                 )
             )
@@ -369,7 +385,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="CT良率异常波动管理表",
+                    file_description=description,
                     error_message=str(e),
                 )
             )
@@ -379,13 +395,14 @@ class DataAcquisitionOrchestrator:
     def _acquire_target_decomposition(self) -> list[AcquisitionResult]:
         """获取良率目标拆解表。"""
         results: list[AcquisitionResult] = []
+        description = self._report_description(ReportType.TARGET_DECOMPOSITION)
 
         try:
             file_path = self._local_file_loader.ensure_target_decomposition_file()
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="良率目标拆解表",
+                    file_description=description,
                     file_path=file_path,
                 )
             )
@@ -393,7 +410,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="良率目标拆解表",
+                    file_description=description,
                     error_message=str(e),
                 )
             )
@@ -403,13 +420,14 @@ class DataAcquisitionOrchestrator:
     def _acquire_gap_template(self) -> list[AcquisitionResult]:
         """获取 Gap 分析模板。"""
         results: list[AcquisitionResult] = []
+        description = self._report_description(ReportType.GAP_TEMPLATE)
 
         try:
             file_path = self._local_file_loader.ensure_gap_template_file()
             results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="日良率Gap分析模板",
+                    file_description=description,
                     file_path=file_path,
                 )
             )
@@ -417,7 +435,7 @@ class DataAcquisitionOrchestrator:
             results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="日良率Gap分析模板",
+                    file_description=description,
                     error_message=str(e),
                 )
             )
@@ -431,6 +449,8 @@ class DataAcquisitionOrchestrator:
         当用户未明确指定报表类型时，尝试获取所有文件。
         """
         all_results: list[AcquisitionResult] = []
+        daily_description = self._report_description(ReportType.DAILY_YIELD)
+        batch_description = self._report_description(ReportType.BATCH_YIELD)
 
         # FineReport 报表
         try:
@@ -445,7 +465,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=daily_description,
                     file_path=fr_results_daily,
                 )
             )
@@ -453,7 +473,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3CT修正良率及不良率By月周天报表",
+                    file_description=daily_description,
                     error_message=str(e),
                 )
             )
@@ -472,7 +492,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=True,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=batch_description,
                     file_path=fr_results_batch,
                 )
             )
@@ -480,7 +500,7 @@ class DataAcquisitionOrchestrator:
             all_results.append(
                 AcquisitionResult(
                     success=False,
-                    file_description="V3良率及不良率By批次汇总报表",
+                    file_description=batch_description,
                     error_message=str(e),
                 )
             )

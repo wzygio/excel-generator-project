@@ -90,11 +90,6 @@ class SpecBuilder:
         self._llm_converter = llm_converter
         catalog = source_files if source_files is not None else ConfigLoader().get().source_files
         self._source_files = dict(catalog)
-        self._local_source_files = self._configured_source_paths(LOCAL_SOURCE_ALIASES)
-        self._anomaly_source_files = {
-            runtime_alias: self._source_path(config_alias)
-            for runtime_alias, config_alias in ANOMALY_SOURCE_ALIASES.items()
-        }
 
     def build(self, request: SpecBuildRequest) -> SpecBuildResult:
         """Create a run directory, write ``spec.yaml``, and return the TaskSpec."""
@@ -319,7 +314,7 @@ class SpecBuilder:
                 "reports": [],
                 "local_files": [
                     {"alias": alias, "path": path}
-                    for alias, path in self._anomaly_source_files.items()
+                    for alias, path in self._anomaly_source_paths().items()
                 ],
             },
             workflow=[
@@ -330,7 +325,7 @@ class SpecBuilder:
                         "report_date": report_date,
                         "product_models": product_models,
                         "mode": "detect",
-                        "source_files": self._anomaly_source_files,
+                        "source_files": self._anomaly_source_paths(),
                         "write_ledgers": False,
                         "push_notifications": True,
                     },
@@ -490,7 +485,9 @@ class SpecBuilder:
                 "reports": reports,
                 "local_files": [
                     {"alias": alias, "path": path}
-                    for alias, path in self._local_source_files.items()
+                    for alias, path in self._configured_source_paths(
+                        LOCAL_SOURCE_ALIASES
+                    ).items()
                 ],
             },
             workflow=[
@@ -584,7 +581,9 @@ class SpecBuilder:
             ],
             "local_files": [
                 {"alias": alias, "path": path}
-                for alias, path in self._local_source_files.items()
+                for alias, path in self._configured_source_paths(
+                    LOCAL_SOURCE_ALIASES
+                ).items()
             ],
         }
 
@@ -601,6 +600,12 @@ class SpecBuilder:
 
     def _configured_source_paths(self, aliases: tuple[str, ...]) -> dict[str, str]:
         return {alias: self._source_path(alias) for alias in aliases}
+
+    def _anomaly_source_paths(self) -> dict[str, str]:
+        return {
+            runtime_alias: self._source_path(config_alias)
+            for runtime_alias, config_alias in ANOMALY_SOURCE_ALIASES.items()
+        }
 
     def _source_path(self, alias: str) -> str:
         source = self._source_files.get(alias)

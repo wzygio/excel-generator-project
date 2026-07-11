@@ -123,7 +123,7 @@ def test_agent_runtime_runs_daily_report_native_facade(
     assert (tmp_path / "specs" / "runs" / "run-daily-native" / "run_summary.json").exists()
 
 
-def test_native_facade_ignores_invalid_agent_workspace(
+def test_native_facade_rejects_invalid_explicit_workspace(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -131,7 +131,7 @@ def test_native_facade_ignores_invalid_agent_workspace(
     generator_root = tmp_path / "daily-report-generator"
     generator_root.mkdir()
     output_path = tmp_path / "daily-report.xlsx"
-    calls: list[Path] = []
+    calls: list[Path | None] = []
 
     def fake_run_generator_cli(**kwargs) -> dict[str, object]:
         calls.append(kwargs["workspace"])
@@ -147,17 +147,18 @@ def test_native_facade_ignores_invalid_agent_workspace(
         DailyReportRequest(
             report_date="2026-06-23",
             generator_workspace=invalid_workspace,
-            source_files={"daily_report_generator_root": generator_root},
+            generator_root=generator_root,
         ),
         RunContext(run_id="run-native-invalid-workspace", workspace=tmp_path),
     )
 
-    assert result.success is True
-    assert calls == [tmp_path.resolve()]
-    assert Path(result.data["workspace"]) == tmp_path.resolve()
+    assert result.success is False
+    assert calls == []
+    assert result.error is not None
+    assert "Configured generator workspace is invalid" in result.error.message
 
 
-def test_native_facade_uses_report_date_for_runner_now(
+def test_native_facade_preserves_explicit_generator_now(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -183,26 +184,24 @@ def test_native_facade_uses_report_date_for_runner_now(
             report_date="2026-06-23",
             generator_workspace=duty_workspace,
             generator_now="2026-06-24T16:00:00",
-            source_files={"daily_report_generator_root": generator_root},
+            generator_root=generator_root,
         ),
         RunContext(run_id="run-native-report-date-now", workspace=tmp_path),
     )
 
     assert result.success is True
-    assert calls == ["2026-06-23 16:00"]
+    assert calls == ["2026-06-24T16:00:00"]
 
 
 def test_native_facade_calls_daily_report_generator_cli(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
-    duty_workspace = tmp_path / "duty"
-    duty_workspace.mkdir()
     generator_root = tmp_path / "daily-report-generator"
     cli_path = generator_root / "scripts" / "daily_report_cli.py"
     cli_path.parent.mkdir(parents=True)
     cli_path.write_text("", encoding="utf-8")
-    output_path = duty_workspace / "daily-report.xlsx"
+    output_path = tmp_path / "daily-report.xlsx"
     captured: dict[str, object] = {}
 
     def fake_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
@@ -227,8 +226,8 @@ def test_native_facade_calls_daily_report_generator_cli(
     result = native_pipeline.run_native_daily_report(
         DailyReportRequest(
             report_date="2026-06-23",
-            generator_workspace=duty_workspace,
-            source_files={"daily_report_generator_root": generator_root},
+            generator_root=generator_root,
+            generator_now="2026-06-24T16:00:00",
         ),
         RunContext(run_id="run-native-generator-cli", workspace=tmp_path),
     )
@@ -242,12 +241,11 @@ def test_native_facade_calls_daily_report_generator_cli(
         tmp_path / "output" / "artifacts" / "reports" / "generated"
     )
     assert str(cli_path.resolve()) in command
-    assert "--workspace" in command
-    assert str(duty_workspace.resolve()) in command
+    assert "--workspace" not in command
     assert "--output-dir" in command
     assert str(tmp_path / "output" / "artifacts" / "reports" / "generated") in command
     assert "--now" in command
-    assert "2026-06-23 16:00" in command
+    assert "2026-06-24T16:00:00" in command
     assert "--end-date" in command
     assert "2026-06-23" in command
     assert result.data["workflow"] == ["mod0", "mod4"]

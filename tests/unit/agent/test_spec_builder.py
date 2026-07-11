@@ -129,7 +129,7 @@ def test_spec_builder_requires_confirmation_when_all_products_disabled(tmp_path:
     assert result.warnings == ["缺少产品型号，需要用户确认。"]
 
 
-def test_spec_builder_parses_explicit_date_and_sections(tmp_path: Path) -> None:
+def test_spec_builder_uses_minimal_daily_report_wrapper_input(tmp_path: Path) -> None:
     builder = SpecBuilder(store=RunStore(workspace=tmp_path), today=date(2026, 6, 8))
 
     result = builder.build(
@@ -143,8 +143,7 @@ def test_spec_builder_parses_explicit_date_and_sections(tmp_path: Path) -> None:
 
     assert result.spec.inputs["report_date"] == "2026-06-01"
     assert result.spec.inputs["date_range"] == {"start": "2026-05-26", "end": "2026-06-01"}
-    assert result.spec.workflow[0].input["sections"] == ["gap", "trend"]
-    assert result.spec.workflow[0].input["analysis_results"] == []
+    assert result.spec.workflow[0].input == {"report_date": "2026-06-01"}
 
 
 def test_spec_builder_builds_data_analysis_spec_for_trend_goal(tmp_path: Path) -> None:

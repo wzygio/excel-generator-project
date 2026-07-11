@@ -11,7 +11,7 @@ This is not a generic BI platform. Prefer explicit, testable, traceable report w
 - Keep `ARCHITECTURE.md` shallow. Use it for project map and ownership boundaries; use CodeGraph for symbol, caller, callee, and file-level tracing.
 
 ## Context Router
-
+ 
 - For project shape, ownership boundaries, or runtime flow, read `ARCHITECTURE.md`.
 - For Harness routing, start at `references/index.md`.
 - For system, Agent, Skill, Spec, module, or feature design, use `references/design/`.

@@ -121,7 +121,7 @@ class ConfigLoader:
         if config_dir is not None:
             self._config_dir = config_dir
         elif not hasattr(self, "_config_dir"):
-            self._config_dir = Path("config")
+            self._config_dir = PROJECT_ROOT / "config"
         if self._config is not None:
             return
         self._config = None

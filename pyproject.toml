@@ -48,6 +48,7 @@ packages = ["src/yield_report", "src/shared_kernel"]
 allow-direct-references = true
 
 [tool.pyright]
+venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]

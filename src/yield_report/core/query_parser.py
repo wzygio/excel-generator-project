@@ -41,7 +41,7 @@ class ReportType(StrEnum):
     """Daily/weekly/monthly yield source used for Gap analysis."""
 
     BATCH_YIELD = "batch_yield"
-    """V3良率及不良率By批次汇总报表 - 用于批次恶化判断"""
+    """Batch-level yield source used for degradation analysis."""
 
     CT_EXCEPTION = "ct_exception"
     """CT异常管理表 - 用于异常搜索"""

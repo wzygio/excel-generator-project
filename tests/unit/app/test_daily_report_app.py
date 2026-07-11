@@ -13,7 +13,7 @@ def test_repo_root_points_to_project_root() -> None:
 
 def test_default_generator_root_can_be_configured(monkeypatch, tmp_path: Path) -> None:
     configured = tmp_path / "daily-report-generator"
-    monkeypatch.setenv("DAILY_REPORT_GENERATOR_ROOT", str(configured))
+    monkeypatch.setenv("YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT", str(configured))
 
     assert default_generator_root() == configured
 

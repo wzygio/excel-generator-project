@@ -46,42 +46,33 @@
 
 ## 3. 三个 Skill 的协作边界
 
-三个业务 Skill 的关系是：
+三个业务 Skill 都由 Agent Runtime 通过稳定工具契约调用：
 
 ```text
-daily_report > data_analysis > report_download
+Agent Runtime
+  -> report_download
+  -> data_analysis
+  -> daily_report facade
+       -> public daily-report-generator CLI
 ```
 
-这里的“大于”不是 Python import 方向，而是业务拆解方向。上层 Skill 不直接调用下层 Skill；上层只声明自己缺少什么，下层返回自己产出了什么，由 `AgentRuntime` / `SpecCompiler` 展开调用。
-
-目标闭环：
-
-```text
-daily_report 缺分析事实
-  -> RequiredAction(data_analysis)
-  -> data_analysis 缺源表
-  -> RequiredAction(report_download)
-  -> report_download 返回 ArtifactManifest
-  -> data_analysis 返回 AnalysisFactRef
-  -> daily_report 消费 AnalysisFactRef
-```
-
-这种设计让每个 Skill 保持独立可调用，同时完整日报任务可以像递归拆解一样有条理地完成。
+`report_download` 和 `data_analysis` 是项目能力；`daily_report` 是公共生成器的 Agent facade。它们不互相 import，也不由本地 `daily_report` 递归展开。公共生成器内部的 Mod0-Mod4 顺序、依赖、源表和工作簿交接由公共 skill 自己管理。
 
 ## 4. daily_report 边界原则
 
 `daily_report` 的职责：
 
-- 判断生成日报需要哪些分析事实。
-- 消费 `analysis_results` / `analysis_facts`。
-- 写出最终 Excel、JSON、Markdown 产物。
-- 在缺少事实时返回 `RequiredAction`，让 Runtime 展开 `data_analysis`。
+- 将 Agent 请求适配为公共 `daily_report_cli.py run` 调用。
+- 从 Pydantic 配置读取安装路径、CLI 相对路径和 Agent 交付目录。
+- 解析公共 CLI JSON，映射为 `SkillResult` 和 Excel artifact。
+- 保留旧请求字段的反序列化兼容，但不解释其中的生成业务含义。
 
 `daily_report` 不应：
 
-- 直接 import 并调用 `data_analysis`。
-- 直接隐藏式下载源表。
-- 把核心 Gap/趋势/异常计算只写进自然语言 prompt。
+- 生成或写入日报工作簿。
+- 复制公共生成器的报表名称、日期策略、Mod 参数或依赖顺序。
+- 默认强制公共 CLI 使用 Agent repo 作为 workspace。
+- 从 `source_files` 魔法键读取 generator 配置。
 - 直接写 confirmed memory。
 
-当前 HEAD 中 `daily_report` 仍是占位实现。本轮先建立契约闭环，不做日报算法全量深拆。
+公共生成器拥有完整实现；项目侧只维护上述 facade 和契约测试。

@@ -30,6 +30,9 @@ Shared Kernel 不负责：
 - `llm`: DeepSeek/Gemini 供应商配置。
 - `logging`: 日志级别与保留策略。
 - `report`: 报告模块与分析参数。
+- `agent.daily_report`: 公共日报生成器的安装、CLI 与 Agent 交付路径。
+- `source_files`: Agent 源表名称、匹配规则、文件名与默认路径目录。
+- `report_download.finereport`: FineReport 门户标签、浏览器和等待参数（不含秘密）。
 - `products`: 产品级配置列表。
 
 加载优先级：

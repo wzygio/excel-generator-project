@@ -17,6 +17,7 @@ import pytest
 import yaml
 
 from shared_kernel.config import (
+    PROJECT_ROOT,
     ConfigLoader,
     _deep_merge,
     _load_yaml_file,
@@ -24,8 +25,10 @@ from shared_kernel.config import (
 )
 from shared_kernel.config_model import (
     AppConfig,
+    FineReportDownloadConfig,
     LlmConfig,
     PathsConfig,
+    SourceFileConfig,
 )
 
 
@@ -169,6 +172,20 @@ class TestConfigLoaderLoading:
         """模块级 config 实例应存在且为 ConfigLoader 类型。"""
         assert isinstance(config, ConfigLoader)
 
+    def test_default_config_dir_is_independent_of_current_working_directory(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        ConfigLoader._instance = None
+        ConfigLoader._config = None
+        monkeypatch.chdir(tmp_path)
+
+        loader = ConfigLoader()
+
+        assert loader.config_dir == PROJECT_ROOT / "config"
+        assert loader.get().source_files["daily_yield"].description
+
 
 class TestProductConfigOverride:
     """测试产品级配置覆盖。"""
@@ -250,6 +267,40 @@ class TestAppConfigModel:
         assert cfg.report.gap_analysis.top_n == 3
         assert cfg.report.batch_analysis.min_yield_rate == 30.0
         assert cfg.report.trend_analysis.consecutive_days == 3
+
+    def test_agent_source_and_download_settings_are_validated(self):
+        cfg = AppConfig.model_validate(
+            {
+                "agent": {
+                    "daily_report": {
+                        "generator_root": "~/skills/generator",
+                        "cli_path": "scripts/cli.py",
+                        "output_dir": "output/reports",
+                    }
+                },
+                "source_files": {
+                    "daily_yield": {
+                        "description": "Configured report",
+                        "pattern": "configured-*",
+                        "filename": "configured.xlsx",
+                        "default_path": "resources/configured.xlsx",
+                    }
+                },
+                "report_download": {
+                    "finereport": {
+                        "report_directory": "configured/directory",
+                        "report_wait_timeout_ms": 90000,
+                        "browser": {"timeout_ms": 60000},
+                    }
+                },
+            }
+        )
+
+        assert cfg.agent.daily_report.cli_path == "scripts/cli.py"
+        assert isinstance(cfg.source_files["daily_yield"], SourceFileConfig)
+        assert cfg.source_files["daily_yield"].filename == "configured.xlsx"
+        assert isinstance(cfg.report_download.finereport, FineReportDownloadConfig)
+        assert cfg.report_download.finereport.report_wait_timeout_ms == 90000
 
     def test_agent_letta_config(self):
         """Agent Runtime 配置应支持 Letta。"""

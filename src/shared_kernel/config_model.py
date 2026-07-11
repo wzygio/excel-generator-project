@@ -123,6 +123,8 @@ class SourceFileConfig(BaseModel):
     pattern: str = Field(default="", description="本地文件名匹配模式")
     filename: str = Field(default="", description="下载或落盘时使用的文件名")
     default_path: str = Field(default="", description="Agent 默认读取路径")
+    alternate_paths: list[str] = Field(default_factory=list, description="备用本地读取路径")
+    remote_path: str = Field(default="", description="可选网络源路径")
     purpose: str = Field(default="", description="该源表在 Agent 工作流中的用途")
     source: str = Field(default="", description="源表来源，例如 FineReport 或本地文件")
     aliases: list[str] = Field(default_factory=list, description="自然语言识别别名")

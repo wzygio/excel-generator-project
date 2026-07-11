@@ -16,7 +16,7 @@
 |----------|------------|------|
 | 报表下载 / 数据获取 | `report_download` | 根据 Spec 中的报表类型、日期、产品型号和筛选条件下载或定位源表。 |
 | 数据分析 | `data_analysis` | 读取优先解密文件，执行趋势、异常、Gap、排序等分析，并返回结构化结论。 |
-| 日报生成 | `daily_report` | 根据分析结果和模板生成标准 Excel 日报。 |
+| 日报生成 | `daily_report` | 通过 facade 调用公共 `$daily-report-generator` CLI 并返回 Excel artifact。 |
 
 统一任务契约和 Skill 工具契约见 Agent system design references。
 
@@ -203,7 +203,7 @@ Core 层只放领域判断和模型，不直接访问文件系统、浏览器或
 |----------|----------|----------|
 | `src/yield_report/skills/report_download/` | `DataAcquisitionOrchestrator`、`FinereportClient`、`LocalFileLoader` | 已包装现有下载行为，提供结构化 request/result。 |
 | `src/yield_report/skills/data_analysis/` | `AnalysisOrchestrator`、分析文件解析器、分析器、memory | 已包装 Task1/Task2 数据分析能力，向下游返回可复用结构化数据。 |
-| `src/yield_report/skills/daily_report/` | V1 日报写入经验和新 V2 需求 | 已预留稳定 Skill 接口，具体生成逻辑后续接入。 |
+| `src/yield_report/skills/daily_report/` | 公共 `$daily-report-generator` CLI | 只保留 Agent 请求/结果适配；生成逻辑与业务参数归公共 skill。 |
 
 ## 5. FineReport RPA 设计约束
 
@@ -214,7 +214,7 @@ D:\wzy\Python\packages\web_automation
 import fr_web_automation
 ```
 
-项目层只维护良率报表相关信息：
+项目层只维护 Agent 获取报表所需的非秘密配置：
 
 - 报表名称
 - 报表目录
@@ -223,15 +223,16 @@ import fr_web_automation
 - 产品型号业务规则
 - 下载文件命名规则
 
-当前关键常量位于 `yield_download_service.py`：
+配置所有权如下：
 
 ```text
-DAILY_YIELD_REPORT_NAME = "V3良率及不良率By月周天汇总报表"
-BATCH_YIELD_REPORT_NAME = "V3良率及不良率By批次汇总报表"
-YIELD_REPORT_DIRECTORY = "目录/良率监控/综合良率"
-LABEL_END_DATE = "结束日期："
-LABEL_START_DATE = "开始日期："
-LABEL_PRODUCT_MODEL = "产品型号："
+config/global.yaml
+  source_files.*                 # 报表名、pattern、filename、default_path
+  report_download.finereport.*  # 门户目录、参数标签、browser、timeout
+
+AppConfig / SourceFileConfig / FineReportDownloadConfig
+  -> FinereportClient
+  -> YieldDownloadService
 ```
 
 失败定位：

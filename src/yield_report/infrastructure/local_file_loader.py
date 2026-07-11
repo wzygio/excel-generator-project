@@ -1,10 +1,8 @@
 ﻿"""
 local_file_loader.py: 本地/网络文件加载器
 
-负责处理不需要通过 FineReport 爬取的本地文件和网络共享文件:
-1. CT良率异常波动管理表 - 网络路径 (\\10.71.4.18\\...)
-2. 良率目标拆解表 - resources/ 本地
-3. 日良率Gap分析模板 - resources/ 本地
+负责处理不需要通过 FineReport 获取的本地文件和网络共享文件。
+具体文件名、默认路径、备用路径和远端路径来自 Pydantic 校验后的源表目录。
 
 核心功能:
 - 检查本地文件是否存在
@@ -16,9 +14,11 @@ from __future__ import annotations
 
 import logging
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
-from shared_kernel.config import config as config_loader
+from shared_kernel.config import ConfigLoader
+from shared_kernel.config_model import AppConfig, SourceFileConfig
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +39,22 @@ class LocalFileLoader:
     所有文件最终指向 resources/ 目录下的预期路径。
     """
 
-    # 文件定义: (预期文件名, 描述)
-    CT_EXCEPTION_FILENAME = "CT良率异常波动管理表.xlsx"
-    TARGET_DECOMPOSITION_FILENAME = "2026年良率目标拆解-1017版V05 - 无公式版.xlsx"
-    GAP_TEMPLATE_FILENAME = "日良率Gap分析模板.xlsx"
-
-    # CT 异常表的网络共享路径
-    CT_EXCEPTION_NETWORK_PATH = (
-        r"\\10.71.4.18\合肥维信诺公共盘\23专项\大数据专项"
-        r"\02 量产良率\02 良率异常闭环管理\CT良率异常波动管理表.xlsx"
-    )
-
-    def __init__(self) -> None:
-        app_config = config_loader.get()
-        self._resources_dir = Path(app_config.paths.resources_dir)
+    def __init__(
+        self,
+        app_config: AppConfig | None = None,
+        source_files: Mapping[str, SourceFileConfig] | None = None,
+    ) -> None:
+        app_config = app_config or ConfigLoader().get()
+        base_dir = Path(app_config.paths.base_dir).expanduser()
+        self._base_dir = base_dir.resolve()
+        resources_dir = Path(app_config.paths.resources_dir).expanduser()
+        self._resources_dir = (
+            resources_dir.resolve()
+            if resources_dir.is_absolute()
+            else (self._base_dir / resources_dir).resolve()
+        )
+        catalog = source_files if source_files is not None else app_config.source_files
+        self._source_files = dict(catalog)
 
     # ================================================================
     # 公共方法
@@ -75,7 +77,8 @@ class LocalFileLoader:
             LocalFileNotFoundError: 文件无法获取
             NetworkFileCopyError: 网络复制失败
         """
-        local_path = self._resources_dir / self.CT_EXCEPTION_FILENAME
+        source = self._require_source("ct_exception")
+        local_path = self._configured_path(source.default_path, alias="ct_exception")
 
         # 如果文件已存在且不强制复制，直接返回
         if local_path.exists() and not force_copy:
@@ -83,7 +86,9 @@ class LocalFileLoader:
             return local_path
 
         # 尝试从网络路径复制
-        network_path = Path(self.CT_EXCEPTION_NETWORK_PATH)
+        if not source.remote_path.strip():
+            raise LocalFileNotFoundError("source_files.ct_exception.remote_path is not configured")
+        network_path = Path(source.remote_path).expanduser()
         if network_path.exists():
             try:
                 self._copy_file(network_path, local_path)
@@ -113,24 +118,25 @@ class LocalFileLoader:
         Raises:
             LocalFileNotFoundError: 文件未找到
         """
-        local_path = self._resources_dir / self.TARGET_DECOMPOSITION_FILENAME
+        source = self._require_source("target_decomposition")
+        local_path = self._configured_path(
+            source.default_path,
+            alias="target_decomposition",
+        )
 
         if local_path.exists():
             logger.info("良率目标拆解表已就绪: %s", local_path)
             return local_path
 
-        # 尝试在 resources/project_files/ 下查找
-        alt_path = self._resources_dir / "project_files" / self.TARGET_DECOMPOSITION_FILENAME
-        if alt_path.exists():
-            # 复制到 resources/ 根目录
-            shutil.copy2(str(alt_path), str(local_path))
-            logger.info("良率目标拆解表已从 project_files/ 复制: %s", local_path)
-            return local_path
+        for alt_path in self._alternate_paths(source):
+            if alt_path.exists():
+                self._copy_file(alt_path, local_path)
+                logger.info("良率目标拆解表已从备用路径复制: %s", local_path)
+                return local_path
 
         raise LocalFileNotFoundError(
             f"良率目标拆解表未找到。"
-            f"请将 '{self.TARGET_DECOMPOSITION_FILENAME}' "
-            f"放置于 {self._resources_dir} 目录下。"
+            f"请将 '{source.filename}' 放置于 {local_path.parent} 目录下。"
         )
 
     def ensure_gap_template_file(self) -> Path:
@@ -146,23 +152,22 @@ class LocalFileLoader:
         Raises:
             LocalFileNotFoundError: 文件未找到
         """
-        local_path = self._resources_dir / self.GAP_TEMPLATE_FILENAME
+        source = self._require_source("gap_template")
+        local_path = self._configured_path(source.default_path, alias="gap_template")
 
         if local_path.exists():
             logger.info("日良率Gap分析模板已就绪: %s", local_path)
             return local_path
 
-        # 尝试在 resources/project_files/ 下查找
-        alt_path = self._resources_dir / "project_files" / self.GAP_TEMPLATE_FILENAME
-        if alt_path.exists():
-            shutil.copy2(str(alt_path), str(local_path))
-            logger.info("日良率Gap分析模板已从 project_files/ 复制: %s", local_path)
-            return local_path
+        for alt_path in self._alternate_paths(source):
+            if alt_path.exists():
+                self._copy_file(alt_path, local_path)
+                logger.info("日良率Gap分析模板已从备用路径复制: %s", local_path)
+                return local_path
 
         raise LocalFileNotFoundError(
             f"日良率Gap分析模板未找到。"
-            f"请将 '{self.GAP_TEMPLATE_FILENAME}' "
-            f"放置于 {self._resources_dir} 目录下。"
+            f"请将 '{source.filename}' 放置于 {local_path.parent} 目录下。"
         )
 
     def check_all_files_ready(self) -> dict[str, bool]:
@@ -172,22 +177,40 @@ class LocalFileLoader:
         Returns:
             dict: {文件名: 是否存在}
         """
-        files = [
-            self.CT_EXCEPTION_FILENAME,
-            self.TARGET_DECOMPOSITION_FILENAME,
-            self.GAP_TEMPLATE_FILENAME,
-        ]
-
         status: dict[str, bool] = {}
-        for filename in files:
-            filepath = self._resources_dir / filename
-            status[filename] = filepath.exists()
+        for alias in ("ct_exception", "target_decomposition", "gap_template"):
+            source = self._require_source(alias)
+            filepath = self._configured_path(source.default_path, alias=alias)
+            status[source.filename or filepath.name] = filepath.exists()
 
         return status
 
     # ================================================================
     # 辅助方法
     # ================================================================
+
+    def _require_source(self, alias: str) -> SourceFileConfig:
+        source = self._source_files.get(alias)
+        if source is None:
+            raise ValueError(f"source_files.{alias} is not configured")
+        if not source.default_path.strip():
+            raise ValueError(f"source_files.{alias}.default_path is not configured")
+        return source
+
+    def _configured_path(self, raw_path: str, *, alias: str) -> Path:
+        if not raw_path.strip():
+            raise ValueError(f"source_files.{alias}.default_path is not configured")
+        path = Path(raw_path).expanduser()
+        return path.resolve() if path.is_absolute() else (self._base_dir / path).resolve()
+
+    def _alternate_paths(self, source: SourceFileConfig) -> list[Path]:
+        paths: list[Path] = []
+        for raw_path in source.alternate_paths:
+            path = Path(raw_path).expanduser()
+            paths.append(
+                path.resolve() if path.is_absolute() else (self._base_dir / path).resolve()
+            )
+        return paths
 
     @staticmethod
     def _copy_file(source: Path, destination: Path) -> None:

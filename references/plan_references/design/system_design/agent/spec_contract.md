@@ -231,13 +231,8 @@ workflow:
 
   - id: generate_daily_report
     skill: daily_report
-    depends_on:
-      - analyze_ct_trend
     input:
-      sections:
-        - ct_trend
-      analysis_results:
-        - ct_trend_result
+      report_date: "2026-06-23"
     save_as: daily_report_file
 ```
 
@@ -414,13 +409,8 @@ workflow:
 
   - id: generate_daily_report
     skill: daily_report
-    depends_on:
-      - analyze_ct_trend
     input:
-      sections:
-        - ct_trend
-      analysis_results:
-        - ct_trend_result
+      report_date: "2026-06-23"
     save_as: daily_report_file
 
 outputs:

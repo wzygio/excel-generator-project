@@ -5,17 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from yield_report.infrastructure.yield_download_service import (
-    BATCH_YIELD_FILENAME,
-    BATCH_YIELD_REPORT_NAME,
-    DAILY_YIELD_FILENAME,
-    DAILY_YIELD_REPORT_NAME,
-    LABEL_END_DATE,
-    LABEL_MONTH_COUNT,
-    LABEL_START_DATE,
-    YIELD_REPORT_DIRECTORY,
-    YieldDownloadService,
+from shared_kernel.config_model import (
+    FineReportDownloadConfig,
+    FineReportParameterLabelsConfig,
+    SourceFileConfig,
 )
+from yield_report.infrastructure.yield_download_service import YieldDownloadService
 from yield_report.infrastructure.yield_portal_adapter import YieldPortalAdapter
 
 
@@ -27,6 +22,25 @@ def _build_service_stub() -> YieldDownloadService:
     service._handle_product_models = MagicMock()  # type: ignore[method-assign]
     service._query_and_export = MagicMock()  # type: ignore[method-assign]
     service._get_adapter = MagicMock()  # type: ignore[method-assign]
+    service._settings = FineReportDownloadConfig(
+        report_directory="configured/report/directory",
+        labels=FineReportParameterLabelsConfig(
+            end_date="configured-end-date",
+            start_date="configured-start-date",
+            product_model="configured-product-model",
+            month_count="configured-month-count",
+        ),
+    )
+    service._source_files = {
+        "daily_yield": SourceFileConfig(
+            description="Configured Daily Report",
+            filename="configured-daily.xlsx",
+        ),
+        "batch_yield": SourceFileConfig(
+            description="Configured Batch Report",
+            filename="configured-batch.xlsx",
+        ),
+    }
     return service
 
 
@@ -40,15 +54,15 @@ def test_download_daily_yield_passes_product_models(tmp_path: Path) -> None:
         save_dir=tmp_path,
     )
 
-    assert result == tmp_path / DAILY_YIELD_FILENAME
+    assert result == tmp_path / "configured-daily.xlsx"
     service._navigate_to_report.assert_called_once_with(
-        DAILY_YIELD_REPORT_NAME,
-        report_path=YIELD_REPORT_DIRECTORY,
+        "Configured Daily Report",
+        report_path="configured/report/directory",
     )
     service._handle_product_models.assert_called_once_with(["M678"])
     service._query_and_export.assert_called_once_with(
-        file_name=DAILY_YIELD_FILENAME,
-        save_path=tmp_path / DAILY_YIELD_FILENAME,
+        file_name="configured-daily.xlsx",
+        save_path=tmp_path / "configured-daily.xlsx",
     )
 
 
@@ -65,8 +79,8 @@ def test_download_daily_yield_sets_requested_month_count(tmp_path: Path) -> None
         save_dir=tmp_path,
     )
 
-    adapter.set_date.assert_called_once_with("2026-06-15", LABEL_END_DATE)
-    adapter.set_text_parameter.assert_called_once_with("3", LABEL_MONTH_COUNT)
+    adapter.set_date.assert_called_once_with("2026-06-15", "configured-end-date")
+    adapter.set_text_parameter.assert_called_once_with("3", "configured-month-count")
 
 
 def test_download_batch_yield_passes_product_models(tmp_path: Path) -> None:
@@ -92,21 +106,21 @@ def test_download_batch_yield_passes_product_models(tmp_path: Path) -> None:
         save_dir=tmp_path,
     )
 
-    assert result == tmp_path / BATCH_YIELD_FILENAME
+    assert result == tmp_path / "configured-batch.xlsx"
     service._navigate_to_report.assert_called_once_with(
-        BATCH_YIELD_REPORT_NAME,
-        report_path=YIELD_REPORT_DIRECTORY,
+        "Configured Batch Report",
+        report_path="configured/report/directory",
     )
     assert events == [
-        ("set_date", LABEL_START_DATE, "2026-04-01"),
-        ("set_date", LABEL_END_DATE, "2026-05-31"),
+        ("set_date", "configured-start-date", "2026-04-01"),
+        ("set_date", "configured-end-date", "2026-05-31"),
         ("product_models", ["M678"], None),
-        ("query", BATCH_YIELD_FILENAME, None),
+        ("query", "configured-batch.xlsx", None),
     ]
     service._handle_product_models.assert_called_once_with(["M678"])
     service._query_and_export.assert_called_once_with(
-        file_name=BATCH_YIELD_FILENAME,
-        save_path=tmp_path / BATCH_YIELD_FILENAME,
+        file_name="configured-batch.xlsx",
+        save_path=tmp_path / "configured-batch.xlsx",
     )
 
 

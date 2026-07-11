@@ -7,19 +7,21 @@ yield_download_service.py: 良率报表下载业务编排服务
 
 【设计原则】
     - 不包含 web_automation 通用逻辑（保持该包的通用性）
-    - 所有业务名称（报表名、标签文本、日期计算）均在此处定义
+    - 报表名、标签、目录和超时只从经过 Pydantic 校验的配置注入
 """
 
 from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
 from fr_web_automation.application.download_service import DownloadService
 from fr_web_automation.config import WebAutomationConfig
 
+from shared_kernel.config_model import FineReportDownloadConfig, SourceFileConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,
@@ -29,29 +31,6 @@ from yield_report.infrastructure.yield_portal_adapter import (
 )
 
 logger = logging.getLogger(__name__)
-
-# ================================================================
-# 报表常量定义（集中管理，方便调整）
-# ================================================================
-
-# 报表名称（必须与 FineReport 门户中的名称精确匹配）
-DAILY_YIELD_REPORT_NAME = "V3CT修正良率及不良率By月周天报表"
-BATCH_YIELD_REPORT_NAME = "V3良率及不良率By批次汇总报表"
-YIELD_REPORT_DIRECTORY = "目录/良率监控/综合良率"
-
-# 默认保存文件名
-DAILY_YIELD_FILENAME = "V3CT修正良率及不良率By月周天报表.xlsx"
-BATCH_YIELD_FILENAME = "V3良率及不良率By批次汇总报表.xlsx"
-
-# 参数面板标签文本（可通过此处调整以适配实际 UI）
-LABEL_END_DATE = "结束日期："
-LABEL_START_DATE = "开始日期："
-LABEL_PRODUCT_MODEL = "产品型号："
-LABEL_MONTH_COUNT = "月数："
-
-# 等待超时（毫秒）
-WAIT_FOR_REPORT_TIMEOUT = 180000  # 3 分钟，大数据量报表可能需要较长时间
-BROWSER_TIMEOUT = 120000  # 2 分钟
 
 
 class YieldDownloadService(DownloadService):
@@ -74,6 +53,8 @@ class YieldDownloadService(DownloadService):
         portal_url: str,
         username: str,
         password: str,
+        settings: FineReportDownloadConfig,
+        source_files: Mapping[str, SourceFileConfig],
     ) -> None:
         """
         Args:
@@ -86,6 +67,10 @@ class YieldDownloadService(DownloadService):
         self._portal_url = portal_url
         self._username = username
         self._password = password
+        self._settings = settings
+        self._source_files = dict(source_files)
+        self._require_source("daily_yield")
+        self._require_source("batch_yield")
         # 类型标注：初始化时为 None，_ensure_browser_ready() 后保证非空
         self._portal_adapter: YieldPortalAdapter = None  # type: ignore[assignment]
         self._browser_initialized = False
@@ -113,7 +98,8 @@ class YieldDownloadService(DownloadService):
             下载文件的完整路径
         """
         end_date = end_date or effective_report_end_date().isoformat()
-        save_path = self._resolve_save_path(save_dir, DAILY_YIELD_FILENAME)
+        source = self._require_source("daily_yield")
+        save_path = self._resolve_save_path(save_dir, source.filename)
 
         logger.info(">>> 开始下载月周天汇总报表 <<<")
         logger.info("  结束日期: %s", end_date)
@@ -123,22 +109,25 @@ class YieldDownloadService(DownloadService):
 
         try:
             self._navigate_to_report(
-                DAILY_YIELD_REPORT_NAME,
-                report_path=YIELD_REPORT_DIRECTORY,
+                source.description,
+                report_path=self._settings.report_directory,
             )
 
             # 设置参数
-            adapter.set_date(end_date, LABEL_END_DATE)
+            adapter.set_date(end_date, self._settings.labels.end_date)
             if month_count is not None:
                 try:
-                    adapter.set_text_parameter(str(month_count), LABEL_MONTH_COUNT)
+                    adapter.set_text_parameter(
+                        str(month_count),
+                        self._settings.labels.month_count,
+                    )
                 except Exception:
                     logger.warning('月数字段不可用（该报表可能不含此参数），跳过月数设置')
             self._handle_product_models(product_models)
 
             # 查询并导出
             self._query_and_export(
-                file_name=DAILY_YIELD_FILENAME,
+                file_name=source.filename,
                 save_path=save_path,
             )
 
@@ -172,7 +161,8 @@ class YieldDownloadService(DownloadService):
         """
         start_date = start_date or self._default_start_date()
         end_date = end_date or effective_report_end_date().isoformat()
-        save_path = self._resolve_save_path(save_dir, BATCH_YIELD_FILENAME)
+        source = self._require_source("batch_yield")
+        save_path = self._resolve_save_path(save_dir, source.filename)
 
         logger.info(">>> 开始下载批次汇总报表 <<<")
         logger.info("  开始日期: %s  结束日期: %s", start_date, end_date)
@@ -182,18 +172,18 @@ class YieldDownloadService(DownloadService):
 
         try:
             self._navigate_to_report(
-                BATCH_YIELD_REPORT_NAME,
-                report_path=YIELD_REPORT_DIRECTORY,
+                source.description,
+                report_path=self._settings.report_directory,
             )
 
             # 设置参数
-            adapter.set_date(start_date, LABEL_START_DATE)
-            adapter.set_date(end_date, LABEL_END_DATE)
+            adapter.set_date(start_date, self._settings.labels.start_date)
+            adapter.set_date(end_date, self._settings.labels.end_date)
             self._handle_product_models(product_models)
 
             # 查询并导出
             self._query_and_export(
-                file_name=BATCH_YIELD_FILENAME,
+                file_name=source.filename,
                 save_path=save_path,
             )
 
@@ -239,7 +229,7 @@ class YieldDownloadService(DownloadService):
         self.page = self.start_engine()
         self._portal_adapter = YieldPortalAdapter(
             self.page,
-            timeout=BROWSER_TIMEOUT,
+            timeout=self._settings.browser.timeout_ms,
         )
 
         # 导航到门户首页
@@ -276,7 +266,7 @@ class YieldDownloadService(DownloadService):
         time.sleep(0.5)
         adapter.search_and_enter_report(report_name, report_path=report_path)
         # 显式等待参数面板加载，而非盲等
-        adapter.wait_for_report_frame(timeout=BROWSER_TIMEOUT)
+        adapter.wait_for_report_frame(timeout=self._settings.browser.timeout_ms)
 
     # ================================================================
     # 内部方法：参数设置
@@ -297,12 +287,12 @@ class YieldDownloadService(DownloadService):
             logger.info("设置产品型号（%d 个）...", len(product_models))
             adapter.select_dropdown_options(
                 product_models,
-                label_text=LABEL_PRODUCT_MODEL,
+                label_text=self._settings.labels.product_model,
             )
         else:
             logger.info("未指定产品型号，执行全选...")
             adapter.select_all_dropdown_options(
-                label_text=LABEL_PRODUCT_MODEL,
+                label_text=self._settings.labels.product_model,
             )
 
     # ================================================================
@@ -325,7 +315,7 @@ class YieldDownloadService(DownloadService):
 
         # 1. 点击查询并等待渲染
         adapter.click_query_and_wait(
-            wait_timeout=WAIT_FOR_REPORT_TIMEOUT,
+            wait_timeout=self._settings.report_wait_timeout_ms,
         )
 
         # 2. 执行导出并保存
@@ -353,6 +343,16 @@ class YieldDownloadService(DownloadService):
     # ================================================================
     # 辅助方法
     # ================================================================
+
+    def _require_source(self, alias: str) -> SourceFileConfig:
+        source = self._source_files.get(alias)
+        if source is None:
+            raise ValueError(f"source_files.{alias} is not configured")
+        if not source.description.strip():
+            raise ValueError(f"source_files.{alias}.description is not configured")
+        if not source.filename.strip():
+            raise ValueError(f"source_files.{alias}.filename is not configured")
+        return source
 
     def _capture_debug_artifacts(self, name: str) -> None:
         """保存 RPA 失败时的页面截图和可见 iframe 文本，便于定位帆软页面状态。"""
