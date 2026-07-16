@@ -6,7 +6,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from shared_kernel.config import config as app_config
+from yield_report.shared_kernel.config import config as app_config
 from yield_report.agent.letta_runtime import (
     LettaRuntime,
     LettaRuntimeConfig,

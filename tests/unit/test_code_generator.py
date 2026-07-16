@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shared_kernel.infrastructure.codex_cli_client import CodexCLIError
+from yield_report.shared_kernel.infrastructure.codex_cli_client import CodexCLIError
 from yield_report.infrastructure.code_generator import (
     CodeGenerator,
     _detect_header_depth,

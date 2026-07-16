@@ -8,8 +8,8 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from typing import Any
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import AppConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import AppConfig
 
 DEFAULT_LOG_FILENAME = "all.log"
 DEFAULT_LOG_DIR = Path("output") / "logs"

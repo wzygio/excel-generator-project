@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from shared_kernel.config import config as config_loader
+from yield_report.shared_kernel.config import config as config_loader
 
 logger = logging.getLogger(__name__)
 

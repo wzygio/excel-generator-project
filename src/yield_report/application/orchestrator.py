@@ -29,8 +29,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import SourceFileConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import SourceFileConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,

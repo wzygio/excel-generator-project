@@ -55,7 +55,6 @@
 | `specs/runs/` | 单次任务运行目录。 |
 | `specs/templates/` | 可复用任务规格模板。 |
 | `src/` | Python 源码。 |
-| `src/shared_kernel/` | 跨业务共享配置、LLM 和基础设施能力。 |
 | `src/yield_report/` | 当前良率日报 Agent、Skill、应用、领域和基础设施实现。 |
 | `src/excel_generator_project/` | V1 兼容实现。 |
 | `tests/` | 自动化测试入口。 |
@@ -102,6 +101,15 @@
 | RPA | Playwright, fr-web-automation |
 | UI | CopilotKit, Next.js |
 | 工程 | uv, pytest, ruff, pyright |
+
+## Common utilities boundary
+
+Reusable infrastructure comes from the local editable `fr-common-utils` dependency and uses
+the canonical `fr_common_utils` namespace. This project currently consumes only the core
+logging API, so it declares no `db` or `excel` extra. Project configuration models and policy,
+the structured rotating logger, report workflows, and LLM/Codex adapters remain under
+`yield_report.shared_kernel`; the top-level `shared_kernel` name is reserved for package
+compatibility and is not used by project code.
 
 ## 验证入口
 

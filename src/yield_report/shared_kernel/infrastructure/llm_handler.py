@@ -8,15 +8,16 @@ is routed to the configured DeepSeek-compatible chat completions endpoint.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, cast
 
+from fr_common_utils.logging import get_logger
 from openai import OpenAI, OpenAIError
+from openai.types.chat import ChatCompletionMessageParam
 
-from shared_kernel.config import config
+from yield_report.shared_kernel.config import config
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class LLMError(Exception):
@@ -143,11 +144,11 @@ class LLMManager:
     def _build_messages(
         messages: list[dict[str, str]] | None,
         system_prompt: str | None,
-    ) -> list[dict[str, str]]:
-        payload: list[dict[str, str]] = []
+    ) -> list[ChatCompletionMessageParam]:
+        payload: list[ChatCompletionMessageParam] = []
         if system_prompt:
             payload.append({"role": "system", "content": system_prompt})
-        payload.extend(messages or [])
+        payload.extend(cast(list[ChatCompletionMessageParam], messages or []))
         return payload
 
     @staticmethod

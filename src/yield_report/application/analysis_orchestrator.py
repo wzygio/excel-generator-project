@@ -440,7 +440,7 @@ class AnalysisOrchestrator:
         schema: str,
         decision: StrategyDecision,
     ) -> AnalysisResult:
-        from shared_kernel.infrastructure.llm_handler import llm_manager
+        from yield_report.shared_kernel.infrastructure.llm_handler import llm_manager
 
         user_message = (
             f"## 用户需求\n{user_query}\n\n"

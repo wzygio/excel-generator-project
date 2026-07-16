@@ -7,6 +7,9 @@
 - Do not copy public-skill business configuration into this project. Project wrappers may adapt public CLI inputs/results only.
 - Keep Core logic mostly pure; browser, Excel, filesystem, and network IO belong in infrastructure or adapters.
 - Use the shared LLM manager for LLM calls; do not instantiate provider clients in business code.
+- Import reusable common infrastructure from `fr_common_utils`. Keep project configuration,
+  structured logging policy, report workflows, and LLM/Codex adapters under
+  `yield_report.shared_kernel`; do not add project imports from top-level `shared_kernel`.
 - Keep existing public entrypoints compatible unless the user explicitly asks for a breaking refactor.
 - Add dependencies only through project dependency files and explain why existing dependencies are insufficient.
 - Prefer focused tests for parser, selector, Skill contract, file naming, logging, and download behavior.

@@ -10,8 +10,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import SourceFileConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import SourceFileConfig
 from yield_report.agent.run_id import RunIdFactory, normalize_capability, normalize_source
 from yield_report.agent.run_store import RunPaths, RunStore
 from yield_report.agent.spec_graph import LangGraphSpecAgent
@@ -172,7 +172,7 @@ class SpecBuilder:
         if self._llm_converter is not None:
             return self._llm_converter(request)
 
-        from shared_kernel.infrastructure.llm_handler import llm_manager
+        from yield_report.shared_kernel.infrastructure.llm_handler import llm_manager
 
         system_prompt = (
             "你是良率日报 Agent Workbench 的 Spec Builder。"

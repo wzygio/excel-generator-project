@@ -11,7 +11,7 @@ config.py: ConfigLoader 配置工厂
 4. 链式访问: config.paths.base_dir, config.llm.provider
 
 使用方式:
-    from shared_kernel.config import config
+    from yield_report.shared_kernel.config import config
     cfg = config.get()
     print(cfg.paths.base_dir)
 
@@ -31,9 +31,9 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-from shared_kernel.config_model import AppConfig
+from yield_report.shared_kernel.config_model import AppConfig
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -193,7 +193,7 @@ config = ConfigLoader()
 模块级单例实例。
 
 使用方式:
-    from shared_kernel.config import config
+    from yield_report.shared_kernel.config import config
     cfg = config.get()
     print(cfg.paths.base_dir)
     print(cfg.llm.provider)

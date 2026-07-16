@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from shared_kernel.config_model import AppConfig
+from yield_report.shared_kernel.config_model import AppConfig
 from yield_report.agent.spec_model import RunContext
 from yield_report.infrastructure.logging_config import (
     configure_yield_report_logging,

@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from shared_kernel.config import ConfigLoader
 from yield_report.agent.spec_model import RunContext, SkillResult
+from yield_report.shared_kernel.config import ConfigLoader
 from yield_report.skills.daily_report import tool as daily_report_tool
 from yield_report.skills.daily_report.models import DailyReportRequest
 

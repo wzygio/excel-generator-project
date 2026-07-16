@@ -17,8 +17,8 @@ import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import AppConfig, SourceFileConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import AppConfig, SourceFileConfig
 
 logger = logging.getLogger(__name__)
 

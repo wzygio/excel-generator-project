@@ -8,7 +8,7 @@ config_model.py: Pydantic V2 配置模型定义
 4. 提供合理的默认值与详细的校验错误信息
 
 使用方式:
-    from shared_kernel.config_model import AppConfig, LlmConfig
+    from yield_report.shared_kernel.config_model import AppConfig, LlmConfig
     cfg = AppConfig(...)  # 或通过 ConfigLoader 加载
 
 架构:

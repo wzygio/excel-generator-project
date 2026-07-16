@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
-from shared_kernel.infrastructure.llm_handler import llm_manager
+from yield_report.shared_kernel.infrastructure.llm_handler import llm_manager
 from yield_report.core.business_time import effective_report_end_date
 from yield_report.core.query_parser import REPORT_TYPE_META, ReportType
 

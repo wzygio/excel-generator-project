@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from shared_kernel.infrastructure.codex_cli_client import CodexCLIClient, CodexCLIError
+from yield_report.shared_kernel.infrastructure.codex_cli_client import CodexCLIClient, CodexCLIError
 
 logger = logging.getLogger(__name__)
 

@@ -27,9 +27,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import SourceFileConfig
-from shared_kernel.infrastructure.llm_handler import llm_manager
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import SourceFileConfig
+from yield_report.shared_kernel.infrastructure.llm_handler import llm_manager
 
 logger = logging.getLogger(__name__)
 

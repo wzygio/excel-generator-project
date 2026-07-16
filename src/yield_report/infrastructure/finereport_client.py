@@ -26,8 +26,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fr_web_automation.config import BrowserConfig, WebAutomationConfig
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import AppConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import AppConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,

@@ -9,7 +9,7 @@ from typing import Any
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config import ConfigLoader
 from yield_report.application.orchestrator import DataAcquisitionOrchestrator
 from yield_report.core.query_parser import ReportQueryRequest, ReportType
 

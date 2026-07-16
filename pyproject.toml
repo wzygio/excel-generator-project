@@ -24,6 +24,7 @@ dependencies = [
     "letta-client>=1.12.1",
     "langgraph>=0.2.0",
     "pydantic-ai-slim[openai]>=2.3.0",
+    "fr-common-utils",
     "streamlit>=1.37.0",
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",
@@ -42,7 +43,7 @@ dev = [
 dev-dependencies = ["yield-report-generator[dev]"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/yield_report", "src/shared_kernel"]
+packages = ["src/yield_report"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -67,6 +68,7 @@ ignore = ["E501"]
 
 
 [tool.uv.sources]
+fr-common-utils = { path = "D:/wzy/Python/packages/common_utils", editable = true }
 fr-web-automation = { path = "D:/wzy/Python/packages/web_automation", editable = true }
 
 [build-system]

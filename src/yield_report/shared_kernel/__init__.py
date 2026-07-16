@@ -1,4 +1,4 @@
-# src/shared_kernel/__init__.py
+# src/yield_report/shared_kernel/__init__.py
 """
 共享内核 (Shared Kernel)
 

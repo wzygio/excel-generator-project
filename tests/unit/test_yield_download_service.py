@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from shared_kernel.config_model import (
+from yield_report.shared_kernel.config_model import (
     FineReportDownloadConfig,
     FineReportParameterLabelsConfig,
     SourceFileConfig,

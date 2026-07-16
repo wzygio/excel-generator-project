@@ -459,6 +459,29 @@ wheels = [
 ]
 
 [[package]]
+name = "fr-common-utils"
+version = "0.2.0"
+source = { editable = "../packages/common_utils" }
+
+[package.metadata]
+requires-dist = [
+    { name = "build", marker = "extra == 'dev'", specifier = ">=1.2.0" },
+    { name = "defusedxml", marker = "extra == 'dev'", specifier = ">=0.7.1" },
+    { name = "defusedxml", marker = "extra == 'excel'", specifier = ">=0.7.1" },
+    { name = "openpyxl", marker = "extra == 'dev'", specifier = ">=3.1.0" },
+    { name = "openpyxl", marker = "extra == 'excel'", specifier = ">=3.1.0" },
+    { name = "pandas", marker = "extra == 'db'", specifier = ">=2.0.0" },
+    { name = "pandas", marker = "extra == 'dev'", specifier = ">=2.0.0" },
+    { name = "pandas", marker = "extra == 'excel'", specifier = ">=2.0.0" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.400" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5.0" },
+    { name = "sqlalchemy", marker = "extra == 'db'", specifier = ">=2.0.0" },
+    { name = "sqlalchemy", marker = "extra == 'dev'", specifier = ">=2.0.0" },
+]
+provides-extras = ["db", "excel", "dev"]
+
+[[package]]
 name = "fr-web-automation"
 version = "0.1.0"
 source = { editable = "../packages/web_automation" }
@@ -2994,6 +3017,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
+    { name = "fr-common-utils" },
     { name = "fr-web-automation" },
     { name = "google-genai" },
     { name = "langgraph" },
@@ -3035,6 +3059,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
+    { name = "fr-common-utils", editable = "../packages/common_utils" },
     { name = "fr-web-automation", editable = "../packages/web_automation" },
     { name = "google-genai", specifier = ">=1.0.0" },
     { name = "langgraph", specifier = ">=0.2.0" },

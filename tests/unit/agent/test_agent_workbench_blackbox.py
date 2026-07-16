@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from openpyxl import Workbook
 
 from scripts import agent_workbench_bridge
-from shared_kernel.infrastructure import llm_handler
+from yield_report.shared_kernel.infrastructure import llm_handler
 
 BLACKBOX_GOAL = "请分析M678最近三个月的月度良率变化趋势；如果有恶化，请给出恶化原因"
 

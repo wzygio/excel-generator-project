@@ -16,14 +16,14 @@ from pathlib import Path
 import pytest
 import yaml
 
-from shared_kernel.config import (
+from yield_report.shared_kernel.config import (
     PROJECT_ROOT,
     ConfigLoader,
     _deep_merge,
     _load_yaml_file,
     config,
 )
-from shared_kernel.config_model import (
+from yield_report.shared_kernel.config_model import (
     AppConfig,
     FineReportDownloadConfig,
     LlmConfig,

@@ -21,7 +21,7 @@ from pathlib import Path
 from fr_web_automation.application.download_service import DownloadService
 from fr_web_automation.config import WebAutomationConfig
 
-from shared_kernel.config_model import FineReportDownloadConfig, SourceFileConfig
+from yield_report.shared_kernel.config_model import FineReportDownloadConfig, SourceFileConfig
 from yield_report.core.business_time import (
     default_batch_start_date,
     effective_report_end_date,

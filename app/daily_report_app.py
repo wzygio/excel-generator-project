@@ -16,7 +16,7 @@ from app.daily_report_service import (
     generate_daily_report,
     list_generated_reports,
 )
-from shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config import ConfigLoader
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXCEL_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

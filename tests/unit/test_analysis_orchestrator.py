@@ -180,7 +180,7 @@ def test_analysis_orchestrator_generates_code_with_codex_cli(
         return "print('M626 最近一周日度良率趋势: codex ok')"
 
     monkeypatch.setattr(
-        "shared_kernel.infrastructure.codex_cli_client.CodexCLIClient.chat",
+        "yield_report.shared_kernel.infrastructure.codex_cli_client.CodexCLIClient.chat",
         codex_chat,
     )
 

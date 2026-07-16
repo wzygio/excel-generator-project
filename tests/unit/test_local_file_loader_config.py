@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from shared_kernel.config_model import AppConfig
+from yield_report.shared_kernel.config_model import AppConfig
 from yield_report.infrastructure.local_file_loader import LocalFileLoader
 
 

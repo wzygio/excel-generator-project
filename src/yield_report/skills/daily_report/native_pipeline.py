@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from shared_kernel.config import ConfigLoader
-from shared_kernel.config_model import DailyReportAgentConfig
+from yield_report.shared_kernel.config import ConfigLoader
+from yield_report.shared_kernel.config_model import DailyReportAgentConfig
 from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
 from yield_report.skills.daily_report.models import DailyReportRequest
 
