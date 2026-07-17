@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
 from yield_report.shared_kernel.config import ConfigLoader
 from yield_report.shared_kernel.config_model import DailyReportAgentConfig
-from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillError, SkillResult
 from yield_report.skills.daily_report.models import DailyReportRequest
 
 TOOL_NAME = "daily_report"
@@ -96,7 +96,7 @@ def _run_generator_cli(
         raise FileNotFoundError(f"{RUNTIME_NAME} CLI is missing: {cli_path}")
 
     command = [
-        sys.executable,
+        str(_resolve_generator_python(settings)),
         str(cli_path),
         "run",
         "--mode",
@@ -132,6 +132,19 @@ def _run_generator_cli(
 
 def _load_runtime_settings() -> DailyReportAgentConfig:
     return ConfigLoader().get().agent.daily_report
+
+
+def _resolve_generator_python(settings: DailyReportAgentConfig) -> Path:
+    configured = settings.python_executable.strip()
+    if not configured:
+        return Path(sys.executable).resolve()
+
+    executable = Path(configured).expanduser().resolve()
+    if not executable.exists() or not executable.is_file():
+        raise FileNotFoundError(
+            f"Configured {RUNTIME_NAME} Python executable is missing: {executable}"
+        )
+    return executable
 
 
 def _resolve_generator_root(

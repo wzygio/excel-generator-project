@@ -65,6 +65,7 @@ agent:
   default_runtime: "pydantic_ai"
   daily_report:
     generator_root: "~/.agents/skills/daily-report-generator"
+    python_executable: "D:/Program/Python/python.exe"
     cli_path: "scripts/daily_report_cli.py"
     output_dir: "output/artifacts/reports/generated"
     generator_root_env: "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"

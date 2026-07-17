@@ -25,7 +25,7 @@ Do not duplicate the generator's business rules here.
 
 ## Workflow
 1. Resolve Agent integration settings through the project's Pydantic configuration.
-2. Run the public `scripts/daily_report_cli.py run --output-dir <agent-output> --mode write` entry point. Pass `--workspace` only for an explicit compatibility override.
+2. Run the public `scripts/daily_report_cli.py run --output-dir <agent-output> --mode write` entry point with the configured generator Python executable (or the wrapper interpreter when it is unset). Pass `--workspace` only for an explicit compatibility override.
 3. Parse the generator JSON result.
 4. Return the generated workbook as the Excel artifact.
 

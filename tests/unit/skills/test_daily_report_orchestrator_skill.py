@@ -6,6 +6,7 @@ from pathlib import Path
 
 from yield_report.agent.registry import build_default_runtime
 from yield_report.agent.spec_model import ArtifactRef, RunContext, SkillCall, SkillResult, TaskSpec
+from yield_report.shared_kernel.config_model import DailyReportAgentConfig
 from yield_report.skills.daily_report import native_pipeline, tool
 from yield_report.skills.daily_report.models import DailyReportRequest
 
@@ -249,3 +250,55 @@ def test_native_facade_calls_daily_report_generator_cli(
     assert "--end-date" in command
     assert "2026-06-23" in command
     assert result.data["workflow"] == ["mod0", "mod4"]
+
+
+def test_native_facade_uses_configured_generator_interpreter(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    generator_root = tmp_path / "daily-report-generator"
+    cli_path = generator_root / "scripts" / "daily_report_cli.py"
+    cli_path.parent.mkdir(parents=True)
+    cli_path.write_text("", encoding="utf-8")
+    generator_python = tmp_path / "generator-python.exe"
+    generator_python.write_text("", encoding="utf-8")
+    output_path = tmp_path / "daily-report.xlsx"
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        captured["command"] = command
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            stdout=json.dumps(
+                {
+                    "status": "success",
+                    "workbook_path": str(output_path),
+                    "mods": [{"mod_id": "mod0"}, {"mod_id": "mod1"}],
+                },
+                ensure_ascii=False,
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(native_pipeline.subprocess, "run", fake_run)
+    monkeypatch.setattr(
+        native_pipeline,
+        "_load_runtime_settings",
+        lambda: DailyReportAgentConfig(
+            generator_root=str(generator_root),
+            cli_path="scripts/daily_report_cli.py",
+            output_dir="output/artifacts/reports/generated",
+            python_executable=str(generator_python),
+        ),
+    )
+
+    result = native_pipeline.run_native_daily_report(
+        DailyReportRequest(report_date="2026-06-23"),
+        RunContext(run_id="run-configured-generator-python", workspace=tmp_path),
+    )
+
+    command = captured["command"]
+    assert result.success is True
+    assert isinstance(command, list)
+    assert command[0] == str(generator_python.resolve())

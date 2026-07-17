@@ -171,6 +171,7 @@ class DailyReportAgentConfig(BaseModel):
     """Agent integration settings for the public daily-report generator."""
 
     generator_root: str = ""
+    python_executable: str = ""
     cli_path: str = ""
     output_dir: str = ""
     generator_root_env: str = ""
