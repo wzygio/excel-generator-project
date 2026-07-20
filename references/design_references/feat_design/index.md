@@ -1,4 +1,4 @@
-# Restrictions Index
+# Feat Design Index
 
 ## Folder Routes
 

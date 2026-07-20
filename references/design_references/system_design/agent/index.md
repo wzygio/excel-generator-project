@@ -1,4 +1,4 @@
-# Restrictions Index
+# Agent Index
 
 ## Folder Routes
 

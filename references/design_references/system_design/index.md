@@ -1,4 +1,4 @@
-# Restrictions Index
+# System Design Index
 
 ## Folder Routes
 

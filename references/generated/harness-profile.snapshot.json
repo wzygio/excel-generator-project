@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "profile_id": "agent-workflow-v1",
+  "name": "Agent Workflow Harness",
+  "description": "Workflow-oriented Harness separating durable artifacts from reusable references across design, planning, development/testing, and summary stages.",
+  "roots": {
+    "agents": "AGENTS.md",
+    "architecture": "ARCHITECTURE.md",
+    "references": "references",
+    "artifact_router": "references/retrospective.md",
+    "generated": "references/generated",
+    "checker": "scripts/harness_check.py"
+  },
+  "artifact_router": {
+    "path": "references/retrospective.md",
+    "title": "Docs Artifact Router",
+    "purpose": "Navigate durable project artifacts under docs/. Reusable guidance belongs in references/; temporary task state belongs in .scratch/ and .planning/.",
+    "routes": [
+      {
+        "path": "docs/PRD",
+        "create": true,
+        "role": "Approved requirement and product-specification documents"
+      },
+      {
+        "path": "docs/ADR",
+        "create": true,
+        "role": "Durable architectural decisions and their consequences"
+      },
+      {
+        "path": "docs/dev_docs",
+        "create": true,
+        "role": "Development prompts, tutorials, and generated engineering guidance"
+      },
+      {
+        "path": "docs/agents",
+        "create": true,
+        "role": "Repository-specific Agent/Harness operating configuration"
+      },
+      {
+        "path": "docs/others",
+        "create": true,
+        "role": "Retained project documents outside the other artifact classes"
+      }
+    ],
+    "update_rule": "When a durable artifact class is added under docs/, add its folder route here. Keep this router folder-level; do not list individual documents."
+  },
+  "router": {
+    "required_headings": [
+      "Project Overview",
+      "Code Intelligence Policy",
+      "Context Router",
+      "Iteration Router",
+      "Agent skills",
+      "Safety Boundary"
+    ],
+    "allow_additional_headings": true,
+    "index_policy": "folder-only",
+    "architecture_max_path_depth": 2
+  },
+  "template_documents": [
+    {
+      "path": "AGENTS.md",
+      "source": "templates/AGENTS.md"
+    },
+    {
+      "path": "CONTEXT.md",
+      "source": "templates/CONTEXT.md"
+    },
+    {
+      "path": "references/design_references/domain/GLOSSARY.md",
+      "source": "templates/GLOSSARY.md"
+    }
+  ],
+  "workflow": [
+    {
+      "id": "design",
+      "label": "Design / 需求",
+      "purpose": "Capture requests, clarify requirements, and maintain product or feature specifications.",
+      "artifacts": [
+        {
+          "path": ".scratch",
+          "create": true,
+          "required": true,
+          "role": "Local Markdown Issues and triage lifecycle"
+        },
+        {
+          "path": "docs/PRD",
+          "create": true,
+          "required": true,
+          "role": "Durable requirement documents"
+        }
+      ],
+      "references": [
+        {
+          "path": "references/design_references",
+          "create": true,
+          "required": true,
+          "role": "Domain, system, module, and feature design knowledge"
+        }
+      ],
+      "external_skills": []
+    },
+    {
+      "id": "plan",
+      "label": "Plan / 计划",
+      "purpose": "Turn approved requirements into ordered, traceable execution phases.",
+      "artifacts": [
+        {
+          "path": ".planning",
+          "create": true,
+          "required": true,
+          "role": "Persistent task plan, findings, and progress"
+        }
+      ],
+      "references": [],
+      "external_skills": [
+        {
+          "name": "planning-with-files",
+          "path": "C:/Users/V0141351/.agents/skills/planning-with-files/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "dev-test",
+      "label": "Dev/Test / 开发与验证",
+      "purpose": "Implement runtime behavior and prove it through focused then broad verification.",
+      "artifacts": [
+        {
+          "path": "app",
+          "create": false,
+          "required": false,
+          "role": "Application and UI code when the repository uses this layout"
+        },
+        {
+          "path": "src",
+          "create": false,
+          "required": false,
+          "role": "Domain and application source code when the repository uses this layout"
+        },
+        {
+          "path": "tests",
+          "create": false,
+          "required": false,
+          "role": "Executable verification when present"
+        }
+      ],
+      "references": [
+        {
+          "path": "references/dev_references",
+          "create": true,
+          "required": true,
+          "role": "Coding conventions and restrictions"
+        },
+        {
+          "path": "references/test_references",
+          "create": true,
+          "required": true,
+          "role": "Acceptance, validation, tools, debugging, and observability"
+        }
+      ],
+      "external_skills": []
+    },
+    {
+      "id": "summary",
+      "label": "Summary / 总结沉淀",
+      "purpose": "Record durable architectural decisions and evolve Harness guidance from delivery evidence.",
+      "artifacts": [
+        {
+          "path": "docs/ADR",
+          "create": true,
+          "required": true,
+          "role": "Architectural decision records"
+        }
+      ],
+      "references": [
+        {
+          "path": "references/summary_references",
+          "create": true,
+          "required": true,
+          "role": "Reusable delivery-summary, retrospective, and knowledge-consolidation guidance"
+        }
+      ],
+      "external_skills": []
+    }
+  ],
+  "indexes": {
+    "references/index.md": [
+      "references/design_references/",
+      "references/dev_references/",
+      "references/test_references/",
+      "references/summary_references/",
+      "references/generated/"
+    ],
+    "references/design_references/index.md": [
+      "references/design_references/domain/",
+      "references/design_references/system_design/",
+      "references/design_references/module_design/",
+      "references/design_references/feat_design/"
+    ],
+    "references/dev_references/index.md": [
+      "references/dev_references/coding_spec/",
+      "references/dev_references/restrictions/"
+    ],
+    "references/test_references/index.md": [
+      "references/test_references/acceptance/",
+      "references/test_references/methods/",
+      "references/test_references/tools/",
+      "references/test_references/debug_router/"
+    ],
+    "references/summary_references/index.md": []
+  },
+  "leaf_indexes": [
+    "references/design_references/domain/index.md",
+    "references/design_references/system_design/index.md",
+    "references/design_references/system_design/agent/index.md",
+    "references/design_references/module_design/index.md",
+    "references/design_references/feat_design/index.md",
+    "references/dev_references/coding_spec/index.md",
+    "references/dev_references/restrictions/index.md",
+    "references/generated/index.md",
+    "references/test_references/acceptance/index.md",
+    "references/test_references/methods/index.md",
+    "references/test_references/tools/index.md",
+    "references/test_references/debug_router/index.md"
+  ],
+  "seed_documents": [
+    {
+      "path": "references/design_references/system_design/rules_boundary.md",
+      "title": "Rules Boundary",
+      "lines": [
+        "Stable user-maintained rules belong in specs, config, or documented rule files.",
+        "Code-owned behavior belongs in typed modules with executable tests."
+      ]
+    },
+    {
+      "path": "references/dev_references/coding_spec/coding_conventions.md",
+      "title": "Coding Conventions",
+      "lines": [
+        "Use type annotations for new functions and methods.",
+        "Keep IO at infrastructure or adapter boundaries.",
+        "Keep public entrypoints compatible unless a breaking change is explicitly approved."
+      ]
+    },
+    {
+      "path": "references/dev_references/restrictions/safety_rules.md",
+      "title": "Safety Rules",
+      "lines": [
+        "Do not print or commit secrets.",
+        "Do not delete user data unless explicitly asked.",
+        "Preserve unrelated user changes."
+      ]
+    },
+    {
+      "path": "references/test_references/tools/project_commands.md",
+      "title": "Project Commands",
+      "lines": [
+        "Document install, run, test, lint, typecheck, smoke, and Harness commands here."
+      ]
+    },
+    {
+      "path": "references/test_references/methods/validation.md",
+      "title": "Validation Guidance",
+      "lines": [
+        "Run the smallest relevant verification first.",
+        "Broaden checks when shared behavior, public contracts, or UI flows change."
+      ]
+    },
+    {
+      "path": "references/test_references/observability.md",
+      "title": "Observability",
+      "lines": [
+        "Document trace, log, smoke, and diagnostic entrypoints here."
+      ]
+    },
+    {
+      "path": "docs/agents/issue-tracker.md",
+      "title": "Issue Tracker: Local Markdown",
+      "lines": [
+        "Issues and PRDs live under `.scratch/<feature-slug>/`.",
+        "Implementation issues use `.scratch/<feature-slug>/issues/<NN>-<slug>.md`.",
+        "Record category, status, and chronological comments in each issue file."
+      ]
+    },
+    {
+      "path": "docs/agents/triage-labels.md",
+      "title": "Triage Labels",
+      "lines": [
+        "Use exactly one category: `bug` or `enhancement`.",
+        "Use exactly one state: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`."
+      ]
+    },
+    {
+      "path": "docs/agents/domain.md",
+      "title": "Domain Docs",
+      "lines": [
+        "This is a single-context repository.",
+        "Read root `CONTEXT.md`, relevant decisions under `docs/ADR/`, and `references/design_references/domain/GLOSSARY.md` before changing domain behavior."
+      ]
+    }
+  ],
+  "required_paths": [
+    "AGENTS.md",
+    "ARCHITECTURE.md",
+    "CONTEXT.md",
+    ".scratch",
+    ".planning",
+    "docs/PRD",
+    "docs/ADR",
+    "references/index.md",
+    "references/design_references/index.md",
+    "references/design_references/domain/GLOSSARY.md",
+    "references/dev_references/index.md",
+    "references/test_references/index.md",
+    "references/summary_references/index.md",
+    "references/retrospective.md",
+    "docs/agents/issue-tracker.md",
+    "docs/agents/triage-labels.md",
+    "docs/agents/domain.md",
+    "scripts/harness_check.py"
+  ],
+  "audit": {
+    "default_path": "references/generated/harness-check.json",
+    "profile_snapshot": "references/generated/harness-profile.snapshot.json",
+    "refactor_log": "references/generated/harness-refactor-log.md",
+    "legacy_archive": "references/generated/legacy-harness"
+  },
+  "migration": {
+    "legacy_candidates": [
+      ".roorules",
+      "docs/agent",
+      "docs/design",
+      "docs/exec-plans",
+      "docs/observability.md",
+      "references/design",
+      "references/exec-plans",
+      "references/plans",
+      "references/project-conf",
+      "references/project-info"
+    ],
+    "never_move": [
+      ".env",
+      "app",
+      "src",
+      "tests",
+      "resources",
+      "output",
+      "downloads",
+      "specs/runs"
+    ]
+  }
+}

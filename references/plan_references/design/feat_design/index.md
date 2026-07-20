@@ -1,15 +1,9 @@
-# Feature Design Index
+# Legacy Feature Design Index
 
 ## Folder Routes
 
-No child folders yet.
-
-## Read Guidance
-
-| Document | When To Read | Commands |
-|---|---|---|
-| `design-spec_builder.md` | Natural-language-to-TaskSpec behavior, workflow routing, or Spec repair changes. | Run focused SpecBuilder tests and relevant Runtime workflow tests. |
+No child folders.
 
 ## Update Rule
 
-Add feature folders here when a feature needs multiple design documents.
+This is retained pre-profile material. Keep this index folder-only; create new durable feature guidance under `references/design_references/feat_design/`.

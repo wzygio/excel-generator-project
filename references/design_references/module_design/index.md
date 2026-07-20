@@ -1,4 +1,4 @@
-# Restrictions Index
+# Module Design Index
 
 ## Folder Routes
 

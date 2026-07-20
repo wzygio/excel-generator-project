@@ -1,4 +1,4 @@
-# Restrictions Index
+# Generated Index
 
 ## Folder Routes
 
