@@ -72,7 +72,7 @@ def main() -> None:
             if pin_runtime:
                 run_time = st.time_input("运行时间", value=datetime.now().time().replace(microsecond=0))
                 generator_now = f"{report_date.isoformat()}T{run_time.isoformat()}"
-            submitted = st.form_submit_button("生成日报", use_container_width=True)
+            submitted = st.form_submit_button("生成日报", width="stretch")
 
         if submitted:
             _run_generation(
@@ -91,9 +91,9 @@ def main() -> None:
         else:
             st.info("等待生成")
 
-        st.subheader("最近生成")
-        reports = list_generated_reports(Path(output_dir_text), workspace=REPO_ROOT, limit=12)
-        _render_downloads(reports, empty_message="暂无可下载文件", key_prefix="recent")
+    reports = list_generated_reports(Path(output_dir_text), workspace=REPO_ROOT, limit=12)
+    warnings = result.warnings if isinstance(result, DailyReportRunView) else []
+    _render_footer_sections(reports=reports, warnings=warnings)
 
 
 def _run_generation(
@@ -138,15 +138,31 @@ def _render_result(result: DailyReportRunView) -> None:
         st.code(result.error_message, language="text")
     if result.output_file:
         st.write(f"输出文件：`{result.output_file}`")
-    if result.workflow:
-        st.write("流程：" + " → ".join(result.workflow))
-    for warning in result.warnings:
-        st.warning(warning)
     _render_downloads(
-        result.downloads,
+        result.downloads[:1],
         empty_message="本次运行未返回可下载文件",
         key_prefix="result",
     )
+
+
+def _render_footer_sections(
+    *,
+    reports: list[DownloadableReport],
+    warnings: list[str],
+) -> None:
+    with st.expander(f"历史文件（{len(reports)}）", expanded=False):
+        _render_downloads(
+            reports,
+            empty_message="暂无可下载文件",
+            key_prefix="recent",
+        )
+
+    with st.expander(f"Warning（{len(warnings)}）", expanded=False):
+        if not warnings:
+            st.caption("暂无 Warning")
+            return
+        for warning in warnings:
+            st.warning(warning)
 
 
 def _render_downloads(
@@ -174,7 +190,7 @@ def _render_downloads(
             file_name=report.path.name,
             mime=EXCEL_MIME,
             key=download_key(report, prefix=key_prefix, index=index),
-            use_container_width=True,
+            width="stretch",
         )
 
 

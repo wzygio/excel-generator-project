@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from pathlib import Path
 
+import app.daily_report_app as daily_report_app
 from app.daily_report_app import REPO_ROOT, default_generator_root, download_key, format_size
-from app.daily_report_service import DownloadableReport
+from app.daily_report_service import DailyReportRunView, DownloadableReport
 
 
 def test_repo_root_points_to_project_root() -> None:
@@ -32,3 +34,76 @@ def test_download_key_is_unique_across_page_sections(tmp_path: Path) -> None:
         prefix="recent",
         index=0,
     )
+
+
+def test_result_renders_only_latest_download_without_inline_warnings(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    latest = DownloadableReport(path=tmp_path / "latest.xlsx", label="latest.xlsx")
+    older = DownloadableReport(path=tmp_path / "older.xlsx", label="older.xlsx")
+    rendered_downloads: list[list[DownloadableReport]] = []
+    written: list[str] = []
+
+    monkeypatch.setattr(daily_report_app.st, "success", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily_report_app.st, "write", lambda value: written.append(value))
+    monkeypatch.setattr(
+        daily_report_app.st,
+        "warning",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("warnings must not render in the result column")
+        ),
+    )
+    monkeypatch.setattr(
+        daily_report_app,
+        "_render_downloads",
+        lambda reports, **_kwargs: rendered_downloads.append(reports),
+    )
+
+    daily_report_app._render_result(
+        DailyReportRunView(
+            success=True,
+            summary="完成",
+            output_file=latest.path,
+            downloads=[latest, older],
+            warnings=["warning one"],
+            workflow=["mod0", "mod1"],
+        )
+    )
+
+    assert rendered_downloads == [[latest]]
+    assert written == [f"输出文件：`{latest.path}`"]
+
+
+def test_footer_sections_are_collapsed_with_history_above_warnings(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    report = DownloadableReport(path=tmp_path / "daily.xlsx", label="daily.xlsx")
+    expanders: list[tuple[str, bool]] = []
+    rendered_downloads: list[list[DownloadableReport]] = []
+    rendered_warnings: list[str] = []
+
+    def fake_expander(label: str, *, expanded: bool):
+        expanders.append((label, expanded))
+        return nullcontext()
+
+    monkeypatch.setattr(daily_report_app.st, "expander", fake_expander)
+    monkeypatch.setattr(daily_report_app.st, "warning", rendered_warnings.append)
+    monkeypatch.setattr(
+        daily_report_app,
+        "_render_downloads",
+        lambda reports, **_kwargs: rendered_downloads.append(reports),
+    )
+
+    daily_report_app._render_footer_sections(
+        reports=[report],
+        warnings=["warning one", "warning two"],
+    )
+
+    assert expanders == [
+        ("历史文件（1）", False),
+        ("Warning（2）", False),
+    ]
+    assert rendered_downloads == [[report]]
+    assert rendered_warnings == ["warning one", "warning two"]
