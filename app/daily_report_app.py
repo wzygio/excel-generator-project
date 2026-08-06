@@ -93,7 +93,12 @@ def main() -> None:
 
     reports = list_generated_reports(Path(output_dir_text), workspace=REPO_ROOT, limit=12)
     warnings = result.warnings if isinstance(result, DailyReportRunView) else []
-    _render_footer_sections(reports=reports, warnings=warnings)
+    errors = (
+        [result.error_message]
+        if isinstance(result, DailyReportRunView) and result.error_message
+        else []
+    )
+    _render_footer_sections(reports=reports, warnings=warnings, errors=errors)
 
 
 def _run_generation(
@@ -131,11 +136,10 @@ def _run_generation(
 def _render_result(result: DailyReportRunView) -> None:
     if result.success:
         st.success(result.summary or "日报生成完成")
+    elif result.error_message:
+        st.warning("日报生成失败，请展开下方 Warning / Error 查看详细信息")
     else:
-        st.error(result.summary or "日报生成失败")
-
-    if result.error_message:
-        st.code(result.error_message, language="text")
+        st.warning(result.summary or "日报生成失败")
     if result.output_file:
         st.write(f"输出文件：`{result.output_file}`")
     _render_downloads(
@@ -149,6 +153,7 @@ def _render_footer_sections(
     *,
     reports: list[DownloadableReport],
     warnings: list[str],
+    errors: list[str] | None = None,
 ) -> None:
     with st.expander(f"历史文件（{len(reports)}）", expanded=False):
         _render_downloads(
@@ -157,10 +162,14 @@ def _render_footer_sections(
             key_prefix="recent",
         )
 
-    with st.expander(f"Warning（{len(warnings)}）", expanded=False):
-        if not warnings:
-            st.caption("暂无 Warning")
+    errors = errors or []
+    total_messages = len(warnings) + len(errors)
+    with st.expander(f"Warning / Error（{total_messages}）", expanded=False):
+        if not warnings and not errors:
+            st.caption("暂无 Warning / Error")
             return
+        for error in errors:
+            st.error(error)
         for warning in warnings:
             st.warning(warning)
 

@@ -83,6 +83,7 @@ def test_footer_sections_are_collapsed_with_history_above_warnings(
     expanders: list[tuple[str, bool]] = []
     rendered_downloads: list[list[DownloadableReport]] = []
     rendered_warnings: list[str] = []
+    rendered_errors: list[str] = []
 
     def fake_expander(label: str, *, expanded: bool):
         expanders.append((label, expanded))
@@ -90,6 +91,7 @@ def test_footer_sections_are_collapsed_with_history_above_warnings(
 
     monkeypatch.setattr(daily_report_app.st, "expander", fake_expander)
     monkeypatch.setattr(daily_report_app.st, "warning", rendered_warnings.append)
+    monkeypatch.setattr(daily_report_app.st, "error", rendered_errors.append)
     monkeypatch.setattr(
         daily_report_app,
         "_render_downloads",
@@ -99,11 +101,41 @@ def test_footer_sections_are_collapsed_with_history_above_warnings(
     daily_report_app._render_footer_sections(
         reports=[report],
         warnings=["warning one", "warning two"],
+        errors=["error one"],
     )
 
     assert expanders == [
         ("历史文件（1）", False),
-        ("Warning（2）", False),
+        ("Warning / Error（3）", False),
     ]
     assert rendered_downloads == [[report]]
+    assert rendered_errors == ["error one"]
     assert rendered_warnings == ["warning one", "warning two"]
+
+
+def test_result_renders_only_a_status_hint_for_errors(monkeypatch) -> None:
+    rendered: list[tuple[str, str]] = []
+
+    monkeypatch.setattr(
+        daily_report_app.st,
+        "warning",
+        lambda message: rendered.append(("warning", message)),
+    )
+    monkeypatch.setattr(
+        daily_report_app.st,
+        "code",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("raw errors must not render in the status area")
+        ),
+    )
+    monkeypatch.setattr(daily_report_app, "_render_downloads", lambda *_args, **_kwargs: None)
+
+    daily_report_app._render_result(
+        DailyReportRunView(
+            success=False,
+            summary="日报生成失败",
+            error_message="raw downstream traceback",
+        )
+    )
+
+    assert rendered == [("warning", "日报生成失败，请展开下方 Warning / Error 查看详细信息")]
