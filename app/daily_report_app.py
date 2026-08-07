@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import date, datetime
+from datetime import date, datetime, time
 from pathlib import Path
 
 import streamlit as st
@@ -45,6 +45,15 @@ def download_key(report: DownloadableReport, *, prefix: str, index: int) -> str:
     return f"{prefix}-{index}-{report.path.resolve()}"
 
 
+def generator_now_for_time(
+    run_time: time,
+    *,
+    generation_day: date | None = None,
+) -> str:
+    """Build a runtime override without deriving its date from the report date."""
+    return datetime.combine(generation_day or date.today(), run_time).isoformat()
+
+
 def main() -> None:
     st.set_page_config(
         page_title="Excel日报生成",
@@ -71,7 +80,7 @@ def main() -> None:
             generator_now = ""
             if pin_runtime:
                 run_time = st.time_input("运行时间", value=datetime.now().time().replace(microsecond=0))
-                generator_now = f"{report_date.isoformat()}T{run_time.isoformat()}"
+                generator_now = generator_now_for_time(run_time)
             submitted = st.form_submit_button("生成日报", width="stretch")
 
         if submitted:

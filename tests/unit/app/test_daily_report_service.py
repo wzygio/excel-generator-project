@@ -46,6 +46,7 @@ def test_generate_daily_report_returns_downloadable_artifact(tmp_path: Path) -> 
     assert result.downloads[0].path == output_file
     assert result.workflow == ["mod0", "mod4"]
     assert calls[0][0].report_date == "2026-07-03"
+    assert calls[0][0].generator_now is None
     assert calls[0][0].output_dir == tmp_path / "output" / "artifacts" / "reports" / "generated"
     assert calls[0][1].workspace == tmp_path
 

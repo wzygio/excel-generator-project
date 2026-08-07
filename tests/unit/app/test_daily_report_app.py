@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+from datetime import date, time
 from pathlib import Path
 
 import app.daily_report_app as daily_report_app
-from app.daily_report_app import REPO_ROOT, default_generator_root, download_key, format_size
+from app.daily_report_app import (
+    REPO_ROOT,
+    default_generator_root,
+    download_key,
+    format_size,
+    generator_now_for_time,
+)
 from app.daily_report_service import DailyReportRunView, DownloadableReport
 
 
@@ -24,6 +31,13 @@ def test_format_size_uses_readable_units() -> None:
     assert format_size(12) == "12 B"
     assert format_size(2048) == "2.0 KB"
     assert format_size(3 * 1024 * 1024) == "3.0 MB"
+
+
+def test_pinned_runtime_uses_generation_day_not_selected_report_day() -> None:
+    assert generator_now_for_time(
+        time(17, 30),
+        generation_day=date(2026, 8, 7),
+    ) == "2026-08-07T17:30:00"
 
 
 def test_download_key_is_unique_across_page_sections(tmp_path: Path) -> None:
