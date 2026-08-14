@@ -9,7 +9,7 @@ set "LOG_FILE=%LOG_DIR%\daily_report_ui_start.log"
 cd /d "%PROJECT_DIR%"
 
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
-if not exist "output\artifacts\reports\generated" mkdir "output\artifacts\reports\generated"
+if not exist "C:\Users\V0141351\.agents\skills\daily-report-generator\output\reports" mkdir "C:\Users\V0141351\.agents\skills\daily-report-generator\output\reports"
 
 echo [%date% %time%] Starting daily report UI on port %PORT%.>> "%LOG_FILE%"
 

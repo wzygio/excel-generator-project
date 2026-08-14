@@ -67,7 +67,7 @@ agent:
     generator_root: "~/.agents/skills/daily-report-generator"
     python_executable: "D:/Program/Python/python.exe"
     cli_path: "scripts/daily_report_cli.py"
-    output_dir: "output/artifacts/reports/generated"
+    output_dir: 'C:\Users\V0141351\.agents\skills\daily-report-generator\output\reports'
     generator_root_env: "YIELD_REPORT_DAILY_REPORT_GENERATOR_ROOT"
     workspace_env: "YIELD_REPORT_DUTY_WORKSPACE"
   pydantic_ai:

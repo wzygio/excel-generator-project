@@ -99,7 +99,6 @@ def generate_daily_report(
         raw_result=result,
     )
 
-
 def list_generated_reports(
     output_dir: Path | str | None = None,
     *,

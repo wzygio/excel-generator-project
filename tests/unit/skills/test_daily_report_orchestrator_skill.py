@@ -238,13 +238,14 @@ def test_native_facade_calls_daily_report_generator_cli(
     assert result.success is True
     assert result.data["runtime"] == "daily-report-generator"
     assert result.data["generator_root"] == str(generator_root.resolve())
-    assert result.data["output_dir"] == str(
-        tmp_path / "output" / "artifacts" / "reports" / "generated"
+    expected_output_dir = Path(
+        r"C:\Users\V0141351\.agents\skills\daily-report-generator\output\reports"
     )
+    assert result.data["output_dir"] == str(expected_output_dir)
     assert str(cli_path.resolve()) in command
     assert "--workspace" not in command
     assert "--output-dir" in command
-    assert str(tmp_path / "output" / "artifacts" / "reports" / "generated") in command
+    assert str(expected_output_dir) in command
     assert "--now" in command
     assert "2026-06-24T16:00:00" in command
     assert "--end-date" in command

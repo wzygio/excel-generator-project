@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.daily_report_service import (
     DailyReportFormInput,
+    default_report_output_dir,
     generate_daily_report,
     list_generated_reports,
 )
@@ -34,7 +35,10 @@ def test_generate_daily_report_returns_downloadable_artifact(tmp_path: Path) -> 
         )
 
     result = generate_daily_report(
-        DailyReportFormInput(report_date="2026-07-03"),
+        DailyReportFormInput(
+            report_date="2026-07-03",
+            output_dir=output_file.parent,
+        ),
         workspace=tmp_path,
         runner=fake_runner,
         preflight=False,
@@ -49,6 +53,12 @@ def test_generate_daily_report_returns_downloadable_artifact(tmp_path: Path) -> 
     assert calls[0][0].generator_now is None
     assert calls[0][0].output_dir == tmp_path / "output" / "artifacts" / "reports" / "generated"
     assert calls[0][1].workspace == tmp_path
+
+
+def test_default_report_output_dir_uses_generator_skill_output() -> None:
+    assert default_report_output_dir() == Path(
+        r"C:\Users\V0141351\.agents\skills\daily-report-generator\output\reports"
+    )
 
 
 def test_generate_daily_report_does_not_preflight_agent_repo_business_files(
