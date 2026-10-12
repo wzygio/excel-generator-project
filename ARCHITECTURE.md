@@ -42,6 +42,10 @@ The Runtime routes report download, Excel analysis, and report generation to con
 ## Boundaries
 
 - The Agent orchestrates approved Skills and task state; Skills own stable report capabilities and their input/output contracts.
+- The daily-report facade recognizes the generator CLI's `daily_report.busy`
+  response as a recoverable busy state. The Streamlit service carries it to the
+  status area as a direct informational message; concurrency ownership remains
+  in the generator CLI rather than per-browser session state.
 - User-provided resources are read-only inputs. Rebuildable runtime artifacts are not source-of-truth project knowledge.
 - UI presentation, browser automation, and external integrations stay outside core domain behavior.
 

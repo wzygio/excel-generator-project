@@ -153,3 +153,30 @@ def test_result_renders_only_a_status_hint_for_errors(monkeypatch) -> None:
     )
 
     assert rendered == [("warning", "日报生成失败，请展开下方 Warning / Error 查看详细信息")]
+
+
+def test_busy_result_shows_a_direct_message_without_error_or_downloads(monkeypatch) -> None:
+    rendered: list[str] = []
+    monkeypatch.setattr(daily_report_app.st, 'info', rendered.append)
+    monkeypatch.setattr(daily_report_app.st, 'warning', lambda *_args: (_ for _ in ()).throw(
+        AssertionError('Busy is not a generation failure')))
+    monkeypatch.setattr(daily_report_app, '_render_downloads', lambda *_args, **_kwargs: (_ for _ in ()).throw(
+        AssertionError('A rejected run must not render a missing-download message')))
+
+    daily_report_app._render_result(DailyReportRunView(
+        success=False, summary='已有任务正在运行', busy=True,
+        error_message='已有日报任务正在运行，请等待当前任务完成后再试。',
+    ))
+    assert rendered == ['已有日报任务正在运行，请等待当前任务完成后再试。']
+
+
+def test_result_from_before_hot_reload_can_still_be_rendered(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    rendered: list[str] = []
+    monkeypatch.setattr(daily_report_app.st, 'success', rendered.append)
+    monkeypatch.setattr(daily_report_app, '_render_downloads', lambda *_args, **_kwargs: None)
+    daily_report_app._render_result(SimpleNamespace(
+        success=True, summary='完成', output_file=None, downloads=[],
+    ))
+    assert rendered == ['完成']

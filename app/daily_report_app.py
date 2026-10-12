@@ -104,7 +104,7 @@ def main() -> None:
     warnings = result.warnings if isinstance(result, DailyReportRunView) else []
     errors = (
         [result.error_message]
-        if isinstance(result, DailyReportRunView) and result.error_message
+        if isinstance(result, DailyReportRunView) and result.error_message and not getattr(result, 'busy', False)
         else []
     )
     _render_footer_sections(reports=reports, warnings=warnings, errors=errors)
@@ -143,6 +143,9 @@ def _run_generation(
 
 
 def _render_result(result: DailyReportRunView) -> None:
+    if getattr(result, 'busy', False):
+        st.info(result.error_message or result.summary)
+        return
     if result.success:
         st.success(result.summary or "日报生成完成")
     elif result.error_message:

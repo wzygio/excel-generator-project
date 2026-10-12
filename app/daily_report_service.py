@@ -55,6 +55,7 @@ class DailyReportRunView:
     workflow: list[str] = field(default_factory=list)
     error_message: str = ""
     raw_result: SkillResult | None = None
+    busy: bool = False
 
 
 def generate_daily_report(
@@ -97,6 +98,7 @@ def generate_daily_report(
         workflow=[str(item) for item in workflow] if isinstance(workflow, list) else [],
         error_message=error_message,
         raw_result=result,
+        busy=bool(result.error and result.error.code == 'daily_report.busy'),
     )
 
 def list_generated_reports(

@@ -18,6 +18,10 @@ TOOL_NAME = "daily_report"
 RUNTIME_NAME = "daily-report-generator"
 
 
+class DailyReportBusyError(RuntimeError):
+    """The generator rejected this request because another run is active."""
+
+
 def run_native_daily_report(request: DailyReportRequest, context: RunContext) -> SkillResult:
     """Run the user-facing daily-report-generator pipeline."""
     try:
@@ -62,13 +66,14 @@ def run_native_daily_report(request: DailyReportRequest, context: RunContext) ->
             warnings=list(result.get("warnings") or []),
         )
     except Exception as exc:
+        busy = isinstance(exc, DailyReportBusyError)
         return SkillResult(
             skill_name=TOOL_NAME,
             success=False,
-            summary=f"{RUNTIME_NAME} failed: {exc}",
+            summary=str(exc) if busy else f"{RUNTIME_NAME} failed: {exc}",
             data={"runtime": RUNTIME_NAME},
             error=SkillError(
-                code="daily_report.native_pipeline.failed",
+                code="daily_report.busy" if busy else "daily_report.native_pipeline.failed",
                 message=str(exc),
                 recoverable=True,
                 details={"exception_type": type(exc).__name__},
@@ -126,6 +131,13 @@ def _run_generator_cli(
         check=False,
     )
     if completed.returncode != 0:
+        try:
+            error_payload = json.loads(completed.stderr)
+        except (json.JSONDecodeError, TypeError):
+            error_payload = None
+        if (completed.returncode == 2 and isinstance(error_payload, dict)
+                and error_payload.get('error_code') == 'daily_report.busy'):
+            raise DailyReportBusyError(str(error_payload.get('error') or '已有日报任务正在运行，请稍后再试。'))
         raise RuntimeError(_format_cli_failure(completed))
     return _parse_cli_result(completed.stdout)
 

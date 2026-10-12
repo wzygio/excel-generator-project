@@ -11,6 +11,36 @@ from yield_report.skills.daily_report import native_pipeline, tool
 from yield_report.skills.daily_report.models import DailyReportRequest
 
 
+def test_busy_cli_response_reaches_frontend_as_busy_without_a_traceback(monkeypatch, tmp_path: Path) -> None:
+    from app.daily_report_service import DailyReportFormInput, generate_daily_report
+
+    generator_root = tmp_path / 'generator'
+    cli = generator_root / 'scripts/daily_report_cli.py'
+    cli.parent.mkdir(parents=True)
+    cli.write_text('', encoding='utf-8')
+    message = '已有日报任务正在运行，请等待当前任务完成后再试。本次请求未启动生成任务。'
+    monkeypatch.setattr(native_pipeline, '_load_runtime_settings', lambda: DailyReportAgentConfig(
+        generator_root=str(generator_root), cli_path='scripts/daily_report_cli.py',
+        output_dir=str(tmp_path / 'output'),
+    ))
+    monkeypatch.setattr(native_pipeline.subprocess, 'run', lambda command, **kwargs: subprocess.CompletedProcess(
+        command, 2, stdout='', stderr=json.dumps({
+            'status': 'failed', 'error_code': 'daily_report.busy', 'error': message,
+        }, ensure_ascii=False),
+    ))
+    view = generate_daily_report(DailyReportFormInput(
+        generator_root=generator_root, output_dir=tmp_path / 'output',
+    ), workspace=tmp_path)
+    assert not view.success
+    assert view.busy
+    assert view.error_message == message
+    assert view.summary == message
+    assert not view.downloads
+    assert view.raw_result is not None
+    assert view.raw_result.error is not None
+    assert view.raw_result.error.code == 'daily_report.busy'
+
+
 def test_daily_report_skill_delegates_to_native_pipeline(
     monkeypatch,
     tmp_path: Path,
