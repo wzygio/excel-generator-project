@@ -1,54 +1,66 @@
-# AGENTS.md
+# DDD Python Project Instructions
 
-## Project Overview
-
-This project is an Excel-based OLED yield-report assistant. It downloads FineReport source reports, analyzes local Excel workbooks, and prepares traceable yield-report outputs through a Spec / Skill / Runtime architecture.
-
-Read `CONTEXT.md` for its domain purpose and stable operating model, and `ARCHITECTURE.md` for its current runtime structure. Harness profile: `agent-workflow-v1`. Prefer explicit, testable, traceable report workflows over broad automatic inference.
-
-## Code Intelligence Policy
-
-- Use CodeGraph first when `.codegraph/` exists.
-- Keep `ARCHITECTURE.md` shallow and use code intelligence for deep lookup.
+These are project-type instructions shared by the enrolled DDD Python projects.
+User-wide operating and safety rules belong to `C:/Users/V0141351/.codex/AGENTS.md`.
+Each project's identity, configuration, constraints and specific task routes belong
+to its own `CONTEXT.md`. Read the global instructions if they are not already loaded.
 
 ## Context Router
 
-- For domain purpose, vocabulary, and hard boundaries, read `CONTEXT.md`.
-- For project shape, ownership, or runtime flow, read `ARCHITECTURE.md`.
-- For Harness routing, start at `references/index.md`.
-- For requirements and design knowledge, use `.scratch/`, `docs/PRD/`, and `references/design_references/`.
-- For execution plans, use `.planning/`.
-- For development and validation knowledge, use `references/dev_references/` and `references/test_references/`.
-- For durable decisions and delivery knowledge, use `docs/ADR/` and `references/summary_references/`.
-- For retained pre-profile design material, use `references/plan_references/`; new durable guidance belongs in the standard routes above.
-- For user-maintainable task specs and runtime traces, use `specs/`.
+Before the first substantive task in a project, read its `CONTEXT.md`. For work
+across projects, read each affected project's context. Follow only relevant task
+routes; do not load every linked document or another project's business rules.
 
-## Iteration Router
+| Task | Read next |
+|---|---|
+| Purpose, terminology, project-specific rules, inputs or artifact lifecycle | The affected project's `CONTEXT.md` |
+| Locate code, trace ownership, change naming or technical dependencies | Its `ARCHITECTURE.md` when present, then the relevant implementation |
+| Find domain rules, specifications, designs or verification guidance | Its knowledge router, normally `references/index.md`, using the routes in CONTEXT |
+| Issue, triage or domain-documentation work | The project procedure selected by CONTEXT |
+| Change agent instructions or document ownership | The owning instruction tier and CONTEXT's maintenance rules; use `$manage-harness` for Harness work |
 
-- Update `CONTEXT.md` and the domain glossary when stable terminology, invariants, or the operating model changes.
-- Update `ARCHITECTURE.md` and design references when ownership or runtime flow changes.
-- Update development references when coding rules or restrictions change.
-- Update test references when validation, smoke, or observability changes.
-- Update `references/retrospective.md` when durable artifact classes or Harness routing changes.
-- Keep Harness `index.md` files folder-only.
+If a routed document is missing, inspect the actual project rather than inventing
+its contents or copying another project's facts. Preserve established source names,
+artifact lifecycles and project-specific exceptions recorded in CONTEXT.
 
-## Agent skills
+## DDD and Engineering Conventions
 
-### Issue tracker
+- Prefer explicit, testable, traceable use cases and workflows. Follow the project's
+  established DDD boundaries: domain/core behavior remains independent of external
+  adapters, application code orchestrates use cases, and infrastructure integrates
+  external systems. Keep presentation concerns outside domain behavior.
+- Keep ARCHITECTURE focused on verified ownership, entry points, naming and technical
+  boundaries; inspect implementation for detailed behavior. A domain inventory must
+  be explicitly maintained before it drives directory organization. Do not reorganize
+  existing packages or business assets just to match a template.
+- For source discovery without CodeGraph, choose the scope and filename patterns from
+  ARCHITECTURE before content search. The global CodeGraph rule applies when indexed.
+- Use `$ecc-production-rules` for implementation, refactoring, debugging, testing,
+  review and performance work. Load relevant `common` rules and Python extensions;
+  activate framework rules only for a confirmed framework. Keep shared rule libraries
+  in their installed location and use the project's configured tools and commands.
+- Use `$manage-harness` for Harness creation, audit, migration or repair. Respect the
+  project's adopted contract and explicit user overrides; do not copy shared Harness
+  templates or historical rule libraries into a repository.
+- Keep business rules and durable domain knowledge in project-owned documents. Route
+  to the project's issue, triage, glossary and domain procedures through CONTEXT.
+  Respect each project's index policy and retained knowledge; do not flatten it into
+  one global file catalog or impose another project's paths.
 
-Issues are tracked as Local Markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+## Update Routes
 
-### Triage labels
+Update the authoritative owner and its affected consumers together:
 
-Local issues use the canonical default state vocabulary. See `docs/agents/triage-labels.md`.
+- Rules applicable across project types: `C:/Users/V0141351/.codex/AGENTS.md`.
+- Rules shared by this DDD Python project type: this hard-linked `AGENTS.md`.
+- Project identity, specific instructions/task triggers, configuration constraints,
+  important routes, artifact lifecycle and document ownership: its `CONTEXT.md`.
+- Technical boundaries, source/test naming and maintained module ownership: its
+  `ARCHITECTURE.md` and affected implementation/configuration.
+- Business facts and decisions: the owning project document; update its knowledge
+  router when the route, scope or naming changes.
 
-### Domain docs
-
-This is a single-context repository using root `CONTEXT.md` and `docs/ADR/`. See `docs/agents/domain.md`.
-
-## Safety Boundary
-
-- Do not print, copy, commit, or persist secrets from `.env`, credentials, cookies, tokens, or portal sessions.
-- Do not delete or overwrite user-provided Excel/source files under `resources/` unless the user explicitly asks.
-- Do not commit runtime outputs from `output/`, `downloads/`, `specs/runs/`, caches, browser artifacts, or decrypted resource folders.
-- Preserve unrelated user changes.
+The current NTFS link group's maintenance entry is `D:/wzy/Python/AGENTS.md`, with
+enrolled paths in `D:/wzy/Python/AGENTS.links.json`. Follow the global hard-link
+maintenance rules when editing any enrolled entry. Keep project-specific rules
+directly in CONTEXT.

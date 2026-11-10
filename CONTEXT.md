@@ -22,7 +22,8 @@
 
 ## Fast Routing
 
-- Agent operating rules: `AGENTS.md`
+- DDD Python project-type instructions: `AGENTS.md` (shared by NTFS hard links)
+- Project-specific instructions and task routes: this `CONTEXT.md`
 - Architecture and module boundaries: `ARCHITECTURE.md`
 - Harness and reusable knowledge routes: `references/index.md`
 - Domain vocabulary and design knowledge: `references/design_references/`
@@ -32,3 +33,32 @@
 - Active file-based plans and checklists: `.planning/`
 - Durable architectural decisions: `docs/ADR/`
 - Development prompts and retained engineering guidance: `docs/dev_docs/`
+
+## Project Agent Rules
+
+This CONTEXT owns this project's specific instructions, constraints and task
+triggers. The global AGENTS owns user-wide operating/safety rules; this project's
+AGENTS owns the shared DDD Python workflow. Update the appropriate owner and any
+affected routes together. This user-requested ownership model takes precedence
+over earlier template descriptions of where project instructions belong.
+
+- Retain the recorded Harness label `agent-workflow-v1`; changes to it require an
+  explicit reconciliation. This project's report flow uses Spec / Skill / Runtime
+  boundaries and preserves source Excel workbooks under `resources/`.
+- Requirements/design work uses `.scratch/`, `docs/PRD/` and
+  `references/design_references/`; execution plans use `.planning/`.
+- Development and validation knowledge uses `references/dev_references/` and
+  `references/test_references/`; durable decisions and delivery knowledge use
+  `docs/ADR/` and `references/summary_references/`. Retain historical material in
+  `references/plan_references/`; direct new knowledge through the maintained routes.
+- User-maintainable task specs and runtime traces use `specs/`. Generated reports,
+  downloads, `specs/runs/`, caches, browser artifacts and decrypted resources remain
+  outside commits; maintained inputs retain their own lifecycle.
+- Keep project indexes folder-only. Update development/test references as their
+  contracts change and `references/retrospective.md` as durable artifact routing changes.
+  Follow `docs/agents/domain.md` for the single-context model and `docs/ADR/` decisions.
+
+- For local Markdown issues and PRDs, follow `docs/agents/issue-tracker.md`.
+- For issue state changes, follow `docs/agents/triage-labels.md`, including its
+  configured canonical role/status vocabulary rather than inventing new states.
+- Before domain behavior/documentation changes, follow `docs/agents/domain.md`.
